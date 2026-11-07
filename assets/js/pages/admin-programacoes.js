@@ -1,5 +1,5 @@
-import { watchAuth, getAdminProfileByEmail } from "../auth.js";
-import { hasPermission, isPrimaryAdmin } from "../services/admin-permissions-service.js";
+import { watchAuth, getAdminProfileForUser } from "../auth.js";
+import { hasPermission } from "../services/admin-permissions-service.js";
 import { listProgramacoes, getProgramacao, saveProgramacao, removeProgramacao } from "../services/programacoes-service.js";
 import { listMusicas } from "../services/musicas-service.js";
 import { listCifras } from "../services/cifras-service.js";
@@ -12,12 +12,34 @@ function $(selector) {
 let musicasCache = [];
 let cifrasCache = [];
 let selectedSongs = [];
+let currentAdmin = null;
+let currentEditing = null;
+let hasInitialized = false;
+
+function setStatus(message = "", isError = false) {
+  const status = $("#admin-programacoes-status");
+  if (!status) return;
+  status.textContent = message;
+  status.classList.toggle("error", isError);
+}
+
+function can(action) {
+  return hasPermission(currentAdmin, "programacoes", action);
+}
 
 function fmtDate(value = "") {
   if (!value) return "Sem data";
   const parts = String(value).split("-");
   if (parts.length !== 3) return value;
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
+function coerceDate(value) {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (typeof value?.toDate === "function") return value.toDate();
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
 function escapeHtml(text = "") {
@@ -140,20 +162,19 @@ function renderAvailableSongs(term = "") {
 }
 
 
-function toDatetimeLocalValue(value) {
+function toTimeValue(value) {
   if (!value) return "";
+  if (/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(value))) return String(value);
   const d = coerceDate(value);
   if (!(d instanceof Date) || Number.isNaN(d.getTime())) return "";
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
   const hh = String(d.getHours()).padStart(2, "0");
   const mi = String(d.getMinutes()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+  return `${hh}:${mi}`;
 }
 
 function fmtHideAfter(value) {
   if (!value) return "";
+  if (/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(value))) return String(value);
   const d = coerceDate(value);
   if (!(d instanceof Date) || Number.isNaN(d.getTime())) return String(value);
   return new Intl.DateTimeFormat("pt-BR", {
@@ -181,7 +202,7 @@ function ensureModal() {
 
         <label>
           <span>Título</span>
-          <input type="text" id="programacao-title" placeholder="Ex.: Culto Jovem Especial" required />
+          <input type="text" id="programacao-title" placeholder="Ex.: Culto Jovem Especial" maxlength="150" required />
         </label>
 
         <div class="programacao-grid">
@@ -197,12 +218,12 @@ function ensureModal() {
 
         <label>
           <span>Local</span>
-          <input type="text" id="programacao-location" placeholder="Ex.: IASD Central" />
+          <input type="text" id="programacao-location" placeholder="Ex.: IASD Central" maxlength="300" />
         </label>
 
         <label>
           <span>Descrição</span>
-          <textarea id="programacao-description" rows="3" placeholder="Observações da programação"></textarea>
+          <textarea id="programacao-description" rows="3" placeholder="Observações da programação" maxlength="2000"></textarea>
         </label>
 
         <div class="programacao-grid">
@@ -216,7 +237,7 @@ function ensureModal() {
         <div class="programacao-song-picker">
           <div class="programacao-song-picker-header">
             <h3>Músicas da programação</h3>
-            <input type="search" id="programacao-song-search" placeholder="Buscar músicas cadastradas..." />
+            <input type="search" id="programacao-song-search" placeholder="Buscar músicas cadastradas..." maxlength="150" />
           </div>
 
           <div class="programacao-song-columns">
@@ -256,7 +277,12 @@ async function preloadCatalogs() {
 }
 
 function openModal(data = null) {
+  if (!can(data?.id ? "edit" : "create")) {
+    setStatus("Você não tem permissão para esta ação.", true);
+    return;
+  }
   ensureModal();
+  currentEditing = data;
 
   $("#programacao-id").value = data?.id || "";
   $("#programacao-title").value = data?.title || "";
@@ -264,7 +290,7 @@ function openModal(data = null) {
   $("#programacao-time").value = data?.time || "";
   $("#programacao-location").value = data?.location || "";
   $("#programacao-description").value = data?.description || "";
-  $("#programacao-hide-after").value = toDatetimeLocalValue(data?.hideAfter || "");
+  $("#programacao-hide-after").value = toTimeValue(data?.hideAfter || "");
   $("#programacao-modal-title").textContent = data?.id ? "Editar programação" : "Nova programação";
   $("#programacao-song-search").value = "";
 
@@ -291,10 +317,17 @@ function openModal(data = null) {
 function closeModal() {
   $("#programacao-modal")?.classList.add("hidden");
   document.body.classList.remove("modal-open");
+  currentEditing = null;
 }
 
 async function onSubmitForm(event) {
   event.preventDefault();
+
+  const id = $("#programacao-id").value.trim();
+  if (!can(id ? "edit" : "create")) {
+    setStatus("Você não tem permissão para salvar esta programação.", true);
+    return;
+  }
 
   const payload = {
     title: $("#programacao-title").value.trim(),
@@ -302,16 +335,15 @@ async function onSubmitForm(event) {
     time: $("#programacao-time").value,
     location: $("#programacao-location").value.trim(),
     description: $("#programacao-description").value.trim(),
+    hideAfter: $("#programacao-hide-after").value,
     songs: selectedSongs,
-    active: true
+    active: id ? currentEditing?.active !== false : true
   };
 
   if (!payload.title || !payload.date || !payload.time) {
     alert("Preencha título, data e hora.");
     return;
   }
-
-  const id = $("#programacao-id").value.trim();
 
   try {
     const saveBtn = $("#programacao-save");
@@ -331,6 +363,7 @@ async function onSubmitForm(event) {
 }
 
 async function onEditProgramacao(id) {
+  if (!can("edit")) return setStatus("Você não tem permissão para editar programações.", true);
   try {
     const item = await getProgramacao(id);
     if (!item) {
@@ -345,6 +378,7 @@ async function onEditProgramacao(id) {
 }
 
 async function onDeleteProgramacao(id) {
+  if (!can("delete")) return setStatus("Você não tem permissão para excluir programações.", true);
   if (!confirm("Deseja excluir esta programação?")) return;
 
   try {
@@ -374,8 +408,8 @@ function buildSongsPreview(songs = []) {
         <div class="programacao-admin-song-line">
           <span>${index + 1}. ${escapeHtml(song.title || "")}</span>
           <span class="programacao-admin-links">
-            ${song.slug ? `<a href="../musica.html?slug=${song.slug}" target="_blank" rel="noopener">Vocal</a>` : "<span>Vocal</span>"}
-            ${song.cifraSlug ? `<a href="../cifra.html?slug=${song.cifraSlug}" target="_blank" rel="noopener">Banda</a>` : `<span class="is-disabled">Em breve</span>`}
+            ${song.slug ? `<a href="../musica.html?slug=${encodeURIComponent(song.slug)}" target="_blank" rel="noopener noreferrer">Vocal</a>` : "<span>Vocal</span>"}
+            ${song.cifraSlug ? `<a href="../cifra.html?slug=${encodeURIComponent(song.cifraSlug)}" target="_blank" rel="noopener noreferrer">Banda</a>` : `<span class="is-disabled">Em breve</span>`}
           </span>
         </div>
       `).join("")}
@@ -405,8 +439,8 @@ async function renderProgramacoes() {
           ${buildSongsPreview(item.songs || [])}
         </div>
         <div class="programacao-admin-actions">
-          <button type="button" class="button-outline" data-edit-id="${item.id}">Editar</button>
-          <button type="button" class="button-danger" data-delete-id="${item.id}">Excluir</button>
+          ${can("edit") ? `<button type="button" class="button-outline" data-edit-id="${item.id}">Editar</button>` : ""}
+          ${can("delete") ? `<button type="button" class="button-danger" data-delete-id="${item.id}">Excluir</button>` : ""}
         </div>
       </article>
     `).join("");
@@ -428,22 +462,27 @@ async function renderProgramacoes() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   ensureModal();
-  await preloadCatalogs();
   $("#new-programacao-button")?.addEventListener("click", () => openModal());
-  await renderProgramacoes();
 });
 
 watchAuth(async (user) => {
-  if (!user?.email) return;
-  const admin = await getAdminProfileByEmail(user.email);
-  if (!admin) return;
-  const refresh = async () => {
-    await renderProgramacoes();
-    document.getElementById('new-programacao-button')?.classList.toggle('hidden', !hasPermission(admin,'programacoes','create'));
-    document.querySelectorAll('[data-edit-id]').forEach((el)=>el.classList.toggle('hidden', !hasPermission(admin,'programacoes','edit')));
-    document.querySelectorAll('[data-delete-id]').forEach((el)=>el.classList.toggle('hidden', !hasPermission(admin,'programacoes','delete')));
-  };
-  await refresh();
+  if (!user?.uid || !user?.email) return;
+  try {
+    currentAdmin = await getAdminProfileForUser(user);
+    if (!currentAdmin) return;
+    document.getElementById("new-programacao-button")?.classList.toggle("hidden", !can("create"));
+    if (!hasInitialized) {
+      setStatus("Carregando programações…");
+      await Promise.all([preloadCatalogs(), renderProgramacoes()]);
+      hasInitialized = true;
+      setStatus("");
+    } else {
+      await renderProgramacoes();
+    }
+  } catch (error) {
+    console.error("Erro ao preparar programações:", error);
+    setStatus("Não foi possível carregar as programações.", true);
+  }
 });

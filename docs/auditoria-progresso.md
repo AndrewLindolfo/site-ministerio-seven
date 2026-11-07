@@ -32,8 +32,9 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - `cifras.html`, `assets/js/pages/cifras.js` e o filtro alfabético compartilhado revisados; renderização insegura removida, links internos validados e busca sem distinção de acentos coberta por testes.
 - `conta.html` e o fluxo público de autenticação revisados; observadores duplicados foram centralizados, gravações de perfil em toda página foram eliminadas, dados e fotos são normalizados e a identificação administrativa passou a usar UID em vez de listar administradores por e-mail.
 - Testes de URLs de perfil adicionados e aprovados.
+- `contato.html` e `assets/js/pages/contato.js` revisados; limites, validação, proteção contra duplo envio, campo-isca e estados de erro foram adicionados, com testes unitários do payload persistido.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- `contato.html`
+- `downloads-por-musica.html`

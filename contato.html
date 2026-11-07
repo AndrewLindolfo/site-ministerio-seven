@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -18,8 +17,9 @@
   <meta property="og:title" content="Contato | Ministério Seven" />
   <meta property="og:description" content="Entre em contato com o Ministério Seven." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://ministerioseven.online/" />
-  <meta property="og:image" content="https://ministerioseven.online/assets/img/logo/logo_dark.png" />
+  <meta property="og:url" content="https://ministerioseven.site/contato.html" />
+  <meta property="og:image" content="https://ministerioseven.site/assets/img/logo/logo_dark.png" />
+  <link rel="canonical" href="https://ministerioseven.site/contato.html" />
   <link rel="icon" href="assets/img/favicon/favicon.ico" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="assets/css/main.css" />
@@ -81,19 +81,24 @@
     <h1>Contato</h1>
     
 <form id="contato-form" class="contact-form">
-  <input type="text" id="contato-nome" placeholder="Nome" required />
-  <input type="email" id="contato-email" placeholder="E-mail" required />
-  <input type="text" id="contato-assunto" placeholder="Assunto" required />
-  <textarea id="contato-mensagem" placeholder="Mensagem" required></textarea>
+  <label for="contato-nome">Nome</label>
+  <input type="text" id="contato-nome" maxlength="120" autocomplete="name" required />
+  <label for="contato-email">E-mail</label>
+  <input type="email" id="contato-email" maxlength="320" autocomplete="email" required />
+  <label for="contato-assunto">Assunto</label>
+  <input type="text" id="contato-assunto" maxlength="160" required />
+  <label for="contato-mensagem">Mensagem</label>
+  <textarea id="contato-mensagem" minlength="10" maxlength="4000" required></textarea>
+  <div class="contact-trap" aria-hidden="true">
+    <label for="contato-site">Site</label>
+    <input type="text" id="contato-site" tabindex="-1" autocomplete="off" />
+  </div>
   <button type="submit">Enviar mensagem</button>
+  <p id="contato-status" class="contact-status" role="status" aria-live="polite"></p>
 </form>
 <div class="social-box">
   <strong>Instagram</strong>
   <a href="https://www.instagram.com/ministeriosev7en/" target="_blank" rel="noopener noreferrer">@ministeriosev7en</a>
-</div>
-
-<div class="social-box">
-  <strong></strong>
 </div>
 
   </section>

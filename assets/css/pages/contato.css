@@ -5,6 +5,23 @@
   margin-top:20px;
 }
 
+.contact-form label{
+  font-weight:700;
+}
+
+.contact-trap{
+  position:absolute;
+  left:-10000px;
+  width:1px;
+  height:1px;
+  overflow:hidden;
+}
+
+.contact-status{
+  min-height:1.5em;
+  color:var(--text-soft);
+}
+
 .social-box{
   margin-top:22px;
   display:grid;

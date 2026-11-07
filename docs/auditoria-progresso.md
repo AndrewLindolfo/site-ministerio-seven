@@ -53,8 +53,9 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Tema, menus móvel e administrativo e autenticação pública foram endurecidos; perfil e estado visual de administrador usam cache curto para evitar novas leituras a cada navegação.
 - Quinze módulos vazios, demonstrativos ou substituídos e quatro funções globais sem uso foram removidos após confirmação de ausência de referências.
 - Ações pessoais revisadas; alterações por usuário são serializadas, limites deixam de falhar silenciosamente, tipos e destinos são normalizados e o modal de playlists usa DOM seguro e restaura o foco.
+- Dois serviços desconectados do site, de preferências antigas de cifra e contador de visualizações, foram removidos após confirmação de ausência de referências.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- Serviços de dados compartilhados em `assets/js/services/`
+- Serviços públicos de conteúdo em `assets/js/services/`

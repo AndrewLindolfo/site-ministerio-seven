@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-DKM3MTBKQ6');
+    gtag("js", new Date());
+    gtag("config", "G-DKM3MTBKQ6");
   </script>
 
   <meta charset="UTF-8" />
@@ -48,11 +46,11 @@
     <a href="./index.html" class="admin-back-link">← Voltar ao painel</a>
     <h1>Downloads</h1>
     <div class="admin-downloads-hub">
-      <a href="./downloads-geral.html" class="admin-downloads-hub-card">
+      <a href="./downloads-geral.html" class="admin-downloads-hub-card hidden" data-download-module="downloadsGerais">
         <strong>Downloads Geral</strong>
         <p>Gerencie os downloads gerais existentes.</p>
       </a>
-      <a href="./downloads-por-musica.html" class="admin-downloads-hub-card">
+      <a href="./downloads-por-musica.html" class="admin-downloads-hub-card hidden" data-download-module="downloadsPorMusica">
         <strong>Downloads por Música</strong>
         <p>Vincule links de PDF e PPT às músicas cadastradas.</p>
       </a>
@@ -65,5 +63,6 @@
 </div>
 <script type="module" src="../assets/js/app.js"></script>
 <script type="module" src="../assets/js/auth-guard.js"></script>
+<script type="module" src="../assets/js/pages/admin-downloads-hub.js"></script>
 </body>
 </html>

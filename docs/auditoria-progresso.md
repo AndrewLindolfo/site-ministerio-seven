@@ -73,8 +73,10 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Gestão e editor de ensaios revisados; a falha `PLACEHOLDER` no tratamento de erros foi removida, leituras aguardam autenticação, permissões são verificadas na execução, renderização usa DOM seguro e operações passam a registrar atividades.
 - CSS antigo de modal e estilos duplicados de programações foram removidos do módulo de ensaios, mantendo apenas os seletores realmente usados.
 - Gestão de fotos revisada; álbuns são carregados uma vez por atualização, títulos e URLs usam DOM seguro, permissões protegem abertura e execução das ações, edições preservam o estado ativo e mensagens do Firebase são exibidas corretamente.
+- Hub e gestões de downloads gerais e por música revisados; cada administrador vê apenas os módulos autorizados, leituras repetidas foram removidas, conteúdo persistido é escapado, selects usam DOM seguro e permissões protegem todas as operações.
+- Edições de downloads preservam o estado ativo, campos receberam limites coerentes com os serviços e falhas de criação, edição e exclusão exibem o erro real sem deixar botões travados.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- Páginas administrativas de downloads gerais e por música
+- Página administrativa de contatos

@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-DKM3MTBKQ6');
+    gtag("js", new Date());
+    gtag("config", "G-DKM3MTBKQ6");
   </script>
 
   <meta charset="UTF-8" />
@@ -50,8 +48,9 @@
     <h1>Downloads por Música</h1>
 
     <div class="admin-toolbar">
-      <button type="button" id="new-download-music-button" class="button-primary">Novo download por música</button>
+      <button type="button" id="new-download-music-button" class="button-primary hidden">Novo download por música</button>
     </div>
+    <p id="admin-downloads-music-status" class="admin-status" role="status" aria-live="polite"></p>
     <div id="admin-downloads-music-list"></div>
   </section>
 </main>

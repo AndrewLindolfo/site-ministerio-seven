@@ -42,8 +42,11 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - As notificações da mesma abertura agora compartilham uma única consulta; armazenamento local bloqueado não interrompe mais a página e dois módulos vazios e sem uso foram removidos.
 - `login.html` e o núcleo de autenticação administrativa revisados; login por e-mail/senha e Google foi estruturado, sessões não autorizadas são encerradas e a validação deixou de depender de consulta ampla por e-mail.
 - O observador global de autenticação não tenta mais sincronizar administradores em toda página, e o popup de comunicados passou a carregar somente onde possui interface e finalidade.
+- `musica.html` revisado; letras ricas são sanitizadas, músicas inativas não são abertas pela rota pública, o observador contínuo foi removido e cifras e navegação são carregadas em paralelo.
+- Incorporações do YouTube agora aceitam somente HTTPS, hosts oficiais e IDs válidos; preferências dos controles têm limites e não derrubam a página quando o armazenamento local está indisponível.
+- Testes automatizados de URLs do YouTube adicionados e aprovados.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- `musica.html`
+- `musicas.html`

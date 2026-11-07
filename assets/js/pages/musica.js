@@ -3,63 +3,8 @@ import { listCifrasByMusica, getInstrumentLabel, normalizeInstrument } from "../
 import { getQueryParam } from "../utils.js";
 import { initMusicaControls } from "../modules/musica-controls.js";
 import { createPersonalButtons, refreshPersonalActionButtons } from "../modules/personal-actions.js";
-import { watchDocument } from "../db.js";
-
-let currentPublicMusicaLiveUnsubscribe = null;
-let currentPublicMusicaLiveSignature = "";
-
-function buildPublicMusicaSignature(musica = {}) {
-  return JSON.stringify({
-    id: String(musica.id || ""),
-    slug: String(musica.slug || ""),
-    title: String(musica.title || ""),
-    subtitle: String(musica.subtitle || ""),
-    author: String(musica.author || ""),
-    originalKey: String(musica.originalKey || ""),
-    category: String(musica.category || ""),
-    youtubeUrl: String(musica.youtubeUrl || ""),
-    lyricHtml: String(musica.lyricHtml || ""),
-    active: musica.active !== false
-  });
-}
-
-function ensureMusicaUpdateBanner() {
-  let banner = document.getElementById("musica-live-update-banner");
-  if (banner) return banner;
-  banner = document.createElement("button");
-  banner.type = "button";
-  banner.id = "musica-live-update-banner";
-  banner.className = "musica-live-update-banner hidden";
-  banner.textContent = "Essa música foi atualizada. Toque para atualizar";
-  banner.addEventListener("click", () => window.location.reload());
-  document.body.appendChild(banner);
-  return banner;
-}
-
-function hideMusicaUpdateBanner() {
-  ensureMusicaUpdateBanner().classList.add("hidden");
-}
-
-function showMusicaUpdateBanner() {
-  ensureMusicaUpdateBanner().classList.remove("hidden");
-}
-
-function startPublicMusicaLiveWatch(musica = {}) {
-  if (currentPublicMusicaLiveUnsubscribe) {
-    currentPublicMusicaLiveUnsubscribe();
-    currentPublicMusicaLiveUnsubscribe = null;
-  }
-  hideMusicaUpdateBanner();
-  if (!musica?.id) return;
-  currentPublicMusicaLiveSignature = buildPublicMusicaSignature(musica);
-  currentPublicMusicaLiveUnsubscribe = watchDocument("musicas", musica.id, (nextDoc) => {
-    if (!nextDoc) return;
-    const nextSignature = buildPublicMusicaSignature(nextDoc);
-    if (nextSignature !== currentPublicMusicaLiveSignature) {
-      showMusicaUpdateBanner();
-    }
-  }, (error) => console.error("Erro ao observar atualizações da música pública:", error));
-}
+import { sanitizeRichHtml } from "../lib/sanitize-html.js";
+import { normalizeYoutubeEmbedUrl } from "../lib/youtube-url.js";
 
 function escapeHtml(value = "") {
   return String(value)
@@ -101,6 +46,19 @@ function renderMeta(musica) {
   meta.innerHTML = parts.join('<span class="meta-separator" aria-hidden="true"> | </span>');
 }
 
+function updatePageMetadata(musica) {
+  const title = String(musica?.title || "Música").trim().slice(0, 100);
+  const description = String(musica?.subtitle || musica?.author || "Letra de música do Ministério Seven.").trim().slice(0, 160);
+  const canonical = new URL("https://ministerioseven.site/musica.html");
+  if (musica?.slug) canonical.searchParams.set("slug", musica.slug);
+  document.title = `${title} | Ministério Seven`;
+  document.querySelector('meta[name="description"]')?.setAttribute("content", description);
+  document.querySelector('meta[property="og:title"]')?.setAttribute("content", `${title} | Ministério Seven`);
+  document.querySelector('meta[property="og:description"]')?.setAttribute("content", description);
+  document.querySelector('meta[property="og:url"]')?.setAttribute("content", canonical.href);
+  document.querySelector('link[rel="canonical"]')?.setAttribute("href", canonical.href);
+}
+
 function renderPersonalActions(musica) {
   const titleEl = document.getElementById("musica-titulo");
   if (!titleEl || !musica?.slug) return;
@@ -134,30 +92,20 @@ function renderPersonalActions(musica) {
 function renderYoutube(url = "") {
   const wrapper = document.getElementById("musica-video-wrapper");
   if (!wrapper) return;
-  const raw = String(url || "").trim();
-  if (!raw) {
-    wrapper.innerHTML = "";
-    wrapper.hidden = true;
-    return;
-  }
-  let embed = "";
-  try {
-    const parsed = new URL(raw);
-    if (parsed.hostname.includes("youtube.com")) {
-      const id = parsed.searchParams.get("v");
-      if (id) embed = `https://www.youtube.com/embed/${id}`;
-    } else if (parsed.hostname.includes("youtu.be")) {
-      const id = parsed.pathname.replace(/^\//, "");
-      if (id) embed = `https://www.youtube.com/embed/${id}`;
-    }
-  } catch {}
+  const embed = normalizeYoutubeEmbedUrl(url);
   if (!embed) {
     wrapper.innerHTML = "";
     wrapper.hidden = true;
     return;
   }
+  const iframe = document.createElement("iframe");
+  iframe.src = embed;
+  iframe.title = "Vídeo da música";
+  iframe.loading = "lazy";
+  iframe.allowFullscreen = true;
+  iframe.referrerPolicy = "strict-origin-when-cross-origin";
   wrapper.hidden = false;
-  wrapper.innerHTML = `<iframe src="${embed}" title="Vídeo da música" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+  wrapper.replaceChildren(iframe);
 }
 
 function closeCifraSelector(menu) {
@@ -254,37 +202,33 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (!musica) {
       if (titleEl) titleEl.textContent = "Música não encontrada";
+      document.querySelector(".page-cross-link")?.setAttribute("hidden", "");
+      document.querySelector(".prev-next-nav")?.setAttribute("hidden", "");
       return;
     }
 
     if (titleEl) titleEl.textContent = musica.title || "Título da música";
+    updatePageMetadata(musica);
     if (subtitleEl) {
       subtitleEl.textContent = musica.subtitle || "";
       subtitleEl.hidden = !musica.subtitle;
     }
     renderMeta(musica);
     renderPersonalActions(musica);
-    if (letraEl) letraEl.innerHTML = musica.lyricHtml || "<p>Letra indisponível.</p>";
+    if (letraEl) letraEl.innerHTML = musica.lyricHtml ? sanitizeRichHtml(musica.lyricHtml) : "<p>Letra indisponível.</p>";
     renderYoutube(musica.youtubeUrl || "");
 
-    const cifras = await listCifrasByMusica(musica.id, true);
+    const [cifras, all] = await Promise.all([
+      listCifrasByMusica(musica.id, true),
+      listMusicas(true)
+    ]);
     renderVerCifraLink(musica, cifras);
-
-    const all = await listMusicas(true);
     renderPrevNext(musica.slug, all);
-    startPublicMusicaLiveWatch(musica);
 
     initMusicaControls();
   } catch (error) {
     console.error("Erro ao carregar música pública:", error);
     const titleEl = document.getElementById("musica-titulo");
     if (titleEl) titleEl.textContent = "Erro ao carregar música";
-  }
-});
-
-window.addEventListener("beforeunload", () => {
-  if (currentPublicMusicaLiveUnsubscribe) {
-    currentPublicMusicaLiveUnsubscribe();
-    currentPublicMusicaLiveUnsubscribe = null;
   }
 });

@@ -4,7 +4,6 @@ import {
   updateDocument,
   deleteDocument,
   getCollection,
-  getOneByField,
   serverTimestamp,
   slugify,
   normalizeText
@@ -68,7 +67,13 @@ export async function getMusica(id) {
 }
 
 export async function getMusicaBySlug(slug) {
-  return await getOneByField(COLLECTION, "slug", slug);
+  const wantedSlug = String(slug || "").trim();
+  if (!wantedSlug) return null;
+  const items = await getCollection(COLLECTION, {
+    where: [["slug", "==", wantedSlug], ["active", "==", true]],
+    limit: 1
+  });
+  return items[0] || null;
 }
 
 export async function findDuplicateMusicaTitle(title, ignoreId = "") {

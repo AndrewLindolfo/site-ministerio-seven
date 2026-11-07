@@ -8,8 +8,29 @@ const MUSIC_SCROLL_VISIBLE_KEY = "seven_musica_scroll_visible";
 const MUSIC_SCROLL_POS_KEY = "seven_musica_scroll_pos";
 
 let scrollInterval = null;
-let scrollSpeed = Number(localStorage.getItem(MUSIC_SCROLL_SPEED_KEY) || "0.35");
+let scrollSpeed = readStoredNumber(MUSIC_SCROLL_SPEED_KEY, 0.35, 0.08, 1.2);
 let scrollAccumulator = 0;
+
+function readStorage(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeStorage(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {}
+}
+
+function readStoredNumber(key, fallback, min, max) {
+  const raw = readStorage(key);
+  if (raw === null || raw === "") return fallback;
+  const value = Number(raw);
+  return Number.isFinite(value) ? clamp(value, min, max) : fallback;
+}
 
 function $(selector) {
   return document.querySelector(selector);
@@ -86,18 +107,18 @@ function ensureMusicaScrollPanel() {
 
 function getStoredScrollPanelPos() {
   try {
-    return JSON.parse(localStorage.getItem(MUSIC_SCROLL_POS_KEY) || "null");
+    return JSON.parse(readStorage(MUSIC_SCROLL_POS_KEY) || "null");
   } catch {
     return null;
   }
 }
 
 function saveScrollPanelPos(pos) {
-  localStorage.setItem(MUSIC_SCROLL_POS_KEY, JSON.stringify(pos));
+  writeStorage(MUSIC_SCROLL_POS_KEY, JSON.stringify(pos));
 }
 
 function isScrollPanelVisible() {
-  return localStorage.getItem(MUSIC_SCROLL_VISIBLE_KEY) === "1";
+  return readStorage(MUSIC_SCROLL_VISIBLE_KEY) === "1";
 }
 
 function applyDefaultScrollPanelPos() {
@@ -206,7 +227,7 @@ function setScrollPanelVisible(visible) {
   bubble.classList.toggle("is-hidden", !visible);
   bubble.classList.toggle("is-open", visible);
   bubble.setAttribute("aria-hidden", visible ? "false" : "true");
-  localStorage.setItem(MUSIC_SCROLL_VISIBLE_KEY, visible ? "1" : "0");
+  writeStorage(MUSIC_SCROLL_VISIBLE_KEY, visible ? "1" : "0");
 
   if (toggleBtn) toggleBtn.classList.toggle("is-active", visible);
   if (visible) requestAnimationFrame(() => applyScrollPanelPos());
@@ -280,8 +301,8 @@ function initScrollPanelControls() {
   if (slider) {
     slider.value = String(scrollSpeed);
     slider.addEventListener("input", () => {
-      scrollSpeed = Number(slider.value || "0.35");
-      localStorage.setItem(MUSIC_SCROLL_SPEED_KEY, String(scrollSpeed));
+      scrollSpeed = clamp(Number(slider.value || "0.35"), 0.08, 1.2);
+      writeStorage(MUSIC_SCROLL_SPEED_KEY, String(scrollSpeed));
     });
   }
 
@@ -308,32 +329,32 @@ function applyFontStyles(size) {
 }
 
 export function increaseMusicaFont() {
-  const size = Number(localStorage.getItem(FONT_KEY) || "20") + 2;
-  localStorage.setItem(FONT_KEY, String(size));
+  const size = Math.min(40, readStoredNumber(FONT_KEY, 20, 12, 40) + 2);
+  writeStorage(FONT_KEY, String(size));
   applyFontStyles(size);
 }
 
 export function decreaseMusicaFont() {
-  const size = Math.max(12, Number(localStorage.getItem(FONT_KEY) || "20") - 2);
-  localStorage.setItem(FONT_KEY, String(size));
+  const size = Math.max(12, readStoredNumber(FONT_KEY, 20, 12, 40) - 2);
+  writeStorage(FONT_KEY, String(size));
   applyFontStyles(size);
 }
 
 function applySavedFont() {
-  const size = Number(localStorage.getItem(FONT_KEY) || "20");
+  const size = readStoredNumber(FONT_KEY, 20, 12, 40);
   applyFontStyles(size);
 }
 
 export function toggleMusicaFocusMode() {
   document.body.classList.toggle("focus-mode");
   const active = document.body.classList.contains("focus-mode");
-  localStorage.setItem(FOCUS_KEY, active ? "1" : "0");
+  writeStorage(FOCUS_KEY, active ? "1" : "0");
   document.querySelector(".site-header")?.classList.toggle("hidden", active);
   document.querySelector(".site-footer")?.classList.toggle("hidden", active);
 }
 
 function applySavedFocus() {
-  const active = localStorage.getItem(FOCUS_KEY) === "1";
+  const active = readStorage(FOCUS_KEY) === "1";
   if (active) {
     document.body.classList.add("focus-mode");
     document.querySelector(".site-header")?.classList.add("hidden");
@@ -350,8 +371,8 @@ export function toggleMusicaFullscreen() {
 }
 
 export function initMusicaControls() {
-  if (localStorage.getItem(MUSIC_SCROLL_VISIBLE_KEY) === null) {
-    localStorage.setItem(MUSIC_SCROLL_VISIBLE_KEY, "0");
+  if (readStorage(MUSIC_SCROLL_VISIBLE_KEY) === null) {
+    writeStorage(MUSIC_SCROLL_VISIBLE_KEY, "0");
   }
   ensureMusicaControls();
   ensureMusicaScrollPanel();

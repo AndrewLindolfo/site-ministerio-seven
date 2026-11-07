@@ -20,7 +20,6 @@
 }
 
 
-/* Botão PDF mais moderno */
 .pdf-modern-btn{
   position: relative;
   overflow: hidden;
@@ -93,7 +92,6 @@
 }
 
 
-/* ===== V2 item 17: barra lateral fixa / menu mobile ===== */
 .musica-page .container{position:relative;}
 
 @media (min-width: 901px){
@@ -201,7 +199,6 @@
   border-radius:18px;
 }
 
-/* Ajuste fino desktop: barra lateral da música alinhada à cifra */
 @media (min-width: 901px){
   .musica-top-controls{
     left: max(10px, calc(50% - 620px)) !important;
@@ -214,7 +211,6 @@
   }
 }
 
-/* Visual claro igual ao menu aprovado da cifra */
 [data-theme="light"] .musica-top-controls{
   background: rgba(255,255,255,.96) !important;
   border-color: rgba(15,23,42,.12) !important;
@@ -228,38 +224,6 @@
 }
 
 
-.musica-live-update-banner{
-  position: fixed;
-  left: 50%;
-  top: 14px;
-  transform: translateX(-50%);
-  z-index: 160;
-  min-height: 44px;
-  padding: 0 16px;
-  border-radius: 999px;
-  border: 1px solid rgba(59,130,246,.35);
-  background: rgba(59,130,246,.96);
-  color: #ffffff;
-  font-weight: 800;
-  font-size: .92rem;
-  box-shadow: 0 14px 32px rgba(0,0,0,.18);
-}
-.musica-live-update-banner.hidden{
-  display:none !important;
-}
-@media (max-width: 768px){
-  .musica-live-update-banner{
-    width:min(92vw,360px);
-    min-height:40px;
-    padding:8px 14px;
-    font-size:.84rem;
-    text-align:center;
-    line-height:1.25;
-  }
-}
-
-
-/* Auto rolagem da música */
 .scroll-panel-toggle-btn{
   position: relative;
   overflow: hidden;

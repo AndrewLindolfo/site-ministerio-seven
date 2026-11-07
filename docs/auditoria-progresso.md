@@ -21,6 +21,7 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - `service-worker.js` removido porque não era registrado e continha uma estratégia antiga de cache sem atualização ou limpeza.
 - `404.html` corrigido para funcionar em qualquer URL inexistente, sem depender do nível do caminho; indexação desativada.
 - `assets/js/pages/error404.js` removido porque continha apenas um ouvinte vazio.
+- `agenda.html`, `assets/js/pages/agenda.js` e `assets/css/pages/agenda.css` revisados; metadados corrigidos, incorporação limitada a HTTPS e estados de carregamento e erro tornados previsíveis.
 
 ## Em andamento
 
@@ -28,4 +29,4 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 
 ## Próximo arquivo
 
-- `agenda.html`
+- `cifra.html`

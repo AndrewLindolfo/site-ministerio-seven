@@ -2,48 +2,71 @@ import { getSiteConfig } from "../services/config-service.js";
 
 const CACHE_KEY = "seven_cache_agenda_embed_v1";
 
-function extractSrc(value = "") {
-  const t = String(value || "").trim();
-  if (!t) return "";
-  const m = t.match(/src=["']([^"']+)["']/i);
-  if (m) return m[1];
-  return t;
+function normalizeAgendaUrl(value = "") {
+  const text = String(value ?? "").trim();
+  if (!text) return "";
+
+  const document = new DOMParser().parseFromString(text, "text/html");
+  const candidate = document.querySelector("iframe")?.getAttribute("src") || text;
+
+  try {
+    const url = new URL(candidate, window.location.origin);
+    return url.protocol === "https:" ? url.href : "";
+  } catch {
+    return "";
+  }
 }
 
-function setAgendaState(url = "") {
+function readCachedUrl() {
+  try {
+    return normalizeAgendaUrl(localStorage.getItem(CACHE_KEY));
+  } catch {
+    return "";
+  }
+}
+
+function writeCachedUrl(url = "") {
+  try {
+    if (url) {
+      localStorage.setItem(CACHE_KEY, url);
+    } else {
+      localStorage.removeItem(CACHE_KEY);
+    }
+  } catch {
+    return;
+  }
+}
+
+function setAgendaState(url = "", message = "Nenhuma agenda configurada ainda.") {
   const iframe = document.getElementById("agenda-iframe");
   const empty = document.getElementById("agenda-empty");
+  const status = document.getElementById("agenda-status");
 
   if (!url) {
+    iframe?.removeAttribute("src");
     iframe?.classList.add("hidden");
     empty?.classList.remove("hidden");
+    if (status) status.textContent = message;
     return;
   }
 
-  if (iframe && iframe.src !== url) iframe.src = url;
+  if (iframe?.getAttribute("src") !== url) iframe?.setAttribute("src", url);
   iframe?.classList.remove("hidden");
   empty?.classList.add("hidden");
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  const cachedUrl = readCachedUrl();
+  if (cachedUrl) setAgendaState(cachedUrl);
+
   try {
-    const cachedUrl = localStorage.getItem(CACHE_KEY) || "";
-    if (cachedUrl) {
-      setAgendaState(cachedUrl);
-    }
-
     const config = await getSiteConfig();
-    const raw = config?.agendaEmbed || "";
-    const url = extractSrc(raw);
+    const url = normalizeAgendaUrl(config?.agendaEmbed);
 
-    if (url) {
-      localStorage.setItem(CACHE_KEY, url);
-    }
-
+    writeCachedUrl(url);
     setAgendaState(url);
-  } catch (e) {
-    console.error("Agenda erro:", e);
-    const cachedUrl = localStorage.getItem(CACHE_KEY) || "";
-    setAgendaState(cachedUrl);
+  } catch (error) {
+    console.error("Não foi possível carregar a agenda.", error);
+    setAgendaState(cachedUrl, "A agenda está indisponível no momento. Tente novamente mais tarde.");
   }
 });

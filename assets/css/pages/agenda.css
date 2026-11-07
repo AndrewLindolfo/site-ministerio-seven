@@ -20,6 +20,7 @@
   width: 100%;
   min-height: 78vh;
   display: block;
+  border: 0;
 }
 
 .agenda-empty{
@@ -29,10 +30,6 @@
   text-align: center;
   padding: 24px;
   color: var(--text-soft);
-}
-
-.hidden{
-  display: none !important;
 }
 
 @media (max-width: 900px){

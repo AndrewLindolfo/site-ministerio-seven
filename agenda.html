@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -18,8 +17,9 @@
   <meta property="og:title" content="Agenda | Ministério Seven" />
   <meta property="og:description" content="Agenda do Ministério Seven." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://ministerioseven.online/" />
-  <meta property="og:image" content="https://ministerioseven.online/assets/img/logo/logo_dark.png" />
+  <meta property="og:url" content="https://ministerioseven.site/agenda.html" />
+  <meta property="og:image" content="https://ministerioseven.site/assets/img/logo/logo_dark.png" />
+  <link rel="canonical" href="https://ministerioseven.site/agenda.html" />
   <link rel="icon" href="assets/img/favicon/favicon.ico" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="assets/css/main.css" />
@@ -84,17 +84,15 @@
     <div class="agenda-embed-card">
       <iframe
         id="agenda-iframe"
-        src=""
-        style="border: 0"
-        frameborder="0"
-        scrolling="no"
+        class="hidden"
         loading="lazy"
+        referrerpolicy="strict-origin-when-cross-origin"
+        sandbox="allow-forms allow-popups allow-same-origin allow-scripts"
         title="Agenda do Ministério Seven">
       </iframe>
 
-      <div id="agenda-empty" class="agenda-empty hidden">
-        <p>Nenhuma agenda configurada ainda.</p>
-        <small>Cadastre o link de incorporação da agenda na área de administração em Links.</small>
+      <div id="agenda-empty" class="agenda-empty" role="status" aria-live="polite">
+        <p id="agenda-status">Carregando agenda...</p>
       </div>
     </div>
   </section>

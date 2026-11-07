@@ -1,74 +1,87 @@
 import { getCurrentPublicUser, openPublicAuthModal, watchPublicAuth, whenPublicAuthReady } from "../public-auth.js";
 import { getUserLibrary } from "../services/user-library-service.js";
-
-function escapeHtml(value = "") {
-  return String(value || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+import { normalizeInternalHref } from "../modules/alphabet-filter.js";
 
 function groupItems(items = []) {
-  const grouped = new Map();
-  items.forEach((item) => {
+  const groups = new Map();
+  for (const item of items) {
     const key = `${String(item.title || "").trim().toLowerCase()}__${String(item.slug || "").trim().toLowerCase()}`;
-    if (!grouped.has(key)) {
-      grouped.set(key, {
-        title: item.title || "",
-        musica: null,
-        cifra: null
-      });
-    }
-    const row = grouped.get(key);
+    if (!groups.has(key)) groups.set(key, { title: item.title || "Sem título", musica: null, cifra: null });
+    const row = groups.get(key);
     if (item.type === "musica" && !row.musica) row.musica = item;
     if (item.type === "cifra" && !row.cifra) row.cifra = item;
-  });
-  return Array.from(grouped.values()).sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), "pt-BR"));
+  }
+  return [...groups.values()].sort((a, b) => a.title.localeCompare(b.title, "pt-BR"));
+}
+
+function addItemLink(container, item, label) {
+  if (!item?.href) return;
+  const link = document.createElement("a");
+  link.className = "personal-library-chip";
+  link.href = normalizeInternalHref(item.href);
+  link.textContent = label;
+  container.appendChild(link);
 }
 
 function renderRows(items = []) {
   const box = document.getElementById("favorites-list");
   if (!box) return;
-
-  if (!items.length) {
-    box.innerHTML = '<div class="personal-library-empty">Nenhum item aqui ainda.</div>';
+  box.replaceChildren();
+  const groups = groupItems(items);
+  if (!groups.length) {
+    const empty = document.createElement("div");
+    empty.className = "personal-library-empty";
+    empty.textContent = "Nenhum item aqui ainda.";
+    box.appendChild(empty);
     return;
   }
 
-  const grouped = groupItems(items);
-  box.innerHTML = grouped.map((row) => `
-    <div class="personal-library-row personal-library-row--grouped">
-      <div class="personal-library-title">${escapeHtml(row.title)}</div>
-      <div class="personal-library-actions">
-        ${row.musica ? `<a class="personal-library-chip" href="${row.musica.href}">Música</a>` : ""}
-        ${row.cifra ? `<a class="personal-library-chip" href="${row.cifra.href}">Cifra</a>` : ""}
-      </div>
-    </div>
-  `).join("");
+  for (const group of groups) {
+    const row = document.createElement("div");
+    row.className = "personal-library-row personal-library-row--grouped";
+    const title = document.createElement("div");
+    title.className = "personal-library-title";
+    title.textContent = group.title;
+    const actions = document.createElement("div");
+    actions.className = "personal-library-actions";
+    addItemLink(actions, group.musica, "Música");
+    addItemLink(actions, group.cifra, "Cifra");
+    row.append(title, actions);
+    box.appendChild(row);
+  }
+}
+
+function renderLoginHint(hint) {
+  if (!hint) return;
+  hint.replaceChildren("Faça login para ver seus favoritos. ");
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "personal-library-primary";
+  button.textContent = "Entrar";
+  button.addEventListener("click", openPublicAuthModal);
+  hint.appendChild(button);
+  hint.classList.remove("hidden");
 }
 
 async function renderPage() {
   const hint = document.getElementById("favorites-login-hint");
   const user = getCurrentPublicUser();
   if (!user?.uid) {
-    if (hint) {
-      hint.classList.remove("hidden");
-      hint.innerHTML = 'Faça login para ver seus favoritos. <button type="button" id="favorites-login-button" class="personal-library-primary">Entrar</button>';
-      document.getElementById("favorites-login-button")?.addEventListener("click", openPublicAuthModal);
-    }
+    renderLoginHint(hint);
     renderRows([]);
     return;
   }
-
   hint?.classList.add("hidden");
-  const library = await getUserLibrary(user.uid);
-  renderRows(library.favorites || []);
+  try {
+    const library = await getUserLibrary(user.uid);
+    renderRows(library.favorites);
+  } catch (error) {
+    console.error("Não foi possível carregar os favoritos.", error);
+    renderRows([]);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
   await whenPublicAuthReady();
-  await renderPage();
-  watchPublicAuth(() => renderPage());
+  watchPublicAuth(renderPage);
 });

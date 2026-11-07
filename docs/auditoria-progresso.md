@@ -34,8 +34,9 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Testes de URLs de perfil adicionados e aprovados.
 - `contato.html` e `assets/js/pages/contato.js` revisados; limites, validação, proteção contra duplo envio, campo-isca e estados de erro foram adicionados, com testes unitários do payload persistido.
 - `downloads.html` e `downloads-por-musica.html` revisados; conteúdo passou a ser criado por DOM, URLs externas são limitadas a HTTPS, campos persistidos têm limites e a busca por música ignora acentos.
+- `favoritos.html` e `playlists.html` revisados; referência CSS inexistente removida, renderização convertida para DOM seguro, leituras concorrentes deduplicadas e limites da biblioteca ajustados ao teto de documento do Firestore.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- `favoritos.html`
+- `ferramentas.html`

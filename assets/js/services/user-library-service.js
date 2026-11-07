@@ -2,9 +2,15 @@ import { getDocument, setDocument } from "../db.js";
 
 const COLLECTION = "bibliotecasUsuarios";
 const LOCAL_PREFIX = "seven_user_library_";
-const MAX_FAVORITES = 200;
-const MAX_PLAYLISTS = 50;
-const MAX_PLAYLIST_ITEMS = 200;
+const MAX_FAVORITES = 100;
+const MAX_PLAYLISTS = 10;
+const MAX_PLAYLIST_ITEMS = 30;
+const libraryCache = new Map();
+const libraryRequests = new Map();
+
+function cloneLibrary(library = {}) {
+  return JSON.parse(JSON.stringify(normalizeLibrary(library)));
+}
 
 function normalizeString(value = "", maxLength = 200) {
   return String(value ?? "").trim().slice(0, maxLength);
@@ -28,12 +34,12 @@ function normalizeItem(item = {}) {
   const type = normalizeString(item.type, 40);
   const href = normalizeHref(item.href);
   return {
-    key: normalizeString(item.key || `${type}:${href}`, 500),
+    key: normalizeString(item.key || `${type}:${href}`, 300),
     type,
-    title: normalizeString(item.title, 200),
+    title: normalizeString(item.title, 150),
     href,
-    subtitle: normalizeString(item.subtitle, 300),
-    slug: normalizeString(item.slug, 200),
+    subtitle: normalizeString(item.subtitle, 200),
+    slug: normalizeString(item.slug, 150),
     instrument: normalizeString(item.instrument, 40),
     createdAt: Number(item.createdAt || Date.now())
   };
@@ -94,16 +100,27 @@ function writeLocal(uid = "", library = {}) {
 }
 
 export async function getUserLibrary(uid = "") {
-  const remote = await readRemote(uid);
-  if (remote) {
-    writeLocal(uid, remote);
-    return remote;
+  if (!uid) return normalizeLibrary();
+  if (libraryCache.has(uid)) return cloneLibrary(libraryCache.get(uid));
+  if (!libraryRequests.has(uid)) {
+    libraryRequests.set(uid, (async () => {
+      const remote = await readRemote(uid);
+      const library = remote || readLocal(uid);
+      if (remote) writeLocal(uid, remote);
+      libraryCache.set(uid, library);
+      libraryRequests.delete(uid);
+      return library;
+    })().catch((error) => {
+      libraryRequests.delete(uid);
+      throw error;
+    }));
   }
-  return readLocal(uid);
+  return cloneLibrary(await libraryRequests.get(uid));
 }
 
 export async function saveUserLibrary(uid = "", library = {}) {
   const normalized = normalizeLibrary(library);
+  libraryCache.set(uid, normalized);
   writeLocal(uid, normalized);
   await writeRemote(uid, normalized);
   return normalized;
@@ -112,6 +129,7 @@ export async function saveUserLibrary(uid = "", library = {}) {
 export async function toggleFavorite(uid = "", item = {}) {
   const library = await getUserLibrary(uid);
   const normalizedItem = normalizeItem(item);
+  if (!normalizedItem.key || !normalizedItem.href) throw new Error("Item inválido.");
   const exists = library.favorites.some((fav) => fav.key === normalizedItem.key);
 
   library.favorites = exists
@@ -123,8 +141,10 @@ export async function toggleFavorite(uid = "", item = {}) {
 }
 
 export async function createPlaylist(uid = "", name = "") {
+  const normalizedName = normalizeString(name, 100);
+  if (!normalizedName) throw new Error("Informe o nome da playlist.");
   const library = await getUserLibrary(uid);
-  const playlist = normalizePlaylist({ name, items: [] });
+  const playlist = normalizePlaylist({ name: normalizedName, items: [] });
   library.playlists = [playlist, ...library.playlists];
   await saveUserLibrary(uid, library);
   return playlist;
@@ -133,6 +153,7 @@ export async function createPlaylist(uid = "", name = "") {
 export async function addItemToPlaylist(uid = "", playlistId = "", item = {}) {
   const library = await getUserLibrary(uid);
   const normalizedItem = normalizeItem(item);
+  if (!normalizedItem.key || !normalizedItem.href) throw new Error("Item inválido.");
   library.playlists = library.playlists.map((playlist) => {
     if (playlist.id !== playlistId) return playlist;
     const exists = playlist.items.some((entry) => entry.key === normalizedItem.key);

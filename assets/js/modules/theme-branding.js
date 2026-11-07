@@ -18,8 +18,6 @@ function updateThemeToggleIcon(isDark) {
   const toggle = document.getElementById("theme-toggle");
   if (!toggle) return;
 
-  // No modo escuro aparece sol para ir ao claro
-  // No modo claro aparece lua para ir ao escuro
   toggle.textContent = isDark ? "☀️" : "🌙";
   toggle.setAttribute(
     "aria-label",

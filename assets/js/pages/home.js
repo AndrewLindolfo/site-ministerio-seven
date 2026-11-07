@@ -3,9 +3,9 @@ import { getSiteConfig } from "../services/config-service.js";
 import { renderProgramacaoCard } from "../modules/programacao-card.js";
 import { listHomeNotificacoes, getTopNotificacao } from "../services/notificacoes-service.js";
 import { listEnsaios } from "../services/ensaios-service.js";
-import { watchCollection } from "../db.js";
+import { normalizeHttpsOrLocalUrl } from "../lib/url-safety.js";
 
-let homeLiveUnsubscribes = [];
+const VALID_NOTIFICATION_TYPES = new Set(["aviso", "novidade", "evento", "destaque"]);
 
 function escapeHtml(value = "") {
   return String(value)
@@ -19,6 +19,32 @@ function formatMultilineHtml(value = "") {
   return escapeHtml(value).replace(/\r?\n/g, "<br>");
 }
 
+function normalizeNotificationType(value = "") {
+  const type = String(value || "aviso").trim().toLowerCase();
+  return VALID_NOTIFICATION_TYPES.has(type) ? type : "aviso";
+}
+
+function getLocalDateKey() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function readLocalStorage(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalStorage(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {}
+}
 
 function getTopStorageKey(item = {}) {
   return `seven_top_notificacao_${item.id || "global"}`;
@@ -28,15 +54,14 @@ function shouldShowTopBanner(item) {
   if (!item?.id) return false;
   const key = getTopStorageKey(item);
   const mode = item.topMode || "device_once";
-  const saved = localStorage.getItem(key);
+  const saved = readLocalStorage(key);
   if (!saved) return true;
   if (mode === "always") {
     const until = Number(saved || 0);
     return !until || Date.now() >= until;
   }
   if (mode === "daily") {
-    const today = new Date().toISOString().slice(0, 10);
-    return saved !== today;
+    return saved !== getLocalDateKey();
   }
   return false;
 }
@@ -45,14 +70,14 @@ function persistTopBannerDismiss(item) {
   const key = getTopStorageKey(item);
   const mode = item.topMode || "device_once";
   if (mode === "always") {
-    localStorage.setItem(key, String(Date.now() + 15 * 60 * 1000));
+    writeLocalStorage(key, String(Date.now() + 15 * 60 * 1000));
     return;
   }
   if (mode === "daily") {
-    localStorage.setItem(key, new Date().toISOString().slice(0, 10));
+    writeLocalStorage(key, getLocalDateKey());
     return;
   }
-  localStorage.setItem(key, "dismissed");
+  writeLocalStorage(key, "dismissed");
 }
 
 async function renderTopNotificacao() {
@@ -67,16 +92,18 @@ async function renderTopNotificacao() {
       return;
     }
 
+    const type = normalizeNotificationType(item.type || item.tipo);
+    const buttonUrl = normalizeHttpsOrLocalUrl(item.buttonLink);
     wrapper.hidden = false;
     box.innerHTML = `
-      <div class="top-notificacao-inner tipo-${escapeHtml(item.type || item.tipo || "aviso")}">
+      <div class="top-notificacao-inner tipo-${type}">
         <div class="top-notificacao-texts">
-          <span class="notificacao-chip tipo-${escapeHtml(item.type || item.tipo || "aviso")}">${escapeHtml(item.type || item.tipo || "aviso")}</span>
+          <span class="notificacao-chip tipo-${type}">${escapeHtml(type)}</span>
           <strong>${escapeHtml(item.title || "Comunicado")}</strong>
           <p>${formatMultilineHtml(item.message || "")}</p>
         </div>
         <div class="top-notificacao-actions">
-          ${item.buttonLink && item.buttonText ? `<a class="button-outline top-notificacao-link" href="${escapeHtml(item.buttonLink)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.buttonText)}</a>` : ""}
+          ${buttonUrl && item.buttonText ? `<a class="button-outline top-notificacao-link" href="${escapeHtml(buttonUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.buttonText)}</a>` : ""}
           <button type="button" class="top-notificacao-close" aria-label="Fechar comunicado">✕</button>
         </div>
       </div>
@@ -97,9 +124,18 @@ async function renderSevenPhoto() {
     const sevenPhotoSection = document.getElementById("seven-photo-section");
     const sevenPhotoCard = document.getElementById("seven-photo-card");
 
-    if (config?.sevenPhotoUrl && sevenPhotoSection && sevenPhotoCard) {
+    const photoUrl = normalizeHttpsOrLocalUrl(config?.sevenPhotoUrl);
+    if (photoUrl && sevenPhotoSection && sevenPhotoCard) {
+      const image = document.createElement("img");
+      image.src = photoUrl;
+      image.alt = "Ministério Seven";
+      image.loading = "lazy";
+      image.decoding = "async";
+      sevenPhotoCard.replaceChildren(image);
       sevenPhotoSection.hidden = false;
-      sevenPhotoCard.innerHTML = `<img src="${config.sevenPhotoUrl}" alt="Ministério Seven" />`;
+    } else if (sevenPhotoSection && sevenPhotoCard) {
+      sevenPhotoCard.replaceChildren();
+      sevenPhotoSection.hidden = true;
     }
   } catch (error) {
     console.error("Erro ao carregar foto principal:", error);
@@ -162,14 +198,18 @@ async function renderHomeNotificacoes() {
     }
 
     section.hidden = false;
-    grid.innerHTML = items.map((item) => `
-      <article class="home-notificacao-card tipo-${escapeHtml(item.type || item.tipo || "aviso")}">
-        <span class="notificacao-chip tipo-${escapeHtml(item.type || item.tipo || "aviso")}">${escapeHtml(item.type || item.tipo || "aviso")}</span>
+    grid.innerHTML = items.map((item) => {
+      const type = normalizeNotificationType(item.type || item.tipo);
+      const buttonUrl = normalizeHttpsOrLocalUrl(item.buttonLink);
+      return `
+      <article class="home-notificacao-card tipo-${type}">
+        <span class="notificacao-chip tipo-${type}">${escapeHtml(type)}</span>
         <h3>${escapeHtml(item.title || "Sem título")}</h3>
         <p>${formatMultilineHtml(item.message || "")}</p>
-        ${item.buttonLink && item.buttonText ? `<a class="button-outline" href="${escapeHtml(item.buttonLink)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.buttonText)}</a>` : ""}
+        ${buttonUrl && item.buttonText ? `<a class="button-outline" href="${escapeHtml(buttonUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.buttonText)}</a>` : ""}
       </article>
-    `).join("");
+    `;
+    }).join("");
   } catch (error) {
     console.error("Erro ao carregar notificações da home:", error);
     section.hidden = true;
@@ -190,7 +230,7 @@ async function renderDestaques() {
       ? top.map((item, idx) => `
         <div class="destaque-box">
           <strong>#${idx + 1}</strong>
-          <p>${item.title || ""}</p>
+          <p>${escapeHtml(item.title || item.titulo || "")}</p>
         </div>
       `).join("")
       : '<div class="destaque-box"><p>Nenhum destaque disponível.</p></div>';
@@ -201,43 +241,13 @@ async function renderDestaques() {
 }
 
 
-function initHomeLiveUpdates() {
-  homeLiveUnsubscribes.forEach((fn) => { try { fn(); } catch {} });
-  homeLiveUnsubscribes = [];
-
-  homeLiveUnsubscribes.push(
-    watchCollection("programacoes", async () => {
-      await renderProgramacaoCard();
-    })
-  );
-
-  homeLiveUnsubscribes.push(
-    watchCollection("ensaios", async () => {
-      await loadEnsaio();
-    })
-  );
-
-  homeLiveUnsubscribes.push(
-    watchCollection("notificacoes", async () => {
-      await renderTopNotificacao();
-      await renderHomeNotificacoes();
-    })
-  );
-}
-
 document.addEventListener("DOMContentLoaded", async () => {
-
-  await renderTopNotificacao();
-  await renderSevenPhoto();
-  await renderProgramacaoCard();
-  await loadEnsaio();
-  await renderHomeNotificacoes();
-  await renderDestaques();
-  initHomeLiveUpdates();
-});
-
-
-window.addEventListener("beforeunload", () => {
-  homeLiveUnsubscribes.forEach((fn) => { try { fn(); } catch {} });
-  homeLiveUnsubscribes = [];
+  await Promise.all([
+    renderTopNotificacao(),
+    renderSevenPhoto(),
+    renderProgramacaoCard(),
+    loadEnsaio(),
+    renderHomeNotificacoes(),
+    renderDestaques()
+  ]);
 });

@@ -3,6 +3,7 @@ import { addDocument, updateDocument, deleteDocument, getCollection, getDocument
 const COLLECTION = "notificacoes";
 const CACHE_KEY = "seven_cache_notificacoes_v2";
 const CACHE_TTL_MS = 5 * 60 * 1000;
+let pendingListRequest = null;
 
 function readCache() {
   try {
@@ -27,6 +28,22 @@ function clearCache() {
   try {
     localStorage.removeItem(CACHE_KEY);
   } catch {}
+}
+
+async function loadCollection() {
+  const cached = readCache();
+  if (cached) return cached;
+  if (!pendingListRequest) {
+    pendingListRequest = getCollection(COLLECTION)
+      .then((items) => {
+        writeCache(items);
+        return items;
+      })
+      .finally(() => {
+        pendingListRequest = null;
+      });
+  }
+  return pendingListRequest;
 }
 
 function toMillis(value) {
@@ -72,9 +89,7 @@ export function isNotificationActive(item = {}, now = new Date()) {
 }
 
 export async function listNotificacoes(activeOnly = false) {
-  const cached = readCache();
-  const all = cached || await getCollection(COLLECTION);
-  if (!cached) writeCache(all);
+  const all = await loadCollection();
   const normalized = all.map(normalizeItem);
   return sortByDateDesc(activeOnly ? normalized.filter((item) => isNotificationActive(item)) : normalized);
 }

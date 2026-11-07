@@ -79,8 +79,9 @@ function resolveExistingCifra(song = {}, cifraIndex = []) {
 
 function renderVocalLink(song = {}) {
   if (song.slug) {
+    const slug = encodeURIComponent(String(song.slug));
     return `
-      <a class="programacao-link-chip programacao-link-chip--vocal" href="./musica.html?slug=${song.slug}">
+      <a class="programacao-link-chip programacao-link-chip--vocal" href="./musica.html?slug=${slug}">
         <span class="programacao-link-icon" aria-hidden="true">🎤</span>
         <span>Vocal</span>
       </a>
@@ -98,8 +99,9 @@ function renderVocalLink(song = {}) {
 function renderBandaLink(song = {}, cifraIndex = []) {
   const existingCifra = resolveExistingCifra(song, cifraIndex);
   if (existingCifra?.slug) {
+    const slug = encodeURIComponent(String(existingCifra.slug));
     return `
-      <a class="programacao-link-chip programacao-link-chip--banda" href="./cifra.html?slug=${existingCifra.slug}">
+      <a class="programacao-link-chip programacao-link-chip--banda" href="./cifra.html?slug=${slug}">
         <span class="programacao-link-icon" aria-hidden="true">🎸</span>
         <span>Banda</span>
       </a>

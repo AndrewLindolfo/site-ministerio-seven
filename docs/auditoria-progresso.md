@@ -37,8 +37,11 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - `favoritos.html` e `playlists.html` revisados; referência CSS inexistente removida, renderização convertida para DOM seguro, leituras concorrentes deduplicadas e limites da biblioteca ajustados ao teto de documento do Firestore.
 - `ferramentas.html` revisado; microfone e contextos de áudio são encerrados com segurança, análise do afinador foi reduzida e reutiliza memória, entradas do metrônomo são limitadas e a matemática de áudio recebeu testes automatizados.
 - `fotos.html` revisado; cartões são criados por DOM e links e capas de álbuns são normalizados como HTTPS tanto na leitura quanto na gravação.
+- Página temporária `inauguracao.html` e seus arquivos exclusivos removidos após o lançamento; o redirecionamento vencido e desativado também foi retirado de `index.html`.
+- `index.html` e dependências da página inicial revisados; metadados foram corrigidos, URLs dinâmicas são validadas, conteúdo persistido é escapado, carregamentos independentes ocorrem em paralelo e observadores que repetiam consultas foram removidos.
+- As notificações da mesma abertura agora compartilham uma única consulta; armazenamento local bloqueado não interrompe mais a página e dois módulos vazios e sem uso foram removidos.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- `inauguracao.html`
+- `login.html`

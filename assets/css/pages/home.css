@@ -31,10 +31,17 @@
 }
 
 #seven-photo-card{
-  min-height:260px;
-  border:1px dashed var(--border);
+  border:1px solid var(--border);
   border-radius:24px;
   background:var(--surface);
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+
+#seven-photo-card img{
+  display:block;
+  width:100%;
+  height:auto;
 }
 
 @media (max-width: 900px){

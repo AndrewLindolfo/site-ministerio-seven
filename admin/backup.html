@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-DKM3MTBKQ6');
+    gtag("js", new Date());
+    gtag("config", "G-DKM3MTBKQ6");
   </script>
 
   <meta charset="UTF-8" />
@@ -51,17 +49,19 @@
     <h1>Backup</h1>
 
     <div class="backup-actions">
-      <button type="button" id="backup-export-button" class="button-primary">Fazer backup completo</button>
+      <button type="button" id="backup-export-button" class="button-primary" disabled>Fazer backup completo</button>
 
       <label for="backup-restore-input" class="button-outline backup-file-label">Escolher arquivo</label>
       <input type="file" id="backup-restore-input" accept=".json,application/json" hidden />
       <span id="backup-file-name" class="backup-file-name">Nenhum arquivo selecionado</span>
 
-      <button type="button" id="backup-restore-button" class="button-outline">Recuperar backup</button>
+      <button type="button" id="backup-restore-button" class="button-outline" disabled>Recuperar backup</button>
     </div>
 
+    <p id="admin-backup-status" class="admin-status" role="status" aria-live="polite"></p>
+
     <div class="backup-help">
-      <p>O backup inclui: músicas, cifras, programações, álbuns, downloads, contatos, links, configurações e admins.</p>
+      <p>O backup inclui administradores, músicas, cifras, programações, ensaios, álbuns, downloads, notificações, contatos, configuração e logs.</p>
       <small>Ao recuperar, os itens do arquivo são restaurados com os mesmos IDs no Firebase.</small>
     </div>
   </section>

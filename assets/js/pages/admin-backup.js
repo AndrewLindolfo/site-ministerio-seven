@@ -1,7 +1,18 @@
+import { watchAuth, getAdminProfileForUser } from "../auth.js";
 import { exportBackupJson } from "../services/backup-service.js";
 import { restoreBackupJson } from "../services/restore-service.js";
 import { explainFirebaseError } from "../db.js";
 import { recordAdminActivity } from "../services/admin-activity-service.js";
+import { isPrimaryAdmin } from "../services/admin-permissions-service.js";
+
+let canManageBackup = false;
+
+function setStatus(message = "", isError = false) {
+  const status = document.getElementById("admin-backup-status");
+  if (!status) return;
+  status.textContent = message;
+  status.classList.toggle("error", isError);
+}
 
 function downloadJsonFile(data, filename) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -10,6 +21,7 @@ function downloadJsonFile(data, filename) {
   a.href = url;
   a.download = filename;
   a.click();
+  a.remove();
   URL.revokeObjectURL(url);
 }
 
@@ -40,26 +52,29 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   exportButton?.addEventListener("click", async () => {
+    if (!canManageBackup) return setStatus("Somente o administrador principal pode exportar backups.", true);
     try {
       exportButton.disabled = true;
+      setStatus("Gerando backup…");
       const data = await exportBackupJson();
       const stamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, "-");
       downloadJsonFile(data, `ministerio-seven-backup-${stamp}.json`);
       await recordAdminActivity({ action: "export", module: "backup", itemId: stamp, itemName: `Backup ${stamp}`, details: "Backup exportado pelo painel administrativo." });
-      alert("Backup gerado com sucesso.");
+      setStatus("Backup gerado com sucesso.");
     } catch (error) {
       console.error("Erro ao fazer backup:", error);
-      alert(`Não foi possível gerar o backup.\n\n${explainFirebaseError(error)}`);
+      setStatus(explainFirebaseError(error), true);
     } finally {
       exportButton.disabled = false;
     }
   });
 
   restoreButton?.addEventListener("click", async () => {
+    if (!canManageBackup) return setStatus("Somente o administrador principal pode restaurar backups.", true);
     try {
       const file = input?.files?.[0];
       if (!file) {
-        alert("Selecione um arquivo de backup primeiro.");
+        setStatus("Selecione um arquivo de backup primeiro.", true);
         return;
       }
 
@@ -68,16 +83,31 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       restoreButton.disabled = true;
+      setStatus("Restaurando backup…");
       const text = await file.text();
       const json = JSON.parse(text);
       const summary = await restoreBackupJson(json);
       await recordAdminActivity({ action: "import", module: "backup", itemId: file.name, itemName: file.name, details: "Backup restaurado pelo painel administrativo." });
-      alert(buildRestoreMessage(summary));
+      setStatus(buildRestoreMessage(summary));
     } catch (error) {
       console.error("Erro ao restaurar backup:", error);
-      alert(`Não foi possível restaurar o backup.\n\n${error?.message || explainFirebaseError(error)}`);
+      setStatus(error?.message || explainFirebaseError(error), true);
     } finally {
       restoreButton.disabled = false;
     }
   });
+});
+
+watchAuth(async (user) => {
+  if (!user?.uid || !user?.email) return;
+  try {
+    const admin = await getAdminProfileForUser(user);
+    canManageBackup = isPrimaryAdmin(admin);
+    document.getElementById("backup-export-button").disabled = !canManageBackup;
+    document.getElementById("backup-restore-button").disabled = !canManageBackup;
+    if (!canManageBackup) setStatus("Somente o administrador principal pode acessar backups.", true);
+  } catch (error) {
+    console.error("Erro ao preparar backup:", error);
+    setStatus(explainFirebaseError(error), true);
+  }
 });

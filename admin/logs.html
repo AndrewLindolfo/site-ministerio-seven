@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-DKM3MTBKQ6');
+    gtag("js", new Date());
+    gtag("config", "G-DKM3MTBKQ6");
   </script>
 
   <meta charset="UTF-8" />
@@ -51,7 +49,7 @@
     <div class="admin-logs-summary" id="admin-logs-summary">
       <div class="admin-logs-summary-card"><span>Hoje</span><strong id="summary-today">0</strong></div>
       <div class="admin-logs-summary-card"><span>Últimos 7 dias</span><strong id="summary-week">0</strong></div>
-      <div class="admin-logs-summary-card"><span>Administradores ativos</span><strong id="summary-admins">0</strong></div>
+      <div class="admin-logs-summary-card"><span>Administradores no histórico</span><strong id="summary-admins">0</strong></div>
     </div>
 
     <div class="admin-logs-filters">
@@ -62,6 +60,7 @@
       <div class="admin-logs-filter-actions"><button type="button" class="button-primary" id="filter-apply">Filtrar</button><button type="button" class="button-outline" id="filter-clear">Limpar</button></div>
     </div>
 
+    <p id="admin-logs-status" class="admin-status" role="status" aria-live="polite"></p>
     <div id="admin-logs-list"></div>
   </section>
 </main>

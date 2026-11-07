@@ -79,6 +79,7 @@
 .admin-status{
   min-height:1.5rem;
   color:var(--text-soft);
+  white-space:pre-line;
 }
 
 .admin-status.error{

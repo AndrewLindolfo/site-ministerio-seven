@@ -94,10 +94,15 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Dependências oficiais de teste do Firebase fixadas em versões compatíveis com Node 22; `npm audit` aprovado sem vulnerabilidades.
 - Regras e configuração de Firestore, Storage e Hosting compiladas com sucesso pelo Firebase CLI em modo `--dry-run`, sem publicação.
 - 10 testes de regras foram aprovados no emulador, além dos 20 testes unitários existentes.
+- Regras e índices do Firestore e regras fechadas do Storage publicados com sucesso somente no projeto novo `ministerio-seven-site`.
+- Migração pública repetível criada com proteção contra sobrescrita; a simulação validou 142 documentos antes de qualquer gravação.
+- Os 142 documentos públicos foram copiados para o Firebase novo: 75 músicas, 37 cifras, 10 álbuns, 2 downloads gerais, 15 downloads por música, 2 notificações e `config/site`.
+- A migração removeu campos históricos redundantes das cifras e descartou 25 documentos de log gravados indevidamente em `config`; uma segunda execução confirmou 142 documentos existentes e nenhuma sobrescrita.
+- Consultas anônimas no Firebase novo confirmaram todos os 141 conteúdos ativos e a leitura pública exclusiva de `config/site`.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próxima etapa
 
 - Criar ou confirmar a conta principal no Authentication e inicializar `admins/master` por operação confiável.
-- Migrar os documentos válidos do Firebase antigo para o projeto novo, adaptando IDs administrativos históricos sem copiar regras antigas.
+- Obter acesso autenticado às coleções privadas antigas para auditar e migrar somente administradores, ensaios, contatos, logs e dados pessoais necessários.
 - Publicar um canal de pré-visualização do Firebase Hosting e concluir a validação visual responsiva e dos fluxos autenticados antes de qualquer troca de domínio.

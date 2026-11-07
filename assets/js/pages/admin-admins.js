@@ -16,6 +16,29 @@ const LABELS = {
 
 function qs(sel){ return document.querySelector(sel); }
 
+function escapeHtml(value = "") {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function setStatus(message = "", isError = false) {
+  const status = qs("#admin-secondary-status");
+  if (!status) return;
+  status.textContent = message;
+  status.classList.toggle("error", isError);
+}
+
+function setFormBusy(busy) {
+  const form = qs("#admin-admin-form");
+  form?.querySelectorAll("input, button").forEach((control) => {
+    control.disabled = busy;
+  });
+}
+
 function updateUidStatusText(item = null) {
   const status = qs("#admin-uid-status-text");
   if (!status) return;
@@ -82,29 +105,29 @@ function summarizePermissions(item) {
 async function renderList() {
   const root = qs("#admin-secondary-list");
   if (!root) return;
-  const all = await listAdmins();
-  const secondary = all.filter((item) => !isPrimaryAdmin(item));
+  setStatus("Carregando administradores…");
+  const secondary = (await listAdmins()).filter((item) => !isPrimaryAdmin(item));
 
   root.innerHTML = secondary.length ? secondary.map((item) => `
     <div class="admin-list-card">
       <div>
-        <strong>${item.name || item.nome || ""}</strong>
-        <p class="admin-admin-email">${item.email || ""}</p>
-        <p class="admin-admin-email">${item.uid ? `UID vinculado: ${item.uid}` : "UID ainda não vinculado"}</p>
+        <strong>${escapeHtml(item.name || item.nome || "")}</strong>
+        <p class="admin-admin-email">${escapeHtml(item.email || "")}</p>
+        <p class="admin-admin-email">${item.uid ? `UID vinculado: ${escapeHtml(item.uid)}` : "UID ainda não vinculado"}</p>
         <div class="admin-admin-tags">
-          ${summarizePermissions(item).map((tag) => `<span class="admin-admin-tag">${tag}</span>`).join("")}
+          ${summarizePermissions(item).map((tag) => `<span class="admin-admin-tag">${escapeHtml(tag)}</span>`).join("")}
         </div>
       </div>
       <div class="admin-list-actions">
-        <button type="button" class="button-outline" data-edit-id="${item.id}">Editar</button>
-        <button type="button" class="button-danger" data-delete-id="${item.id}">Excluir</button>
+        <button type="button" class="button-outline" data-edit-id="${escapeHtml(item.id)}">Editar</button>
+        <button type="button" class="button-danger" data-delete-id="${escapeHtml(item.id)}">Excluir</button>
       </div>
     </div>
   `).join("") : "<p>Nenhum administrador secundário cadastrado.</p>";
+  setStatus(secondary.length ? `${secondary.length} administrador(es) secundário(s).` : "");
 
-  root.querySelectorAll("[data-edit-id]").forEach((btn) => btn.addEventListener("click", async () => {
-    const allAdmins = await listAdmins();
-    const item = allAdmins.find((entry) => entry.id === btn.dataset.editId);
+  root.querySelectorAll("[data-edit-id]").forEach((btn) => btn.addEventListener("click", () => {
+    const item = secondary.find((entry) => entry.id === btn.dataset.editId);
     if (!item) return;
     qs("#admin-secondary-id").value = item.id || "";
     qs("#admin-secondary-name").value = item.name || item.nome || "";
@@ -116,18 +139,29 @@ async function renderList() {
 
   root.querySelectorAll("[data-delete-id]").forEach((btn) => btn.addEventListener("click", async () => {
     if (!confirm("Excluir este administrador secundário?")) return;
-    const allAdmins = await listAdmins();
-    const item = allAdmins.find((entry) => entry.id === btn.dataset.deleteId);
-    await removeSecondaryAdmin(btn.dataset.deleteId);
-    await recordAdminActivity({ action: "delete", module: "admins", itemId: btn.dataset.deleteId, itemName: item?.name || item?.email || "Administrador secundário" });
-    await renderList();
+    const item = secondary.find((entry) => entry.id === btn.dataset.deleteId);
+    btn.disabled = true;
+    try {
+      await removeSecondaryAdmin(btn.dataset.deleteId);
+      await recordAdminActivity({ action: "delete", module: "admins", itemId: btn.dataset.deleteId, itemName: item?.name || item?.email || "Administrador secundário" });
+      await renderList();
+    } catch (error) {
+      console.error("Erro ao excluir administrador:", error);
+      setStatus(error?.message || "Não foi possível excluir o administrador.", true);
+      btn.disabled = false;
+    }
   }));
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
   renderPermissionToggles();
   resetForm();
-  await renderList();
+  try {
+    await renderList();
+  } catch (error) {
+    console.error("Erro ao carregar administradores:", error);
+    setStatus(error?.message || "Não foi possível carregar os administradores.", true);
+  }
 
   qs("#admin-secondary-reset")?.addEventListener("click", resetForm);
 
@@ -140,10 +174,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       active: true
     };
     const existingId = qs("#admin-secondary-id").value.trim();
-    const savedId = await saveSecondaryAdmin(payload, existingId);
-    await recordAdminActivity({ action: existingId ? "update" : "create", module: "admins", itemId: savedId, itemName: payload.name, details: payload.email });
-    alert("✅ ADM salvo com sucesso!");
-    resetForm();
-    await renderList();
+    setFormBusy(true);
+    setStatus("Salvando administrador…");
+    try {
+      const savedId = await saveSecondaryAdmin(payload, existingId);
+      await recordAdminActivity({ action: existingId ? "update" : "create", module: "admins", itemId: savedId, itemName: payload.name, details: payload.email });
+      resetForm();
+      await renderList();
+      setStatus("Administrador salvo com sucesso.");
+    } catch (error) {
+      console.error("Erro ao salvar administrador:", error);
+      setStatus(error?.message || "Não foi possível salvar o administrador.", true);
+    } finally {
+      setFormBusy(false);
+    }
   });
 });

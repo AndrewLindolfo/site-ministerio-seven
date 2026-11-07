@@ -184,12 +184,21 @@ export async function saveSecondaryAdmin(payload = {}, existingId = "") {
     throw new Error("Preencha nome e e-mail do administrador.");
   }
 
+  const current = existingId ? await getDocument(ADMIN_COLLECTION, existingId) : null;
+  if (existingId && (!current || isPrimaryAdmin(current))) {
+    throw new Error("Administrador secundário inválido.");
+  }
+
   const maybeExisting = await getAdminByEmail(email);
-  const targetId = existingId || maybeExisting?.id || buildAdminDocIdFromEmail(email);
+  if (maybeExisting && maybeExisting.id !== existingId) {
+    throw new Error("Já existe um administrador cadastrado com este e-mail.");
+  }
+
+  const emailChanged = Boolean(current && normalizeEmail(current.email) !== email);
+  const targetId = emailChanged ? buildAdminDocIdFromEmail(email) : (existingId || maybeExisting?.id || buildAdminDocIdFromEmail(email));
   if (targetId === PRIMARY_ADMIN_DOC_ID) throw new Error("O administrador principal não pode ser alterado por este formulário.");
 
-  const current = maybeExisting?.id === targetId ? maybeExisting : null;
-  const resolvedUid = String(payload.uid || current?.uid || maybeExisting?.uid || "").trim().slice(0, 128);
+  const resolvedUid = emailChanged ? "" : String(payload.uid || current?.uid || maybeExisting?.uid || "").trim().slice(0, 128);
   const docData = {
     name,
     email,
@@ -205,9 +214,10 @@ export async function saveSecondaryAdmin(payload = {}, existingId = "") {
     docData.uidBoundAt = serverTimestamp();
   }
 
-  if (!current?.createdAt) docData.createdAt = serverTimestamp();
+  if (emailChanged || !current?.createdAt) docData.createdAt = serverTimestamp();
 
   await setDocument(ADMIN_COLLECTION, targetId, docData, { merge: true });
+  if (emailChanged && existingId !== targetId) await deleteDocument(ADMIN_COLLECTION, existingId);
   return targetId;
 }
 

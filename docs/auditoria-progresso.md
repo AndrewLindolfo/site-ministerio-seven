@@ -63,8 +63,9 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Comunicados agendados com exibição antecipada foram corrigidos; tipos, modos, datas, botões e tamanhos agora são validados antes da gravação.
 - Permissão principal deixou de ser inferida pela ausência de permissões; documento `master` e flags explícitas são os únicos caminhos, e IDs de novos convites por e-mail não sofrem colisão.
 - Logs administrativos não vazam mais dados para `config`; backup inclui as coleções de conteúdo faltantes, exporta em paralelo e a restauração recebeu limites e preserva IDs internos.
+- Painel administrativo e cadastro de ADMs revisados; identificação usa UID, cartões são ocultados até a validação, dados persistidos são escapados, operações exibem falhas sem travar a tela e alterações de e-mail recriam o convite sem reaproveitar o UID anterior.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- Páginas administrativas, iniciando pelo painel e administradores
+- Páginas administrativas de músicas e editor de música

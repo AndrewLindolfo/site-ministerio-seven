@@ -8,6 +8,7 @@ import {
 
 let currentLibrary = { favorites: [], playlists: [] };
 let isReady = false;
+let playlistModalPreviousFocus = null;
 
 function $(selector) {
   return document.querySelector(selector);
@@ -39,12 +40,18 @@ function isFavoriteKey(key = "") {
   return currentLibrary.favorites.some((item) => item.key === key);
 }
 
+function showLibraryError(error, fallback) {
+  const message = String(error?.message || "");
+  alert(message.startsWith("Limite de ") || message === "Playlist não encontrada." ? message : fallback);
+}
+
 function ensurePlaylistModal() {
   if ($("#playlist-modal")) return;
 
   const modal = document.createElement("div");
   modal.id = "playlist-modal";
   modal.className = "playlist-modal hidden";
+  modal.setAttribute("aria-hidden", "true");
   modal.innerHTML = `
     <div class="playlist-modal__overlay" data-close-playlist-modal="1"></div>
     <div class="playlist-modal__panel" role="dialog" aria-modal="true" aria-labelledby="playlist-modal-title">
@@ -54,7 +61,7 @@ function ensurePlaylistModal() {
       <div class="playlist-modal__divider"></div>
       <label class="playlist-modal__label">
         <span>Nova playlist</span>
-        <input type="text" id="playlist-new-name" placeholder="Nome da playlist" />
+        <input type="text" id="playlist-new-name" placeholder="Nome da playlist" maxlength="100" />
       </label>
       <div class="playlist-modal__actions">
         <button type="button" id="playlist-create-button" class="playlist-modal__primary">Criar e adicionar</button>
@@ -86,7 +93,7 @@ function ensurePlaylistModal() {
       closePlaylistModal();
     } catch (error) {
       console.error("Não foi possível criar a playlist.", error);
-      alert("Não foi possível criar a playlist. Tente novamente.");
+      showLibraryError(error, "Não foi possível criar a playlist. Tente novamente.");
     } finally {
       button.disabled = false;
     }
@@ -96,17 +103,23 @@ function ensurePlaylistModal() {
 function renderPlaylistChoices() {
   const box = $("#playlist-modal-existing");
   if (!box) return;
+  box.replaceChildren();
   if (!currentLibrary.playlists.length) {
-    box.innerHTML = "<p class=\"playlist-modal__empty\">Nenhuma playlist criada ainda.</p>";
+    const message = document.createElement("p");
+    message.className = "playlist-modal__empty";
+    message.textContent = "Nenhuma playlist criada ainda.";
+    box.appendChild(message);
     return;
   }
-  box.innerHTML = currentLibrary.playlists.map((playlist) => `
-    <button type="button" class="playlist-modal__choice" data-playlist-choice="${playlist.id}">
-      ${escapeHtml(playlist.name)} <small>(${playlist.items.length})</small>
-    </button>
-  `).join("");
-
-  box.querySelectorAll("[data-playlist-choice]").forEach((button) => {
+  currentLibrary.playlists.forEach((playlist) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "playlist-modal__choice";
+    button.dataset.playlistChoice = playlist.id;
+    button.append(document.createTextNode(`${playlist.name} `));
+    const count = document.createElement("small");
+    count.textContent = `(${playlist.items.length})`;
+    button.appendChild(count);
     button.addEventListener("click", async () => {
       const user = getCurrentPublicUser();
       const item = $("#playlist-modal")?._currentItem;
@@ -118,11 +131,12 @@ function renderPlaylistChoices() {
         closePlaylistModal();
       } catch (error) {
         console.error("Não foi possível adicionar o item à playlist.", error);
-        alert("Não foi possível adicionar o item à playlist. Tente novamente.");
+        showLibraryError(error, "Não foi possível adicionar o item à playlist. Tente novamente.");
       } finally {
         button.disabled = false;
       }
     });
+    box.appendChild(button);
   });
 }
 
@@ -131,18 +145,25 @@ async function openPlaylistModal(item) {
   await reloadLibrary();
   const modal = $("#playlist-modal");
   if (!modal) return;
+  playlistModalPreviousFocus = document.activeElement;
   modal._currentItem = item;
   const input = $("#playlist-new-name");
   if (input) input.value = "";
   renderPlaylistChoices();
   modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
   document.body.classList.add("modal-open");
   $("#playlist-new-name")?.focus();
 }
 
 function closePlaylistModal() {
-  $("#playlist-modal")?.classList.add("hidden");
+  const modal = $("#playlist-modal");
+  if (!modal || modal.classList.contains("hidden")) return;
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
   document.body.classList.remove("modal-open");
+  if (playlistModalPreviousFocus instanceof HTMLElement) playlistModalPreviousFocus.focus();
+  playlistModalPreviousFocus = null;
 }
 
 export async function reloadLibrary() {
@@ -157,6 +178,7 @@ export function refreshPersonalActionButtons(root = document) {
     const active = isFavoriteKey(key);
     button.classList.toggle("is-active", active);
     button.setAttribute("aria-pressed", active ? "true" : "false");
+    button.setAttribute("aria-label", active ? "Remover dos favoritos" : "Adicionar aos favoritos");
     button.title = active ? "Remover dos favoritos" : "Adicionar aos favoritos";
   });
 }
@@ -171,7 +193,7 @@ async function onFavoriteClick(button) {
       await reloadLibrary();
     } catch (error) {
       console.error("Não foi possível atualizar os favoritos.", error);
-      alert("Não foi possível atualizar os favoritos. Tente novamente.");
+      showLibraryError(error, "Não foi possível atualizar os favoritos. Tente novamente.");
     } finally {
       button.disabled = false;
     }

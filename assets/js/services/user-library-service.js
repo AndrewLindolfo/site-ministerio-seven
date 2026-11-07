@@ -7,6 +7,7 @@ const MAX_PLAYLISTS = 10;
 const MAX_PLAYLIST_ITEMS = 30;
 const libraryCache = new Map();
 const libraryRequests = new Map();
+const libraryMutations = new Map();
 
 function cloneLibrary(library = {}) {
   return JSON.parse(JSON.stringify(normalizeLibrary(library)));
@@ -31,8 +32,10 @@ function localKey(uid = "") {
 }
 
 function normalizeItem(item = {}) {
-  const type = normalizeString(item.type, 40);
+  const rawType = normalizeString(item.type, 40).toLowerCase();
+  const type = ["musica", "cifra"].includes(rawType) ? rawType : "";
   const href = normalizeHref(item.href);
+  const createdAt = Number(item.createdAt || Date.now());
   return {
     key: normalizeString(item.key || `${type}:${href}`, 300),
     type,
@@ -41,7 +44,7 @@ function normalizeItem(item = {}) {
     subtitle: normalizeString(item.subtitle, 200),
     slug: normalizeString(item.slug, 150),
     instrument: normalizeString(item.instrument, 40),
-    createdAt: Number(item.createdAt || Date.now())
+    createdAt: Number.isFinite(createdAt) ? createdAt : Date.now()
   };
 }
 
@@ -119,6 +122,7 @@ export async function getUserLibrary(uid = "") {
 }
 
 export async function saveUserLibrary(uid = "", library = {}) {
+  if (!uid) throw new Error("UID ausente.");
   const normalized = normalizeLibrary(library);
   libraryCache.set(uid, normalized);
   writeLocal(uid, normalized);
@@ -126,56 +130,71 @@ export async function saveUserLibrary(uid = "", library = {}) {
   return normalized;
 }
 
+function enqueueLibraryMutation(uid = "", mutation) {
+  if (!uid) return Promise.reject(new Error("UID ausente."));
+  const previous = libraryMutations.get(uid) || Promise.resolve();
+  const next = previous.catch(() => {}).then(async () => {
+    const library = await getUserLibrary(uid);
+    const result = await mutation(library);
+    await saveUserLibrary(uid, library);
+    return result;
+  });
+  libraryMutations.set(uid, next);
+  return next.finally(() => {
+    if (libraryMutations.get(uid) === next) libraryMutations.delete(uid);
+  });
+}
+
 export async function toggleFavorite(uid = "", item = {}) {
-  const library = await getUserLibrary(uid);
   const normalizedItem = normalizeItem(item);
-  if (!normalizedItem.key || !normalizedItem.href) throw new Error("Item inválido.");
-  const exists = library.favorites.some((fav) => fav.key === normalizedItem.key);
-
-  library.favorites = exists
-    ? library.favorites.filter((fav) => fav.key !== normalizedItem.key)
-    : [normalizedItem, ...library.favorites.filter((fav) => fav.key !== normalizedItem.key)];
-
-  await saveUserLibrary(uid, library);
-  return !exists;
+  if (!normalizedItem.key || !normalizedItem.type || !normalizedItem.href) throw new Error("Item inválido.");
+  return enqueueLibraryMutation(uid, (library) => {
+    const exists = library.favorites.some((fav) => fav.key === normalizedItem.key);
+    if (!exists && library.favorites.length >= MAX_FAVORITES) throw new Error(`Limite de ${MAX_FAVORITES} favoritos atingido.`);
+    library.favorites = exists
+      ? library.favorites.filter((fav) => fav.key !== normalizedItem.key)
+      : [normalizedItem, ...library.favorites.filter((fav) => fav.key !== normalizedItem.key)];
+    return !exists;
+  });
 }
 
 export async function createPlaylist(uid = "", name = "") {
   const normalizedName = normalizeString(name, 100);
   if (!normalizedName) throw new Error("Informe o nome da playlist.");
-  const library = await getUserLibrary(uid);
-  const playlist = normalizePlaylist({ name: normalizedName, items: [] });
-  library.playlists = [playlist, ...library.playlists];
-  await saveUserLibrary(uid, library);
-  return playlist;
+  return enqueueLibraryMutation(uid, (library) => {
+    if (library.playlists.length >= MAX_PLAYLISTS) throw new Error(`Limite de ${MAX_PLAYLISTS} playlists atingido.`);
+    const playlist = normalizePlaylist({ name: normalizedName, items: [] });
+    library.playlists = [playlist, ...library.playlists];
+    return playlist;
+  });
 }
 
 export async function addItemToPlaylist(uid = "", playlistId = "", item = {}) {
-  const library = await getUserLibrary(uid);
   const normalizedItem = normalizeItem(item);
-  if (!normalizedItem.key || !normalizedItem.href) throw new Error("Item inválido.");
-  library.playlists = library.playlists.map((playlist) => {
-    if (playlist.id !== playlistId) return playlist;
-    const exists = playlist.items.some((entry) => entry.key === normalizedItem.key);
-    return exists ? playlist : { ...playlist, items: [...playlist.items, normalizedItem] };
+  if (!normalizedItem.key || !normalizedItem.type || !normalizedItem.href) throw new Error("Item inválido.");
+  return enqueueLibraryMutation(uid, (library) => {
+    const playlist = library.playlists.find((entry) => entry.id === playlistId);
+    if (!playlist) throw new Error("Playlist não encontrada.");
+    if (playlist.items.some((entry) => entry.key === normalizedItem.key)) return playlist;
+    if (playlist.items.length >= MAX_PLAYLIST_ITEMS) throw new Error(`Limite de ${MAX_PLAYLIST_ITEMS} itens por playlist atingido.`);
+    playlist.items.push(normalizedItem);
+    return playlist;
   });
-  await saveUserLibrary(uid, library);
-  return library.playlists.find((playlist) => playlist.id === playlistId) || null;
 }
 
 export async function removeItemFromPlaylist(uid = "", playlistId = "", itemKey = "") {
-  const library = await getUserLibrary(uid);
-  library.playlists = library.playlists.map((playlist) => {
-    if (playlist.id !== playlistId) return playlist;
-    return { ...playlist, items: playlist.items.filter((entry) => entry.key !== itemKey) };
+  return enqueueLibraryMutation(uid, (library) => {
+    const playlist = library.playlists.find((entry) => entry.id === playlistId);
+    if (!playlist) throw new Error("Playlist não encontrada.");
+    playlist.items = playlist.items.filter((entry) => entry.key !== itemKey);
+    return library;
   });
-  await saveUserLibrary(uid, library);
-  return library;
 }
 
 export async function removePlaylist(uid = "", playlistId = "") {
-  const library = await getUserLibrary(uid);
-  library.playlists = library.playlists.filter((playlist) => playlist.id !== playlistId);
-  await saveUserLibrary(uid, library);
-  return library;
+  return enqueueLibraryMutation(uid, (library) => {
+    if (!library.playlists.some((playlist) => playlist.id === playlistId)) throw new Error("Playlist não encontrada.");
+    library.playlists = library.playlists.filter((playlist) => playlist.id !== playlistId);
+    return library;
+  });
 }

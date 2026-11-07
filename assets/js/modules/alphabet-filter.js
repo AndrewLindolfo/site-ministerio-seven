@@ -1,38 +1,48 @@
 function normalizeInitialLetter(value = "") {
-  const raw = String(value || "").trim();
-  if (!raw) return "#";
-  const first = raw
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .charAt(0)
-    .toUpperCase();
+  const first = normalizeSearchText(value).charAt(0).toUpperCase();
   return /[A-Z]/.test(first) ? first : "#";
 }
 
+export function normalizeSearchText(value = "") {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
+export function normalizeInternalHref(value = "") {
+  try {
+    const url = new URL(String(value || ""), window.location.origin);
+    if (url.origin !== window.location.origin) return "#";
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return "#";
+  }
+}
+
 export function filterByTerm(items = [], term = "") {
-  const normalizedTerm = String(term || "").trim().toLowerCase();
+  const normalizedTerm = normalizeSearchText(term);
   if (!normalizedTerm) return items;
-  return items.filter((item) =>
-    String(item.titulo || item.title || "")
-      .toLowerCase()
-      .includes(normalizedTerm)
-  );
+  return items.filter((item) => normalizeSearchText(item.titulo || item.title).includes(normalizedTerm));
 }
 
 export function renderAlphabetList(containerId, items = [], emptyMessage = "Nenhum item encontrado.") {
   const container = document.getElementById(containerId);
   if (!container) return;
+  container.replaceChildren();
 
   if (!items.length) {
-    container.innerHTML = `<p>${emptyMessage}</p>`;
+    const message = document.createElement("p");
+    message.textContent = emptyMessage;
+    container.appendChild(message);
     return;
   }
 
-  const grouped = items.reduce((acc, item) => {
-    const letter = normalizeInitialLetter(item.titulo || item.title || "");
-    if (!acc[letter]) acc[letter] = [];
-    acc[letter].push(item);
-    return acc;
+  const grouped = items.reduce((groups, item) => {
+    const letter = normalizeInitialLetter(item.titulo || item.title);
+    (groups[letter] ||= []).push(item);
+    return groups;
   }, {});
 
   const letters = Object.keys(grouped).sort((a, b) => {
@@ -41,18 +51,26 @@ export function renderAlphabetList(containerId, items = [], emptyMessage = "Nenh
     return a.localeCompare(b, "pt-BR");
   });
 
-  container.innerHTML = letters.map((letter) => `
-    <section class="alphabet-group">
-      <h2 class="alphabet-letter">${letter}</h2>
-      ${grouped[letter]
-        .sort((a, b) =>
-          String(a.titulo || a.title || "").localeCompare(String(b.titulo || b.title || ""), "pt-BR")
-        )
-        .map((item) => `
-          <div class="music-list-item">
-            <a href="${item.href}">${item.titulo || item.title || ""}</a>
-          </div>
-        `).join("")}
-    </section>
-  `).join("");
+  for (const letter of letters) {
+    const section = document.createElement("section");
+    section.className = "alphabet-group";
+    const heading = document.createElement("h2");
+    heading.className = "alphabet-letter";
+    heading.textContent = letter;
+    section.appendChild(heading);
+
+    grouped[letter]
+      .sort((a, b) => String(a.titulo || a.title || "").localeCompare(String(b.titulo || b.title || ""), "pt-BR"))
+      .forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "music-list-item";
+        const link = document.createElement("a");
+        link.href = normalizeInternalHref(item.href);
+        link.textContent = item.titulo || item.title || "Sem título";
+        row.appendChild(link);
+        section.appendChild(row);
+      });
+
+    container.appendChild(section);
+  }
 }

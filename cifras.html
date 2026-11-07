@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -18,8 +17,9 @@
   <meta property="og:title" content="Cifras | Ministério Seven" />
   <meta property="og:description" content="Lista de cifras do Ministério Seven." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://ministerioseven.online/" />
-  <meta property="og:image" content="https://ministerioseven.online/assets/img/logo/logo_dark.png" />
+  <meta property="og:url" content="https://ministerioseven.site/cifras.html" />
+  <meta property="og:image" content="https://ministerioseven.site/assets/img/logo/logo_dark.png" />
+  <link rel="canonical" href="https://ministerioseven.site/cifras.html" />
   <link rel="icon" href="assets/img/favicon/favicon.ico" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="assets/css/main.css" />
@@ -81,9 +81,10 @@
   <section class="container">
     <h1>Cifras</h1>
     <div class="list-search-bar">
-      <input type="search" id="cifras-filter-input" placeholder="Buscar cifras..." />
+      <label class="sr-only" for="cifras-filter-input">Buscar cifras</label>
+      <input type="search" id="cifras-filter-input" placeholder="Buscar cifras..." autocomplete="off" />
     </div>
-    <div id="cifras-lista-alfabetica" class="alphabet-list"></div>
+    <div id="cifras-lista-alfabetica" class="alphabet-list" aria-live="polite"></div>
   </section>
 </main>
 

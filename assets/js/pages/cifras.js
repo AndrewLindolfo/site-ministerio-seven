@@ -1,5 +1,6 @@
 import { listCifras } from "../services/cifras-service.js";
 import { createPersonalButtons, refreshPersonalActionButtons } from "../modules/personal-actions.js";
+import { normalizeInternalHref, normalizeSearchText } from "../modules/alphabet-filter.js";
 
 function normalizeInitialLetter(value = "") {
   const raw = String(value || "").trim();
@@ -13,10 +14,9 @@ function agruparPorMusica(items = []) {
   for (const item of items) {
     const slug = String(item.slug || "").trim();
     const titulo = String(item.title || "").trim();
-    const chave = slug || titulo.toLowerCase();
-    if (!chave) continue;
-    if (!mapa.has(chave)) {
-      mapa.set(chave, { titulo, slug, href:`./cifra.html?slug=${encodeURIComponent(slug)}` });
+    if (!slug || !titulo) continue;
+    if (!mapa.has(slug)) {
+      mapa.set(slug, { titulo, slug, href:`./cifra.html?slug=${encodeURIComponent(slug)}` });
     }
   }
   return Array.from(mapa.values()).sort((a,b)=>a.titulo.localeCompare(b.titulo,"pt-BR"));
@@ -25,8 +25,11 @@ function agruparPorMusica(items = []) {
 function renderList(containerId, items = [], emptyMessage = "Nenhuma cifra encontrada.") {
   const container = document.getElementById(containerId);
   if (!container) return;
+  container.replaceChildren();
   if (!items.length) {
-    container.innerHTML = `<p>${emptyMessage}</p>`;
+    const message = document.createElement("p");
+    message.textContent = emptyMessage;
+    container.appendChild(message);
     return;
   }
   const grouped = items.reduce((acc, item) => {
@@ -36,22 +39,35 @@ function renderList(containerId, items = [], emptyMessage = "Nenhuma cifra encon
   }, {});
   const letters = Object.keys(grouped).sort((a,b)=> a==="#"?1:b==="#"?-1:a.localeCompare(b,"pt-BR"));
 
-  container.innerHTML = letters.map((letter)=>`
-    <section class="alphabet-group">
-      <h2 class="alphabet-letter">${letter}</h2>
-      ${grouped[letter].sort((a,b)=>a.titulo.localeCompare(b.titulo,"pt-BR")).map((item)=>`
-        <div class="music-list-item">
-          <a class="music-list-link" href="${item.href}">${item.titulo}</a>
-          <span class="personal-action-group">${createPersonalButtons({
-            type:"cifra",
-            title:item.titulo,
-            href:item.href,
-            slug:item.slug || ""
-          })}</span>
-        </div>
-      `).join("")}
-    </section>
-  `).join("");
+  for (const letter of letters) {
+    const section = document.createElement("section");
+    section.className = "alphabet-group";
+    const heading = document.createElement("h2");
+    heading.className = "alphabet-letter";
+    heading.textContent = letter;
+    section.appendChild(heading);
+
+    grouped[letter].sort((a,b)=>a.titulo.localeCompare(b.titulo,"pt-BR")).forEach((item) => {
+      const row = document.createElement("div");
+      row.className = "music-list-item";
+      const link = document.createElement("a");
+      link.className = "music-list-link";
+      link.href = normalizeInternalHref(item.href);
+      link.textContent = item.titulo || "Sem título";
+      const actions = document.createElement("span");
+      actions.className = "personal-action-group";
+      actions.innerHTML = createPersonalButtons({
+        type: "cifra",
+        title: item.titulo,
+        href: item.href,
+        slug: item.slug || ""
+      });
+      row.append(link, actions);
+      section.appendChild(row);
+    });
+
+    container.appendChild(section);
+  }
   refreshPersonalActionButtons(container);
 }
 
@@ -65,8 +81,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const agrupadas = agruparPorMusica(todas);
 
     const render = (term = "") => {
-      const normalized = String(term || "").trim().toLowerCase();
-      const filtered = !normalized ? agrupadas : agrupadas.filter((item) => item.titulo.toLowerCase().includes(normalized));
+      const normalized = normalizeSearchText(term);
+      const filtered = !normalized ? agrupadas : agrupadas.filter((item) => normalizeSearchText(item.titulo).includes(normalized));
       renderList(containerId, filtered, "Nenhuma cifra encontrada.");
     };
 

@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-DKM3MTBKQ6');
+    gtag("js", new Date());
+    gtag("config", "G-DKM3MTBKQ6");
   </script>
 
   <meta charset="UTF-8" />
@@ -52,7 +50,7 @@
     <form id="admin-notificacao-form" class="admin-form">
       <input type="hidden" id="notificacao-id" />
       <div class="admin-grid-two">
-        <input type="text" id="notificacao-titulo" placeholder="Título da notificação *" required />
+        <input type="text" id="notificacao-titulo" maxlength="150" placeholder="Título da notificação *" required />
         <select id="notificacao-tipo" required>
           <option value="aviso">Aviso</option>
           <option value="novidade">Novidade</option>
@@ -61,7 +59,7 @@
         </select>
       </div>
 
-      <textarea id="notificacao-mensagem" placeholder="Mensagem da notificação *" required></textarea>
+      <textarea id="notificacao-mensagem" maxlength="5000" placeholder="Mensagem da notificação *" required></textarea>
 
       <div class="admin-grid-three">
         <label class="admin-field-block">
@@ -94,8 +92,8 @@
       </div>
 
       <div class="admin-grid-two">
-        <input type="text" id="notificacao-botao-texto" placeholder="Texto do botão (opcional)" />
-        <input type="url" id="notificacao-botao-link" placeholder="Link do botão (opcional)" />
+        <input type="text" id="notificacao-botao-texto" maxlength="100" placeholder="Texto do botão (opcional)" />
+        <input type="url" id="notificacao-botao-link" maxlength="2000" placeholder="Link do botão (opcional)" />
       </div>
 
       <div class="admin-switches-grid">
@@ -108,10 +106,12 @@
       </div>
 
       <div class="admin-form-actions">
-        <button type="submit" class="button-primary">Salvar notificação</button>
+        <button type="submit" class="button-primary hidden">Salvar notificação</button>
         <button type="button" id="notificacao-reset" class="button-outline">Limpar</button>
       </div>
     </form>
+
+    <p id="admin-notificacoes-status" class="admin-status" role="status" aria-live="polite"></p>
 
     <div class="admin-toolbar admin-toolbar-spaced">
       <h2 class="admin-subtitle">Notificações cadastradas</h2>

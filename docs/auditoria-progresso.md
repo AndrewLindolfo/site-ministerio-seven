@@ -77,8 +77,10 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Edições de downloads preservam o estado ativo, campos receberam limites coerentes com os serviços e falhas de criação, edição e exclusão exibem o erro real sem deixar botões travados.
 - Gestão de contatos revisada; dados pessoais só são consultados após confirmar a permissão de visualização, a leitura foi limitada aos 200 registros mais recentes, toda renderização usa DOM seguro e a permissão de exclusão passou a executar a função correspondente.
 - Marcação de leitura recebeu timestamp e tratamento de erro, e o CSS vazio exclusivo de contatos foi removido.
+- Gestão de notificações revisada; permissões de criar e editar são verificadas conforme o estado do formulário, datas aceitam `Timestamp`, leituras repetidas foram removidas e operações possuem estados de erro e bloqueio.
+- Administradores com permissões parciais não apagam mais configurações protegidas de popup, faixa do topo, botão ou exibição antecipada ao editar um comunicado.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- Página administrativa de notificações
+- Páginas administrativas de links e configuração

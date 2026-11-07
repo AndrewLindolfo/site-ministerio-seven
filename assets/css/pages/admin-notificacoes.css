@@ -29,6 +29,6 @@
   .admin-grid-two,.admin-grid-three,.admin-switches-grid{grid-template-columns:1fr;}
 }
 
-.admin-notificacao-preview p{
+.admin-notificacao-content > p{
   white-space: pre-line;
 }

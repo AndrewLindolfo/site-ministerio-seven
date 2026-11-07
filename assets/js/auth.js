@@ -75,7 +75,9 @@ export async function getAdminProfileForUser(user = null) {
 
   const primary = await getAccessibleAdminDocument(PRIMARY_ADMIN_DOC_ID);
   if (!primary || primary.active === false || primary.ativo === false) return null;
-  if (String(primary.uid || "").trim() !== uid || normalize(primary.email) !== email) return null;
+  const primaryUid = String(primary.uid || "").trim();
+  if (normalize(primary.email) !== email) return null;
+  if (primaryUid && primaryUid !== uid) return null;
   return primary;
 }
 

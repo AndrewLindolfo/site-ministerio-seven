@@ -32,6 +32,30 @@ service cloud.firestore {
       return /databases/$(database)/documents/admins/$(secondaryId());
     }
 
+    function isOwnPendingAdmin(adminId) {
+      return verifiedEmail()
+        && resource.data.active == true
+        && resource.data.email == request.auth.token.email
+        && resource.data.get('uid', '') == ''
+        && (
+          adminId == secondaryId()
+          || (adminId == 'master' && resource.data.isPrimary == true)
+        );
+    }
+
+    function isValidUidBinding(adminId) {
+      return isOwnPendingAdmin(adminId)
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.active == true
+        && request.resource.data.pendingUid == false
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'uid', 'pendingUid', 'uidBoundAt', 'updatedAt'
+        ])
+        && request.resource.data.uidBoundAt == request.time
+        && request.resource.data.updatedAt == request.time;
+    }
+
     function isPrimary() {
       return verifiedEmail()
         && exists(primaryPath())
@@ -264,25 +288,12 @@ service cloud.firestore {
     }
 
     match /admins/{adminId} {
-      allow get: if isPrimary() || (verifiedEmail() && adminId == secondaryId());
+      allow get: if isPrimary()
+        || (verifiedEmail() && adminId == secondaryId())
+        || (adminId == 'master' && isOwnPendingAdmin(adminId));
       allow list: if isPrimary();
       allow create, delete: if isPrimary();
-      allow update: if isPrimary() || (
-        verifiedEmail()
-        && adminId == secondaryId()
-        && resource.data.email == request.auth.token.email
-        && resource.data.active == true
-        && resource.data.get('uid', '') == ''
-        && request.resource.data.email == request.auth.token.email
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.active == true
-        && request.resource.data.pendingUid == false
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'uid', 'email', 'active', 'pendingUid', 'uidBoundAt', 'updatedAt', 'createdAt'
-        ])
-        && request.resource.data.uidBoundAt == request.time
-        && request.resource.data.updatedAt == request.time
-      );
+      allow update: if isPrimary() || isValidUidBinding(adminId);
     }
 
     match /musicas/{documentId} {

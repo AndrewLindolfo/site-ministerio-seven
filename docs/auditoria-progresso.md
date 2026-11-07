@@ -93,7 +93,7 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Firebase Hosting configurado para servir a raiz do projeto, excluir arquivos de desenvolvimento e segurança, evitar cache imutável em ativos sem hash e enviar cabeçalhos de proteção.
 - Dependências oficiais de teste do Firebase fixadas em versões compatíveis com Node 22; `npm audit` aprovado sem vulnerabilidades.
 - Regras e configuração de Firestore, Storage e Hosting compiladas com sucesso pelo Firebase CLI em modo `--dry-run`, sem publicação.
-- 10 testes de regras foram aprovados no emulador, além dos 20 testes unitários existentes.
+- 11 testes de regras foram aprovados no emulador, além dos 20 testes unitários existentes; o caso adicional cobre o vínculo inicial seguro do administrador principal e rejeita e-mails invasores.
 - Regras e índices do Firestore e regras fechadas do Storage publicados com sucesso somente no projeto novo `ministerio-seven-site`.
 - Migração pública repetível criada com proteção contra sobrescrita; a simulação validou 142 documentos antes de qualquer gravação.
 - Os 142 documentos públicos foram copiados para o Firebase novo: 75 músicas, 37 cifras, 10 álbuns, 2 downloads gerais, 15 downloads por música, 2 notificações e `config/site`.
@@ -102,10 +102,16 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Canal temporário `auditoria` publicado no Firebase Hosting com validade de 7 dias, sem alterar o domínio principal ou o canal de produção.
 - Smoke test remoto aprovou páginas públicas, scripts, cabeçalhos de segurança, página 404 e bloqueio de `firebase.json`, regras, pacote e documentação no Hosting.
 - Páginas HTML com URLs limpas foram configuradas explicitamente sem cache; JavaScript e CSS usam revalidação curta e imagens e fontes usam cache semanal.
-- Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
+- Validação visual aprovada em 14 páginas móveis e 10 páginas desktop, sem rolagem horizontal; detalhes de música, cifra, menu móvel, metrônomo e carregamento de dados foram exercitados no navegador.
+- Authentication do projeto novo confirmado com e-mail/senha e Google ativos; o domínio do canal `auditoria` está autorizado para OAuth.
+- Os seis administradores antigos foram migrados sem os UIDs do projeto anterior: um `master` e cinco convites secundários com permissões normalizadas; a segunda execução confirmou proteção integral contra sobrescrita.
+- O UID novo de `lindolfoandrew0@gmail.com` foi vinculado ao `admins/master`, e o login real abriu o painel como Andrew Lindolfo.
+- O primeiro-login do `master` foi corrigido no cliente e nas regras para aceitar um documento ainda sem UID somente quando o e-mail verificado coincide; depois do vínculo, a autorização volta a exigir UID e e-mail exatos.
+- Links do dashboard administrativo passaram a usar caminhos absolutos em `/admin/`, evitando que a URL limpa `/admin` encaminhe os cartões para páginas públicas.
+- Painel, gestão de músicas e gestão de administradores foram validados no canal remoto: 75 músicas e cinco administradores secundários foram carregados com sucesso.
 
 ## Próxima etapa
 
-- Criar ou confirmar a conta principal no Authentication e inicializar `admins/master` por operação confiável.
-- Obter acesso autenticado às coleções privadas antigas para auditar e migrar somente administradores, ensaios, contatos, logs e dados pessoais necessários.
-- Publicar um canal de pré-visualização do Firebase Hosting e concluir a validação visual responsiva e dos fluxos autenticados antes de qualquer troca de domínio.
+- Concluir verificações não destrutivas das páginas administrativas restantes e registrar qualquer ajuste final encontrado.
+- Confirmar com o responsável se a música `Test 2` é conteúdo válido ou deve ser removida; nenhuma exclusão será feita sem autorização explícita.
+- Manter o domínio principal e o canal de produção inalterados até a aprovação final para entrada em produção.

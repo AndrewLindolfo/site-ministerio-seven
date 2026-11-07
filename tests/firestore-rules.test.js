@@ -218,6 +218,33 @@ describe("administrative authorization", () => {
     await assertFails(updateDoc(doc(db, "admins", `email_${editorAuth.email}`), { uid: invited.uid }));
   });
 
+  test("the verified primary email can safely bind an unclaimed master UID", async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "admins", "master"), {
+        name: "Principal",
+        email: primaryAuth.email,
+        active: true,
+        isPrimary: true,
+        pendingUid: true,
+        createdAt: serverTimestamp()
+      });
+    });
+
+    const primaryDb = testEnv.authenticatedContext(primaryAuth.uid, token(primaryAuth)).firestore();
+    await assertSucceeds(getDoc(doc(primaryDb, "admins", "master")));
+    await assertSucceeds(updateDoc(doc(primaryDb, "admins", "master"), {
+      uid: primaryAuth.uid,
+      pendingUid: false,
+      uidBoundAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }));
+
+    const attacker = { uid: "attacker-uid", email: "attacker@example.com", email_verified: true };
+    const attackerDb = testEnv.authenticatedContext(attacker.uid, token(attacker)).firestore();
+    await assertFails(getDoc(doc(attackerDb, "admins", "master")));
+    await assertFails(updateDoc(doc(attackerDb, "admins", "master"), { uid: attacker.uid }));
+  });
+
   test("the primary admin can maintain protected configuration", async () => {
     const db = testEnv.authenticatedContext(primaryAuth.uid, token(primaryAuth)).firestore();
     await assertSucceeds(setDoc(doc(db, "config", "site"), {

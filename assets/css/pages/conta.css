@@ -1,0 +1,54 @@
+.account-page-card{
+  max-width:720px;
+  margin:0 auto;
+  padding:24px;
+  border:1px solid var(--border);
+  border-radius:24px;
+  background:var(--surface);
+  box-shadow:var(--shadow);
+}
+
+.account-page-head{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  margin-bottom:20px;
+}
+
+.account-page-photo{
+  width:72px;
+  height:72px;
+  border-radius:50%;
+  object-fit:cover;
+  border:1px solid var(--border);
+}
+
+.account-form{
+  display:grid;
+  gap:14px;
+}
+
+.account-form label{
+  display:grid;
+  gap:8px;
+}
+
+.account-form input{
+  min-height:44px;
+  padding:0 14px;
+  border-radius:14px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.03);
+  color:var(--text);
+}
+
+.account-form-actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:8px;
+}
+
+.account-login-state{
+  display:flex;
+  justify-content:flex-start;
+}

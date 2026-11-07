@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-DKM3MTBKQ6');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cifra | Ministério Seven</title>
+  <meta name="description" content="Página de cifra do Ministério Seven." />
+  <meta property="og:title" content="Cifra | Ministério Seven" />
+  <meta property="og:description" content="Página de cifra do Ministério Seven." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://ministerioseven.online/" />
+  <meta property="og:image" content="https://ministerioseven.online/assets/img/logo/logo_dark.png" />
+  <link rel="icon" href="assets/img/favicon/favicon.ico" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <link rel="stylesheet" href="assets/css/theme.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+  <link rel="stylesheet" href="assets/css/pages/cifra.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="./index.html" class="brand-link" aria-label="Início">
+      <img id="header-v7-logo" src="assets/img/v7/icon_120.png" alt="V7" class="brand-v7" />
+    </a>
+    <nav class="main-nav" aria-label="Menu principal">
+      <a href="./musicas.html">Músicas</a>
+      <a href="./cifras.html">Cifras</a>
+      <a href="./agenda.html">Agenda</a>
+      <a href="./fotos.html">Álbuns</a>
+      <a href="./downloads.html">Downloads</a>
+      <a href="./ferramentas.html">Ferramentas</a>
+      <a href="./contato.html">Contato</a>
+    </nav>
+    <div class="header-actions">
+      <button type="button" id="search-toggle" aria-label="Buscar">🔍</button>
+      <button type="button" id="theme-toggle" aria-label="Alternar tema">🌙</button>
+      <button type="button" id="mobile-menu-toggle" aria-label="Abrir menu">☰</button>
+    </div>
+  </div>
+</header>
+
+<div id="mobile-menu" class="mobile-menu" aria-hidden="true">
+  <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
+  <nav class="mobile-menu-panel" aria-label="Menu mobile">
+    <button type="button" id="mobile-menu-close" aria-label="Fechar menu">✕</button>
+    <a href="./musicas.html" class="mobile-nav-link">Músicas</a>
+    <a href="./cifras.html" class="mobile-nav-link">Cifras</a>
+    <a href="./agenda.html" class="mobile-nav-link">Agenda</a>
+    <a href="./fotos.html" class="mobile-nav-link">Álbuns</a>
+    <a href="./downloads.html" class="mobile-nav-link">Downloads</a>
+    <a href="./ferramentas.html" class="mobile-nav-link">Ferramentas</a>
+    <a href="./contato.html" class="mobile-nav-link">Contato</a>
+  </nav>
+</div>
+
+<div id="search-modal" class="search-modal hidden" aria-hidden="true">
+  <div class="search-modal-overlay" id="search-modal-overlay"></div>
+  <div class="search-modal-panel">
+    <button type="button" id="search-modal-close" aria-label="Fechar busca">✕</button>
+    <input type="search" id="search-input" placeholder="Buscar no site..." />
+    <div id="search-results"></div>
+  </div>
+</div>
+
+<main class="cifra-page">
+  <section class="container">
+    <h1 id="cifra-titulo">Título da cifra</h1>
+    <p id="cifra-subtitulo" class="page-subtitle" hidden>Subtítulo</p>
+    <div id="cifra-meta" class="meta-line"></div>
+    <div class="page-cross-link"><a href="./musica.html" id="ver-letra-link">Ver letra</a></div>
+    <div id="cifra-instrument-switcher" class="cifra-instrument-switcher hidden">
+      <button type="button" id="cifra-instrument-current" class="cifra-instrument-button" aria-haspopup="listbox" aria-expanded="false">Violão</button>
+      <div id="cifra-instrument-menu" class="cifra-instrument-menu hidden" role="listbox" aria-label="Selecionar instrumento"></div>
+    </div>
+    <div id="cifra-mini-metronome" class="cifra-mini-metronome hidden" aria-label="Mini metrônomo da cifra">
+      <div class="cifra-mini-metronome-meta">
+        <span id="cifra-mini-metronome-bpm" class="cifra-mini-metronome-bpm">72 BPM</span>
+        <span class="cifra-mini-metronome-divider">•</span>
+        <span id="cifra-mini-metronome-compasso" class="cifra-mini-metronome-compasso">4/4</span>
+      </div>
+      <div id="cifra-mini-metronome-pulses" class="cifra-mini-metronome-pulses" aria-hidden="true"></div>
+      <button type="button" id="cifra-mini-metronome-toggle" class="cifra-mini-metronome-toggle" aria-pressed="false" aria-label="Iniciar metrônomo">▶</button>
+    </div>
+    <div class="cifra-top-controls">
+      <button type="button" id="transpose-down">T-</button>
+      <button type="button" id="transpose-up">T+</button>
+      <button type="button" id="font-down">A-</button>
+      <button type="button" id="font-up">A+</button>
+      <button type="button" id="focus-toggle" aria-label="Modo foco">👁</button>
+      <button type="button" id="fullscreen-toggle" aria-label="Tela cheia">⛶</button>
+      <button type="button" id="scroll-panel-toggle" class="scroll-panel-toggle-btn" aria-label="Mostrar ou ocultar auto-rolamento" title="Mostrar ou ocultar auto-rolamento">
+        <span class="scroll-panel-toggle-icon" aria-hidden="true"></span>
+      </button>
+      <button type="button" id="mini-metronome-floating-toggle" class="mini-metronome-floating-toggle hidden" aria-label="Iniciar ou pausar metrônomo" title="Iniciar ou pausar metrônomo">▶</button>
+      <button type="button" id="pdf-toggle" class="pdf-modern-btn" aria-label="Baixar PDF" title="Baixar PDF">
+        <span class="pdf-btn-icon">⤓</span>
+        <span class="pdf-btn-label">PDF</span>
+      </button>
+    </div>
+    <article id="cifra-content" class="cifra-content"></article>
+    <nav class="prev-next-nav">← Anterior &nbsp; | &nbsp; Próxima →</nav>
+  </section>
+  <div class="scroll-bubble" id="scroll-bubble" aria-hidden="true" hidden>
+    <button type="button" id="scroll-bubble-close" class="scroll-bubble-close" aria-label="Fechar auto-rolamento" title="Fechar auto-rolamento">✕</button>
+    <button type="button" id="scroll-slower" aria-label="Diminuir velocidade">-</button>
+    <button type="button" id="scroll-toggle" aria-label="Iniciar ou pausar rolagem">▶</button>
+    <button type="button" id="scroll-faster" aria-label="Aumentar velocidade">+</button>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <img id="footer-logo" src="assets/img/logo/logo_light.png" alt="Ministério Seven" class="footer-logo" />
+    <p>Ministério Seven</p>
+    <a href="https://www.instagram.com/ministeriosev7en/" target="_blank" rel="noopener noreferrer">Instagram</a>
+    <small>© <span id="footer-year"></span> Ministério Seven — Todos os direitos reservados</small>
+  </div>
+</footer>
+
+<div id="global-loading" class="global-loading hidden" aria-hidden="true">
+  <div class="spinner"></div>
+</div>
+
+<script type="module" src="assets/js/app.js"></script>
+<script type="module" src="assets/js/pages/cifra.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+{
+  "score": 1,
+  "summary": "As regras antigas têm risco crítico de escalada de privilégio: qualquer usuário autenticado pode gravar na coleção de administradores e nas principais coleções do site. A autorização existente no JavaScript do navegador não protege acessos diretos ao Firestore.",
+  "findings": [
+    {
+      "check": "Authority Source",
+      "severity": "critical",
+      "issue": "Qualquer usuário autenticado pode criar ou alterar documentos em admins; o cliente usa esses documentos como fonte de autoridade.",
+      "recommendation": "Mover a concessão de privilégios para uma operação administrativa confiável e validar UID e função nas regras, sem aceitar autoridade autodeclarada pelo cliente."
+    },
+    {
+      "check": "Field-Level vs. Identity-Level Security",
+      "severity": "critical",
+      "issue": "As gravações não verificam proprietário, administrador confiável nem permissões por módulo.",
+      "recommendation": "Aplicar verificações de identidade e função a cada coleção e operação, incluindo permissões específicas para criação, edição e exclusão."
+    },
+    {
+      "check": "The Update Bypass",
+      "severity": "critical",
+      "issue": "Não há distinção entre create e update nem proteção de campos sensíveis, permitindo transformar documentos válidos em estados privilegiados ou inválidos.",
+      "recommendation": "Separar create, update e delete; restringir campos mutáveis com diff().affectedKeys() e validar valores antes e depois."
+    },
+    {
+      "check": "Business Logic vs. Rules",
+      "severity": "major",
+      "issue": "A interface implementa permissões administrativas detalhadas, mas as regras permitem gravação ampla a qualquer pessoa autenticada. A coleção contatos, por outro lado, não permite o envio público esperado por uma página de contato.",
+      "recommendation": "Espelhar a matriz de permissões no servidor e criar uma regra pública de contato estritamente validada, se esse for o fluxo desejado."
+    },
+    {
+      "check": "Storage Abuse",
+      "severity": "major",
+      "issue": "Não existem limites de tamanho de strings, listas ou documentos nas coleções graváveis.",
+      "recommendation": "Adicionar limites de tamanho, contagem de itens e formatos permitidos para reduzir abuso e custos."
+    },
+    {
+      "check": "Type Safety",
+      "severity": "major",
+      "issue": "Nenhum campo é validado por tipo, presença, enumeração ou timestamp.",
+      "recommendation": "Definir esquemas de validação por coleção com tipos, campos obrigatórios e hasOnly/hasAll."
+    },
+    {
+      "check": "Activity Log Integrity",
+      "severity": "major",
+      "issue": "Qualquer usuário autenticado pode ler, criar, alterar ou apagar registros de atividade.",
+      "recommendation": "Permitir criação com identidade imutável e timestamp confiável; impedir update/delete pelo cliente e restringir leitura a administradores autorizados."
+    }
+  ]
+}

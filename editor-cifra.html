@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-DKM3MTBKQ6');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Editor de Cifra | Admin Seven</title>
+  <link rel="stylesheet" href="../assets/css/main.css" />
+  <link rel="stylesheet" href="../assets/css/theme.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css" />
+  <link rel="stylesheet" href="../assets/css/animations.css" />
+  <link rel="stylesheet" href="../assets/css/responsive.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <link rel="stylesheet" href="../assets/css/pages/admin-editor-cifra.css" />
+</head>
+<body>
+
+<header class="admin-topbar">
+  <div class="container admin-topbar-inner">
+    <div class="admin-brand">
+      <img src="../assets/img/v7/icon_120.png" alt="V7" class="admin-v7" />
+      <strong>Área de Administração</strong>
+    </div>
+
+    <div class="header-actions">
+      <button type="button" id="theme-toggle" aria-label="Alternar tema">🌙</button>
+      <div class="admin-account">
+        <button type="button" id="admin-account-toggle">Conta</button>
+        <div id="admin-account-menu" class="admin-account-menu hidden">
+          <img id="admin-user-photo" src="../assets/img/v7/icon_120.png" alt="Conta" class="admin-user-photo" />
+          <p id="admin-user-email">admin@exemplo.com</p>
+          <button type="button" id="admin-logout-button">Sair</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="admin-section-page">
+  <section class="container">
+    <a href="./cifras.html" class="admin-back-link">← Voltar para Cifras</a>
+    <h1>Editor de Cifra</h1>
+
+    <form id="admin-editor-cifra-form" class="admin-form">
+      <input type="search" id="cifra-musica-search" placeholder="Buscar música vinculada *" required />
+      <div id="cifra-musica-resultados"></div>
+
+      <select id="cifra-tom" aria-label="Tom original">
+        <option value="">Tom original (opcional)</option>
+        <optgroup label="Tons maiores">
+          <option value="C">C</option>
+          <option value="C#">C#</option>
+          <option value="Db">Db</option>
+          <option value="D">D</option>
+          <option value="D#">D#</option>
+          <option value="Eb">Eb</option>
+          <option value="E">E</option>
+          <option value="F">F</option>
+          <option value="F#">F#</option>
+          <option value="Gb">Gb</option>
+          <option value="G">G</option>
+          <option value="G#">G#</option>
+          <option value="Ab">Ab</option>
+          <option value="A">A</option>
+          <option value="A#">A#</option>
+          <option value="Bb">Bb</option>
+          <option value="B">B</option>
+        </optgroup>
+        <optgroup label="Tons menores">
+          <option value="Cm">Cm</option>
+          <option value="C#m">C#m</option>
+          <option value="Dbm">Dbm</option>
+          <option value="Dm">Dm</option>
+          <option value="D#m">D#m</option>
+          <option value="Ebm">Ebm</option>
+          <option value="Em">Em</option>
+          <option value="Fm">Fm</option>
+          <option value="F#m">F#m</option>
+          <option value="Gbm">Gbm</option>
+          <option value="Gm">Gm</option>
+          <option value="G#m">G#m</option>
+          <option value="Abm">Abm</option>
+          <option value="Am">Am</option>
+          <option value="A#m">A#m</option>
+          <option value="Bbm">Bbm</option>
+          <option value="Bm">Bm</option>
+        </optgroup>
+      </select>
+
+      <input type="text" id="cifra-capo" placeholder="Capotraste (opcional)" />
+      <input type="text" id="cifra-bpm" placeholder="BPM (opcional)" />
+
+      <textarea id="cifra-conteudo" placeholder="Conteúdo da cifra"></textarea>
+
+      <div class="admin-form-actions">
+        <button type="submit" class="button-primary">Salvar</button>
+        <button type="button" id="delete-cifra-button" class="button-danger">Excluir</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+<div id="global-loading" class="global-loading hidden" aria-hidden="true">
+  <div class="spinner"></div>
+</div>
+
+<script type="module" src="../assets/js/app.js"></script>
+<script type="module" src="../assets/js/editor.js"></script>
+<script type="module" src="../assets/js/auth-guard.js"></script>
+<script type="module" src="../assets/js/pages/admin-editor-cifra.js"></script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-DKM3MTBKQ6');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ferramentas | Ministério Seven</title>
+  <meta name="description" content="Afinador e metrônomo do Ministério Seven." />
+  <meta property="og:title" content="Ferramentas | Ministério Seven" />
+  <meta property="og:description" content="Ferramentas úteis para estudo, ensaio e afinação." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://ministerioseven.online/ferramentas.html" />
+  <meta property="og:image" content="https://ministerioseven.online/assets/img/logo/logo_dark.png" />
+  <link rel="icon" href="assets/img/favicon/favicon.ico" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <link rel="stylesheet" href="assets/css/theme.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/animations.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+  <link rel="stylesheet" href="assets/css/pages/ferramentas.css" />
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="./index.html" class="brand-link" aria-label="Início">
+      <img id="header-v7-logo" src="assets/img/v7/icon_120.png" alt="V7" class="brand-v7" />
+    </a>
+    <nav class="main-nav" aria-label="Menu principal">
+      <a href="./musicas.html">Músicas</a>
+      <a href="./cifras.html">Cifras</a>
+      <a href="./agenda.html">Agenda</a>
+      <a href="./fotos.html">Álbuns</a>
+      <a href="./downloads.html">Downloads</a>
+      <a href="./ferramentas.html" aria-current="page">Ferramentas</a>
+      <a href="./contato.html">Contato</a>
+    </nav>
+    <div class="header-actions">
+      <button type="button" id="search-toggle" aria-label="Buscar">🔍</button>
+      <button type="button" id="theme-toggle" aria-label="Alternar tema">🌙</button>
+      <button type="button" id="mobile-menu-toggle" aria-label="Abrir menu">☰</button>
+    </div>
+  </div>
+</header>
+
+<div id="mobile-menu" class="mobile-menu" aria-hidden="true">
+  <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
+  <nav class="mobile-menu-panel" aria-label="Menu mobile">
+    <button type="button" id="mobile-menu-close" aria-label="Fechar menu">✕</button>
+    <a href="./musicas.html" class="mobile-nav-link">Músicas</a>
+    <a href="./cifras.html" class="mobile-nav-link">Cifras</a>
+    <a href="./agenda.html" class="mobile-nav-link">Agenda</a>
+    <a href="./fotos.html" class="mobile-nav-link">Álbuns</a>
+    <a href="./downloads.html" class="mobile-nav-link">Downloads</a>
+    <a href="./ferramentas.html" class="mobile-nav-link">Ferramentas</a>
+    <a href="./contato.html" class="mobile-nav-link">Contato</a>
+  </nav>
+</div>
+
+<div id="search-modal" class="search-modal hidden" aria-hidden="true">
+  <div class="search-modal-overlay" id="search-modal-overlay"></div>
+  <div class="search-modal-panel">
+    <button type="button" id="search-modal-close" aria-label="Fechar busca">✕</button>
+    <input type="search" id="search-input" placeholder="Buscar no site..." />
+    <div id="search-results"></div>
+  </div>
+</div>
+
+<main class="ferramentas-page">
+  <section class="container">
+    <div class="ferramentas-head">
+      <h1>Ferramentas</h1>
+      <p class="ferramentas-subtitle">Recursos úteis para estudo, ensaio e afinação.</p>
+    </div>
+
+    <div class="ferramentas-grid">
+      <article class="tool-card" id="tool-card-afinador" data-tool="afinador">
+        <div class="tool-card-head">
+          <div>
+            <span class="tool-chip">Ferramenta</span>
+            <h2>Afinador</h2>
+            <p>Use o microfone do aparelho para detectar notas, frequência em Hz e afinar qualquer instrumento cromaticamente.</p>
+          </div>
+          <div class="tool-head-actions">
+            <button type="button" class="tool-expand-btn" data-target="afinador">Abrir</button>
+            <button type="button" class="tool-focus-btn tool-icon-btn" data-target="afinador" aria-pressed="false" aria-label="Modo foco" title="Modo foco">👁</button>
+            <button type="button" class="tool-fullscreen-btn tool-icon-btn" data-target="afinador" aria-pressed="false" aria-label="Tela cheia" title="Tela cheia">⛶</button>
+          </div>
+        </div>
+
+        <div class="tool-body hidden" id="tool-body-afinador">
+          <div class="tool-inline-actions">
+            <button type="button" class="tool-collapse-btn" data-target="afinador">Fechar</button>
+          </div>
+
+          <div class="tuner-panel">
+            <div class="tuner-topline">
+              <span class="tuner-status" id="tuner-status">Aguardando início</span>
+              <span class="tuner-hz" id="tuner-hz">-- Hz</span>
+            </div>
+
+            <div class="tuner-note-wrap">
+              <div class="tuner-note" id="tuner-note">--</div>
+              <div class="tuner-octave" id="tuner-octave">--</div>
+            </div>
+
+            <div class="tuner-meter-wrap">
+              <div class="tuner-meter-scale">
+                <span>-50</span>
+                <span>-25</span>
+                <span>0</span>
+                <span>+25</span>
+                <span>+50</span>
+              </div>
+              <div class="tuner-meter">
+                <div class="tuner-meter-zones">
+                  <span class="zone-red"></span>
+                  <span class="zone-yellow"></span>
+                  <span class="zone-green"></span>
+                  <span class="zone-yellow"></span>
+                  <span class="zone-red"></span>
+                </div>
+                <div class="tuner-needle" id="tuner-needle"></div>
+              </div>
+              <div class="tuner-meter-labels">
+                <span>Muito baixo</span>
+                <span>Baixo</span>
+                <span>Afinado</span>
+                <span>Alto</span>
+                <span>Muito alto</span>
+              </div>
+            </div>
+
+            <div class="tool-actions-row">
+              <button type="button" id="tuner-start-btn" class="button-primary tool-toggle-btn is-stopped" aria-pressed="false">Iniciar afinador</button>
+            </div>
+
+            <div class="tuner-reference">
+              <strong>Afinações comuns</strong>
+              <ul>
+                <li>Violão / Guitarra: E A D G B E</li>
+                <li>Baixo: E A D G</li>
+                <li>Ukulele: G C E A</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="tool-card" id="tool-card-metronomo" data-tool="metronomo">
+        <div class="tool-card-head">
+          <div>
+            <span class="tool-chip">Ferramenta</span>
+            <h2>Metrônomo</h2>
+            <p>Controle o tempo do ensaio com BPM ajustável, compasso e pulso visual com primeira batida destacada.</p>
+          </div>
+          <div class="tool-head-actions">
+            <button type="button" class="tool-expand-btn" data-target="metronomo">Abrir</button>
+            <button type="button" class="tool-focus-btn tool-icon-btn" data-target="metronomo" aria-pressed="false" aria-label="Modo foco" title="Modo foco">👁</button>
+            <button type="button" class="tool-fullscreen-btn tool-icon-btn" data-target="metronomo" aria-pressed="false" aria-label="Tela cheia" title="Tela cheia">⛶</button>
+          </div>
+        </div>
+
+        <div class="tool-body hidden" id="tool-body-metronomo">
+          <div class="tool-inline-actions">
+            <button type="button" class="tool-collapse-btn" data-target="metronomo">Fechar</button>
+          </div>
+
+          <div class="metronome-panel">
+            <div class="metronome-bpm-wrap">
+              <button type="button" id="metronome-minus" class="bpm-step-btn" aria-label="Diminuir BPM">−</button>
+              <div class="metronome-bpm-main">
+                <div class="metronome-bpm-value" id="metronome-bpm-value">72</div>
+                <div class="metronome-bpm-label">BPM</div>
+              </div>
+              <button type="button" id="metronome-plus" class="bpm-step-btn" aria-label="Aumentar BPM">+</button>
+            </div>
+
+            <div class="metronome-slider-wrap">
+              <input type="range" id="metronome-bpm-slider" min="30" max="240" step="1" value="72" aria-label="BPM" />
+            </div>
+
+            <div class="metronome-controls-grid">
+              <label class="metronome-select-wrap">
+                <span>Compasso</span>
+                <select id="metronome-time-signature">
+                  <option value="2">2/4</option>
+                  <option value="3">3/4</option>
+                  <option value="4" selected>4/4</option>
+                  <option value="5">5/4</option>
+                  <option value="6">6/8</option>
+                  <option value="7">7/8</option>
+                  <option value="9">9/8</option>
+                  <option value="12">12/8</option>
+                </select>
+              </label>
+
+              <button type="button" id="metronome-toggle" class="button-primary tool-toggle-btn is-stopped" aria-pressed="false">Iniciar</button>
+            </div>
+
+            <div class="metronome-beats" id="metronome-beats" aria-label="Pulso visual"></div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <img id="footer-logo" src="assets/img/logo/logo_light.png" alt="Ministério Seven" class="footer-logo" />
+    <p>Ministério Seven</p>
+    <a href="https://www.instagram.com/ministeriosev7en/" target="_blank" rel="noopener noreferrer">Instagram</a>
+    <small>© <span id="footer-year"></span> Ministério Seven — Todos os direitos reservados</small>
+  </div>
+</footer>
+
+<div id="global-loading" class="global-loading hidden" aria-hidden="true">
+  <div class="spinner"></div>
+</div>
+
+<script type="module" src="assets/js/app.js"></script>
+<script type="module" src="assets/js/pages/ferramentas.js"></script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+
+.ferramentas-page{padding:28px 0 60px}
+.ferramentas-head{margin-bottom:24px}
+.ferramentas-subtitle{color:var(--text-soft);margin-top:6px}
+.ferramentas-grid{display:grid;gap:18px}
+.tool-card{background:var(--surface);border:1px solid var(--border);border-radius:28px;box-shadow:var(--shadow);overflow:hidden}
+.tool-card-head{display:grid;grid-template-columns:1fr auto;gap:18px;align-items:start;padding:22px}
+.tool-card h2{margin:8px 0 8px}
+.tool-card p{color:var(--text-soft);margin:0}
+.tool-chip{display:inline-flex;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.06);color:var(--text-soft);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase}
+.tool-head-actions,.tool-inline-actions,.tool-actions-row{display:flex;gap:10px;flex-wrap:wrap}
+.tool-head-actions button,.tool-inline-actions button,.tool-actions-row button,.metronome-controls-grid button,.bpm-step-btn{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text)}
+.button-primary{background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05))}
+.tool-body{border-top:1px solid var(--border);padding:18px 22px 22px}
+.tool-body.hidden{display:none!important}
+.tuner-panel,.metronome-panel{display:grid;gap:18px}
+.tuner-topline{display:flex;justify-content:space-between;gap:10px;color:var(--text-soft);font-size:.95rem}
+.tuner-note-wrap{display:flex;align-items:end;justify-content:center;gap:12px;padding:4px 0 8px}
+.tuner-note{font-size:clamp(3rem, 8vw, 5rem);line-height:1;font-weight:800}
+.tuner-octave{font-size:1rem;color:var(--text-soft);padding-bottom:10px}
+.tuner-meter-wrap{display:grid;gap:10px}
+.tuner-meter-scale,.tuner-meter-labels{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;font-size:.78rem;color:var(--text-soft);text-align:center}
+.tuner-meter{position:relative;height:20px;border-radius:999px;overflow:hidden;border:1px solid var(--border);background:rgba(255,255,255,.03)}
+.tuner-meter-zones{display:grid;grid-template-columns:repeat(5,1fr);height:100%}
+.zone-red{background:rgba(239,68,68,.8)}
+.zone-yellow{background:rgba(234,179,8,.8)}
+.zone-green{background:rgba(34,197,94,.9)}
+.tuner-needle{position:absolute;top:-4px;left:50%;width:4px;height:28px;border-radius:999px;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.2),0 0 16px rgba(255,255,255,.3);transform:translateX(-50%);transition:left .08s linear}
+.tuner-reference{padding:16px;border-radius:18px;border:1px solid var(--border);background:rgba(255,255,255,.03)}
+.tuner-reference ul{margin:10px 0 0;padding-left:18px;color:var(--text-soft)}
+.metronome-bpm-wrap{display:grid;grid-template-columns:52px 1fr 52px;gap:14px;align-items:center}
+.bpm-step-btn{font-size:1.5rem;font-weight:700;justify-self:center}
+.metronome-bpm-main{text-align:center}
+.metronome-bpm-value{font-size:clamp(3rem, 8vw, 4.8rem);line-height:1;font-weight:800}
+.metronome-bpm-label{color:var(--text-soft);letter-spacing:.08em;text-transform:uppercase;font-size:.8rem}
+.metronome-slider-wrap input[type="range"]{width:100%;accent-color:#f59b3a}
+.metronome-controls-grid{display:grid;grid-template-columns:minmax(160px,220px) auto;gap:14px;align-items:end}
+.metronome-select-wrap{display:grid;gap:8px}
+.metronome-select-wrap span{color:var(--text-soft);font-size:.9rem}
+.metronome-select-wrap select{min-height:42px;padding:0 14px;border-radius:16px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text)}
+.metronome-beats{display:flex;gap:12px;align-items:center;flex-wrap:wrap;min-height:32px}
+.metronome-beat{width:18px;height:18px;border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.08);transition:transform .08s ease, opacity .08s ease, background .08s ease}
+.metronome-beat.is-active{background:rgba(255,255,255,.9);transform:scale(1.08)}
+.metronome-beat.is-primary{box-shadow:0 0 0 2px rgba(245,155,58,.25)}
+body.tool-focus-active .ferramentas-subtitle,body.tool-focus-active .tool-card:not(.is-focus){display:none!important}
+body.tool-focus-active .tool-card.is-focus{width:100%}
+@media (max-width:900px){.tool-card-head{grid-template-columns:1fr}.tool-head-actions{justify-content:flex-start}.metronome-controls-grid{grid-template-columns:1fr}}
+@media (max-width:600px){.tool-card{border-radius:22px}.tool-card-head,.tool-body{padding-left:16px;padding-right:16px}.tuner-meter-labels{font-size:.68rem;gap:4px}.metronome-bpm-wrap{grid-template-columns:46px 1fr 46px;gap:10px}}
+
+
+.tool-icon-btn{
+  width:42px;
+  min-width:42px!important;
+  padding:0!important;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1rem;
+}
+.tool-fullscreen-btn.is-active,
+.tool-focus-btn[aria-pressed="true"]{
+  background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
+}
+body.tool-focus-active .tool-card:not(.is-focus){
+  display:none;
+}
+.tool-card.is-fullscreen{
+  border-radius:0!important;
+}
+:fullscreen .tool-card-head,
+.tool-card.is-fullscreen .tool-card-head{
+  position:sticky;
+  top:0;
+  z-index:3;
+  background:var(--surface);
+}
+:fullscreen .tool-body,
+.tool-card.is-fullscreen .tool-body{
+  min-height:100dvh;
+}
+@media (max-width: 768px){
+  .tool-icon-btn{
+    width:38px;
+    min-width:38px!important;
+  }
+}
+
+
+.tool-toggle-btn{
+  transition: background .18s ease, box-shadow .18s ease, border-color .18s ease, color .18s ease;
+}
+.tool-toggle-btn.is-stopped{
+  background: linear-gradient(180deg, rgba(239,68,68,.28), rgba(239,68,68,.18)) !important;
+  border-color: rgba(239,68,68,.45) !important;
+  color: #fff !important;
+  box-shadow: inset 0 0 0 1px rgba(239,68,68,.18);
+}
+.tool-toggle-btn.is-running{
+  background: linear-gradient(180deg, rgba(34,197,94,.28), rgba(34,197,94,.18)) !important;
+  border-color: rgba(34,197,94,.45) !important;
+  color: #fff !important;
+  box-shadow: inset 0 0 0 1px rgba(34,197,94,.18);
+}
+
+
+/* ===== Ajustes de tema das Ferramentas ===== */
+[data-theme="light"] .tool-toggle-btn.is-stopped,
+[data-theme="light"] .tool-toggle-btn.is-running{
+  color: #111827 !important;
+}
+html[data-theme="dark"] .metronome-select-wrap select,
+html[data-theme="dark"] .metronome-select-wrap select option{
+  background: #0f1220 !important;
+  color: #f4f7ff !important;
+}
+html[data-theme="light"] .metronome-select-wrap select,
+html[data-theme="light"] .metronome-select-wrap select option{
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+
+html[data-theme="light"] .metronome-beat{
+  background:rgba(17,24,39,.18);
+  border:1px solid rgba(17,24,39,.16);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);
+}
+
+html[data-theme="light"] .metronome-beat.is-active{
+  background:rgba(17,24,39,.72);
+  border-color:rgba(17,24,39,.56);
+  box-shadow:0 0 0 2px rgba(17,24,39,.08);
+  transform:scale(1.08);
+}
+
+html[data-theme="light"] .metronome-beat.is-primary{
+  box-shadow:0 0 0 2px rgba(245,155,58,.35), inset 0 0 0 1px rgba(255,255,255,.25);
+}
+
+html[data-theme="light"] .metronome-beat.is-primary.is-active{
+  background:#f59b3a;
+  border-color:#e18e24;
+  box-shadow:0 0 0 2px rgba(245,155,58,.28), 0 4px 12px rgba(245,155,58,.18);
+}

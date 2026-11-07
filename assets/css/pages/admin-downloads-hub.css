@@ -1,0 +1,39 @@
+.admin-downloads-hub{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:18px;
+  margin-top:24px;
+}
+
+.admin-downloads-hub-card{
+  display:block;
+  text-decoration:none;
+  color:var(--text);
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:24px;
+  box-shadow:var(--shadow);
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+
+.admin-downloads-hub-card strong{
+  display:block;
+  margin-bottom:8px;
+  font-size:1.1rem;
+}
+
+.admin-downloads-hub-card p{
+  margin:0;
+  color:var(--text-soft);
+}
+
+.admin-downloads-hub-card:hover{
+  transform:translateY(-2px);
+}
+
+@media (max-width: 780px){
+  .admin-downloads-hub{
+    grid-template-columns:1fr;
+  }
+}

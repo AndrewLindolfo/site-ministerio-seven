@@ -1,0 +1,118 @@
+.notificacoes-page{
+  padding:28px 0 56px;
+}
+
+.notificacoes-subtitle{
+  margin-top:10px;
+  color:var(--text-soft);
+}
+
+#notificacoes-lista{
+  display:grid;
+  gap:28px;
+  margin-top:26px;
+}
+
+.notificacoes-group{
+  display:grid;
+  gap:16px;
+}
+
+.notificacoes-group h2{
+  font-size:clamp(1.15rem,1.6vw,1.45rem);
+}
+
+.notificacoes-group-list{
+  display:grid;
+  gap:16px;
+}
+
+.notificacao-publica-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:24px;
+  box-shadow:var(--shadow);
+  padding:22px;
+  display:grid;
+  gap:12px;
+}
+
+.notificacao-publica-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  color:var(--text-soft);
+  font-size:.92rem;
+}
+
+.notificacao-publica-card h3{
+  font-size:1.2rem;
+}
+
+.notificacao-link{
+  width:max-content;
+}
+
+
+.notificacao-publica-tags {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.notificacao-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(255,255,255,0.16);
+}
+
+.notificacao-status.status-upcoming {
+  background: rgba(255, 193, 7, 0.14);
+}
+
+.notificacao-status.status-active {
+  background: rgba(34, 197, 94, 0.14);
+}
+
+.notificacao-status.status-ended {
+  background: rgba(239, 68, 68, 0.14);
+}
+
+[data-theme="light"] .home-notificacao-card.tipo-aviso,
+[data-theme="light"] .notificacao-publica-card.tipo-aviso{
+  background: linear-gradient(180deg, rgba(255,245,245,.98), rgba(255,250,250,.96));
+  border-color: rgba(190,18,60,.12);
+}
+[data-theme="light"] .home-notificacao-card.tipo-novidade,
+[data-theme="light"] .notificacao-publica-card.tipo-novidade{
+  background: linear-gradient(180deg, rgba(244,248,255,.98), rgba(248,251,255,.96));
+  border-color: rgba(59,130,246,.12);
+}
+[data-theme="light"] .home-notificacao-card.tipo-evento,
+[data-theme="light"] .notificacao-publica-card.tipo-evento{
+  background: linear-gradient(180deg, rgba(255,250,238,.98), rgba(255,252,244,.96));
+  border-color: rgba(217,119,6,.12);
+}
+[data-theme="light"] .home-notificacao-card.tipo-destaque,
+[data-theme="light"] .notificacao-publica-card.tipo-destaque{
+  background: linear-gradient(180deg, rgba(241,253,246,.98), rgba(247,255,250,.96));
+  border-color: rgba(34,197,94,.12);
+}
+[data-theme="light"] .home-notificacao-card h3,
+[data-theme="light"] .notificacao-publica-card h3{
+  color: #0f172a;
+}
+[data-theme="light"] .home-notificacao-card p,
+[data-theme="light"] .notificacao-publica-top,
+[data-theme="light"] .notificacao-publica-card p{
+  color: #475569;
+}

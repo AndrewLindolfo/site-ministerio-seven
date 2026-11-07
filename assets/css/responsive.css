@@ -1,0 +1,47 @@
+@media (max-width:1080px){
+  .main-nav{gap:16px}
+  .admin-cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .musica-content-layout{grid-template-columns:1fr!important}
+}
+
+@media (max-width:780px){
+  .main-nav{display:none}
+  .admin-cards-grid{grid-template-columns:1fr}
+  .hero-banner{
+    height:24vh;
+    min-height:160px;
+  }
+  .footer-logo{width:180px}
+  .search-modal-panel{margin-top:72px}
+  .cifra-top-controls{
+    overflow:auto;
+    white-space:nowrap;
+    padding-bottom:4px;
+  }
+  .scroll-bubble{
+    right:12px;
+    bottom:12px;
+    padding:8px 10px;
+    gap:8px;
+  }
+  .scroll-bubble button{
+    width:30px;
+    height:30px;
+  }
+}
+
+@media (max-width:520px){
+  .container{width:min(100% - 20px,var(--container))}
+  .header-inner,
+  .admin-topbar-inner{min-height:70px}
+  .brand-v7,
+  .admin-v7{
+    width:32px;
+    height:32px;
+  }
+  .admin-card{min-height:184px}
+  .admin-card img{
+    width:84px;
+    height:84px;
+  }
+}

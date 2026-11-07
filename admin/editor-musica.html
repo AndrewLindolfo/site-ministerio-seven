@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-DKM3MTBKQ6');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Editor de Música | Admin Seven</title>
+  <link rel="stylesheet" href="../assets/css/main.css" />
+  <link rel="stylesheet" href="../assets/css/theme.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css" />
+  <link rel="stylesheet" href="../assets/css/animations.css" />
+  <link rel="stylesheet" href="../assets/css/responsive.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <link rel="stylesheet" href="../assets/css/pages/admin-editor-musica.css" />
+</head>
+<body>
+
+<header class="admin-topbar">
+  <div class="container admin-topbar-inner">
+    <a href="./index.html" class="admin-brand" aria-label="Voltar ao painel">
+      <img src="../assets/img/v7/icon_120.png" alt="V7" class="admin-v7" />
+      <strong>Área de Administração</strong>
+    </a>
+
+    <div class="header-actions">
+      <button type="button" id="theme-toggle" aria-label="Alternar tema">🌙</button>
+      <div class="admin-account">
+        <button type="button" id="admin-account-toggle">Conta</button>
+        <div id="admin-account-menu" class="admin-account-menu hidden">
+          <img id="admin-user-photo" src="../assets/img/v7/icon_120.png" alt="Conta" class="admin-user-photo" />
+          <p id="admin-user-email">admin@exemplo.com</p>
+          <button type="button" id="admin-logout-button">Sair</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="admin-section-page">
+  <section class="container">
+    <a href="./musicas.html" class="admin-back-link">← Voltar para Músicas</a>
+    <h1>Editor de Música</h1>
+
+    <form id="admin-editor-musica-form" class="admin-form">
+      <input type="text" id="musica-titulo" placeholder="Título *" required />
+      <input type="text" id="musica-subtitulo" placeholder="Subtítulo (opcional)" />
+      <input type="text" id="musica-autor" placeholder="Autor / compositor (opcional)" />
+      <input type="text" id="musica-tom" placeholder="Tom original (opcional)" />
+      <input type="text" id="musica-categoria" placeholder="Categoria (opcional)" />
+      <input type="url" id="musica-youtube" placeholder="Link do YouTube (opcional)" />
+      <textarea id="musica-observacao" placeholder="Observação interna (opcional)"></textarea>
+
+      <textarea id="musica-letra" placeholder="Letra da música"></textarea>
+
+      <div class="admin-form-actions">
+        <button type="submit" class="button-primary">Salvar</button>
+        <button type="button" id="delete-musica-button" class="button-danger">Excluir</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+<div id="global-loading" class="global-loading hidden" aria-hidden="true">
+  <div class="spinner"></div>
+</div>
+
+<script type="module" src="../assets/js/app.js"></script>
+
+<script type="module" src="../assets/js/editor.js"></script>
+<script type="module" src="../assets/js/auth-guard.js"></script>
+<script type="module" src="../assets/js/pages/admin-editor-musica.js"></script>
+</body>
+</html>

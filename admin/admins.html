@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-DKM3MTBKQ6');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Administradores | Admin Seven</title>
+  <link rel="stylesheet" href="../assets/css/main.css" />
+  <link rel="stylesheet" href="../assets/css/theme.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css" />
+  <link rel="stylesheet" href="../assets/css/animations.css" />
+  <link rel="stylesheet" href="../assets/css/responsive.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <link rel="stylesheet" href="../assets/css/pages/admin-admins.css" />
+</head>
+<body>
+<header class="admin-topbar">
+  <div class="container admin-topbar-inner">
+    <a href="./index.html" class="admin-brand" aria-label="Voltar ao painel">
+      <img src="../assets/img/v7/icon_120.png" alt="V7" class="admin-v7" />
+      <strong>Área de Administração</strong>
+    </a>
+    <div class="header-actions">
+      <button type="button" id="theme-toggle" aria-label="Alternar tema">🌙</button>
+      <div class="admin-account">
+        <button type="button" id="admin-account-toggle">Conta</button>
+        <div id="admin-account-menu" class="admin-account-menu hidden">
+          <img id="admin-user-photo" src="../assets/img/v7/icon_120.png" alt="Conta" class="admin-user-photo" />
+          <p id="admin-user-email">admin@exemplo.com</p>
+          <button type="button" id="admin-logout-button">Sair</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="admin-section-page">
+  <section class="container">
+    <a href="./index.html" class="admin-back-link">← Voltar ao painel</a>
+    <h1>Cadastro de ADMs</h1>
+    <p class="admin-intro">Cadastre administradores secundários e defina permissões por módulo.</p>
+
+    <form id="admin-admin-form" class="admin-form admin-admin-form">
+      <input type="hidden" id="admin-secondary-id" />
+      <div class="admin-grid-two">
+        <label class="admin-field-block">
+          <span>Nome do administrador</span>
+          <input type="text" id="admin-secondary-name" required />
+        </label>
+        <label class="admin-field-block">
+          <span>E-mail do Google</span>
+          <input type="email" id="admin-secondary-email" required />
+        </label>
+      </div>
+
+      <div class="admin-note-box" id="admin-uid-status-box">
+        <strong>Vinculação por UID</strong>
+        <p id="admin-uid-status-text">Ao primeiro login válido, o UID da conta Google será vinculado automaticamente a este ADM.</p>
+      </div>
+
+      <div class="admin-permission-grid">
+        <section class="admin-permission-card">
+          <h3>Músicas</h3>
+          <div class="admin-permission-items" data-module="musicas"></div>
+        </section>
+        <section class="admin-permission-card">
+          <h3>Cifras</h3>
+          <div class="admin-permission-items" data-module="cifras"></div>
+        </section>
+        <section class="admin-permission-card">
+          <h3>Programações</h3>
+          <div class="admin-permission-items" data-module="programacoes"></div>
+        </section>
+        <section class="admin-permission-card">
+          <h3>Fotos</h3>
+          <div class="admin-permission-items" data-module="fotos"></div>
+        </section>
+        <section class="admin-permission-card">
+          <h3>Downloads gerais</h3>
+          <div class="admin-permission-items" data-module="downloadsGerais"></div>
+        </section>
+        <section class="admin-permission-card">
+          <h3>Downloads por música</h3>
+          <div class="admin-permission-items" data-module="downloadsPorMusica"></div>
+        </section>
+        <section class="admin-permission-card">
+          <h3>Ensaio</h3>
+          <div class="admin-permission-items" data-module="ensaios"></div>
+        </section>
+        <section class="admin-permission-card">
+          <h3>Contatos</h3>
+          <div class="admin-permission-items" data-module="contatos"></div>
+        </section>
+        <section class="admin-permission-card">
+          <h3>Notificações</h3>
+          <div class="admin-permission-items" data-module="notificacoes"></div>
+        </section>
+        <section class="admin-permission-card">
+          <h3>Log de atividades</h3>
+          <div class="admin-permission-items" data-module="logs"></div>
+        </section>
+      </div>
+
+      <div class="admin-form-actions">
+        <button type="submit" class="button-primary">Salvar ADM</button>
+        <button type="button" id="admin-secondary-reset" class="button-outline">Limpar</button>
+      </div>
+    </form>
+
+    <div class="admin-toolbar admin-toolbar-spaced">
+      <h2 class="admin-subtitle">ADMs cadastrados</h2>
+    </div>
+    <div id="admin-secondary-list"></div>
+  </section>
+</main>
+
+<div id="global-loading" class="global-loading hidden" aria-hidden="true"><div class="spinner"></div></div>
+<script type="module" src="../assets/js/app.js"></script>
+<script type="module" src="../assets/js/auth-guard.js"></script>
+<script type="module" src="../assets/js/pages/admin-admins.js"></script>
+</body>
+</html>

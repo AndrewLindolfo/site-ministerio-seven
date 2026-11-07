@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-DKM3MTBKQ6');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log de atividades | Admin Seven</title>
+  <link rel="stylesheet" href="../assets/css/main.css" />
+  <link rel="stylesheet" href="../assets/css/theme.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css" />
+  <link rel="stylesheet" href="../assets/css/animations.css" />
+  <link rel="stylesheet" href="../assets/css/responsive.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <link rel="stylesheet" href="../assets/css/pages/admin-logs.css" />
+</head>
+<body>
+<header class="admin-topbar">
+  <div class="container admin-topbar-inner">
+    <a href="./index.html" class="admin-brand" aria-label="Voltar ao painel">
+      <img src="../assets/img/v7/icon_120.png" alt="V7" class="admin-v7" />
+      <strong>Área de Administração</strong>
+    </a>
+    <div class="header-actions">
+      <button type="button" id="theme-toggle" aria-label="Alternar tema">🌙</button>
+      <div class="admin-account">
+        <button type="button" id="admin-account-toggle">Conta</button>
+        <div id="admin-account-menu" class="admin-account-menu hidden">
+          <img id="admin-user-photo" src="../assets/img/v7/icon_120.png" alt="Conta" class="admin-user-photo" />
+          <p id="admin-user-email">admin@exemplo.com</p>
+          <button type="button" id="admin-logout-button">Sair</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+<main class="admin-section-page">
+  <section class="container">
+    <a href="./index.html" class="admin-back-link">← Voltar ao painel</a>
+    <h1>Log de atividades</h1>
+    <p class="admin-intro">Acompanhe ações realizadas no painel administrativo.</p>
+
+    <div class="admin-logs-summary" id="admin-logs-summary">
+      <div class="admin-logs-summary-card"><span>Hoje</span><strong id="summary-today">0</strong></div>
+      <div class="admin-logs-summary-card"><span>Últimos 7 dias</span><strong id="summary-week">0</strong></div>
+      <div class="admin-logs-summary-card"><span>Administradores ativos</span><strong id="summary-admins">0</strong></div>
+    </div>
+
+    <div class="admin-logs-filters">
+      <label><span>Módulo</span><select id="filter-module"><option value="">Todos</option></select></label>
+      <label><span>Ação</span><select id="filter-action"><option value="">Todas</option><option value="create">Criou</option><option value="update">Editou</option><option value="delete">Excluiu</option><option value="export">Exportou</option><option value="import">Restaurou</option></select></label>
+      <label><span>Usuário</span><select id="filter-user"><option value="">Todos</option></select></label>
+      <label><span>Período</span><select id="filter-period"><option value="7">Últimos 7 dias</option><option value="1">Hoje</option><option value="30">Últimos 30 dias</option><option value="0">Todo o período</option></select></label>
+      <div class="admin-logs-filter-actions"><button type="button" class="button-primary" id="filter-apply">Filtrar</button><button type="button" class="button-outline" id="filter-clear">Limpar</button></div>
+    </div>
+
+    <div id="admin-logs-list"></div>
+  </section>
+</main>
+<div id="global-loading" class="global-loading hidden" aria-hidden="true"><div class="spinner"></div></div>
+<script type="module" src="../assets/js/app.js"></script>
+<script type="module" src="../assets/js/auth-guard.js"></script>
+<script type="module" src="../assets/js/pages/admin-logs.js"></script>
+</body>
+</html>

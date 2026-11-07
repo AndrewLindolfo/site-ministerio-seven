@@ -1,0 +1,137 @@
+.admin-dashboard-page h1,
+.admin-section-page h1{
+  font-size:clamp(1.8rem,2.4vw,2.5rem);
+  margin-bottom:4px;
+}
+
+.admin-intro{
+  color:var(--text-soft);
+  margin-top:8px;
+}
+
+.admin-cards-grid{
+  margin-top:20px;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:20px;
+}
+
+.admin-card{
+  min-height:220px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:24px;
+  box-shadow:var(--shadow);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  gap:18px;
+  text-align:center;
+  transition:transform var(--transition),border-color var(--transition),box-shadow var(--transition);
+}
+
+.admin-card:hover{
+  transform:translateY(-3px);
+  border-color:rgba(249,1,1,.30);
+  box-shadow:0 18px 38px rgba(0,0,0,.24);
+}
+
+.admin-card img{
+  width:112px;
+  height:112px;
+  object-fit:contain;
+}
+
+.admin-card span{
+  font-size:1.05rem;
+  font-weight:800;
+}
+
+.admin-back-link{
+  display:inline-flex;
+  margin-bottom:16px;
+  color:var(--text-soft);
+  font-weight:700;
+}
+
+.admin-toolbar{
+  margin:18px 0 20px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-wrap:wrap;
+}
+
+.admin-form{
+  display:grid;
+  gap:14px;
+  margin-top:18px;
+}
+
+.admin-form-actions{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.backup-actions{
+  display:grid;
+  gap:14px;
+  max-width:500px;
+}
+
+#admin-page-content,
+#admin-musicas-list,
+#admin-cifras-list,
+#admin-programacoes-list,
+#admin-fotos-list,
+#admin-downloads-list,
+#admin-contatos-list{
+  display:grid;
+  gap:12px;
+}
+
+.admin-list-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+  box-shadow:var(--shadow);
+}
+
+.admin-list-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+#editor-musica-tinymce,
+#editor-cifra-tinymce{
+  min-height:320px;
+  border:1px dashed var(--border);
+  border-radius:18px;
+  background:var(--surface);
+  padding:18px;
+  color:var(--text-soft);
+}
+
+.hidden{display:none !important;}
+
+body.admin-dashboard-permissions-pending .admin-cards-grid{
+  visibility:hidden;
+}
+
+body.admin-dashboard-permissions-pending .admin-intro{
+  visibility:hidden;
+}
+
+
+.field-help { display:block; margin-top:6px; font-size:12px; opacity:.75; }
+.programacao-hide-after { margin-top:6px; font-size:13px; opacity:.82; }

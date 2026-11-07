@@ -1,0 +1,1809 @@
+.cifra-page h1{
+  font-size:clamp(2rem,3vw,3rem);
+  margin-bottom:4px;
+}
+
+.cifra-top-controls{
+  margin-top:14px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.cifra-top-controls button{
+  min-height:38px;
+  padding:0 12px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.03);
+  color:var(--text);
+}
+
+#cifra-meta{
+  margin-top:8px;
+  color:var(--text-soft);
+  font-size:.95rem;
+}
+
+.cifra-content{
+  margin-top:20px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:24px;
+  box-shadow:var(--shadow);
+  font-family:"Courier New", Courier, monospace;
+  white-space:pre-wrap;
+  line-height:1.45;
+  min-height:280px;
+  overflow:auto;
+  tab-size:4;
+  -moz-tab-size:4;
+  font-variant-ligatures:none;
+}
+
+.scroll-toggle-wrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-width:34px;
+}
+
+.scroll-speed-label{
+  margin-top:2px;
+  font-size:10px;
+  line-height:1;
+  color:var(--text-soft);
+}
+
+.hidden{
+  display:none !important;
+}
+
+
+
+
+/* Painel flutuante do auto-rolamento - versão limpa */
+.scroll-bubble{
+  position: fixed;
+  right: 8px;
+  bottom: 8px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 6px;
+  width: auto !important;
+  min-width: auto !important;
+  max-width: none !important;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(14,16,28,.94);
+  box-shadow:
+    0 16px 40px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.scroll-bubble.is-dragging{
+  cursor: grabbing;
+}
+
+.scroll-bubble button{
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: #f4f7ff;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
+  transition: background .18s ease, transform .18s ease, opacity .18s ease;
+  cursor: pointer;
+}
+
+.scroll-bubble button:hover{
+  background: rgba(255,255,255,.08);
+  transform: translateY(-1px);
+}
+
+.scroll-bubble button:active{
+  transform: translateY(0);
+}
+
+.scroll-bubble #scroll-toggle{
+  order: 1;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  font-size: .72rem;
+}
+
+.scroll-bubble #scroll-slower{
+  order: 2;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.scroll-bubble #scroll-speed-label{
+  order: 3;
+  position: relative;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  margin: 0;
+  font-size: 0;
+  line-height: 0;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 58%, rgba(255,255,255,.08) 0 42%, transparent 43% 100%),
+    linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 4px 10px rgba(0,0,0,.18);
+}
+
+.scroll-bubble #scroll-speed-label::before{
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1.5px;
+  height: 8px;
+  border-radius: 999px;
+  background: #d81f38;
+  transform-origin: 50% 90%;
+  box-shadow: 0 0 8px rgba(216,31,56,.35);
+}
+
+.scroll-bubble #scroll-speed-label::after{
+  content: "";
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: #e9eefc;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%,-8%);
+  box-shadow: 0 0 0 1px rgba(255,255,255,.08);
+}
+
+.scroll-bubble #scroll-speed-label[data-level="1"]::before{ transform: translate(-50%,-88%) rotate(-58deg); }
+.scroll-bubble #scroll-speed-label[data-level="2"]::before{ transform: translate(-50%,-88%) rotate(-28deg); }
+.scroll-bubble #scroll-speed-label[data-level="3"]::before{ transform: translate(-50%,-88%) rotate(0deg); }
+.scroll-bubble #scroll-speed-label[data-level="4"]::before{ transform: translate(-50%,-88%) rotate(28deg); }
+.scroll-bubble #scroll-speed-label[data-level="5"]::before{ transform: translate(-50%,-88%) rotate(58deg); }
+
+.scroll-bubble #scroll-faster{
+  order: 4;
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.scroll-bubble.is-hidden,
+.scroll-bubble[hidden]{
+  display: none !important;
+}
+
+.scroll-bubble.is-open{
+  display: flex !important;
+}
+
+.scroll-bubble-close{
+  position: absolute !important;
+  top: -5px !important;
+  right: -5px !important;
+  width: 14px !important;
+  height: 14px !important;
+  min-width: 14px !important;
+  min-height: 14px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  background: rgba(14,16,28,.98) !important;
+  color: #f4f7ff !important;
+  font-size: .5rem !important;
+  font-weight: 700 !important;
+  box-shadow: 0 6px 12px rgba(0,0,0,.24) !important;
+  z-index: 3 !important;
+}
+
+.scroll-panel-toggle-btn{
+  position: relative;
+  overflow: hidden;
+  display:inline-flex !important;
+  align-items:center;
+  justify-content:center;
+  min-width:38px;
+  min-height:38px;
+  padding:0 !important;
+}
+
+.scroll-panel-toggle-btn.is-active{
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.10), 0 0 0 2px rgba(255,255,255,.05);
+}
+
+.scroll-panel-toggle-icon{
+  position: relative;
+  display: block;
+  width: 17px;
+  height: 17px;
+  border: 1.8px solid currentColor;
+  border-top-left-radius: 999px;
+  border-top-right-radius: 999px;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  clip-path: inset(0 0 36% 0);
+  opacity: .98;
+}
+
+.scroll-panel-toggle-icon::before{
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 2px;
+  height: 8px;
+  background: #d81f38;
+  border-radius: 999px;
+  transform-origin: 50% 86%;
+  transform: translate(-50%, -50%) rotate(-24deg);
+  box-shadow: 0 0 8px rgba(216,31,56,.30);
+}
+
+.scroll-panel-toggle-icon::after{
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3.8px;
+  height: 3.8px;
+  background: currentColor;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+  box-shadow:
+    -5px -6px 0 -1.2px currentColor,
+    0 -7px 0 -1.2px currentColor,
+    5px -6px 0 -1.2px currentColor;
+}
+
+.pdf-modern-btn{
+  position: relative;
+  overflow: hidden;
+  display:inline-flex !important;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:1px;
+  min-width:48px;
+  min-height:38px;
+  padding:6px 10px !important;
+  border-radius:999px;
+  border:1px solid var(--border) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.03)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 4px 16px rgba(0,0,0,.12);
+}
+
+.pdf-btn-icon{
+  display:block;
+  font-size:14px;
+  line-height:1;
+  margin-bottom:1px;
+  font-weight:700;
+}
+
+.pdf-btn-label{
+  display:block;
+  font-size:10px;
+  line-height:1;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  font-family: Inter, Arial, sans-serif;
+  font-weight:800;
+}
+
+[data-theme="light"] .scroll-bubble{
+  border: 1px solid rgba(15,23,42,.18);
+  outline: 1px solid rgba(15,23,42,.08);
+  outline-offset: 0;
+  background: rgba(255,255,255,.95);
+  box-shadow:
+    0 14px 34px rgba(15,23,42,.12),
+    inset 0 1px 0 rgba(255,255,255,.92);
+}
+
+[data-theme="light"] .scroll-bubble button{
+  color: #111827;
+}
+
+[data-theme="light"] .scroll-bubble button:hover{
+  background: rgba(17,24,39,.07);
+}
+
+[data-theme="light"] .scroll-bubble #scroll-speed-label{
+  background:
+    radial-gradient(circle at 50% 58%, rgba(17,24,39,.06) 0 42%, transparent 43% 100%),
+    linear-gradient(180deg, rgba(255,255,255,.92), rgba(241,245,249,.92));
+  border-color: rgba(15,23,42,.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.92),
+    0 4px 10px rgba(15,23,42,.10);
+}
+
+[data-theme="light"] .scroll-bubble #scroll-speed-label::after{
+  background: #111827;
+}
+
+[data-theme="light"] .scroll-bubble-close{
+  border-color: rgba(15,23,42,.12) !important;
+  background: rgba(255,255,255,.98) !important;
+  color: #111827 !important;
+}
+
+[data-theme="light"] .pdf-modern-btn{
+  background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(245,245,245,.92)) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 4px 14px rgba(0,0,0,.08);
+}
+
+@media (max-width: 768px){
+  .scroll-bubble{
+    right: 6px;
+    bottom: 6px;
+  }
+
+  .scroll-bubble button{
+    width: 17px;
+    height: 17px;
+    min-width: 17px;
+    min-height: 17px;
+    font-size: .72rem;
+  }
+
+  .scroll-bubble #scroll-toggle{
+    width: 19px;
+    height: 19px;
+    min-width: 19px;
+    min-height: 19px;
+    font-size: .68rem;
+  }
+
+  .scroll-bubble #scroll-speed-label{
+    width: 19px;
+    min-width: 19px;
+    height: 19px;
+  }
+
+  .scroll-bubble #scroll-speed-label::before{
+    height: 7px;
+  }
+
+  .scroll-panel-toggle-icon{
+    width: 16px;
+    height: 16px;
+  }
+}
+
+
+
+.cifra-instrument-switcher{
+  position:relative;
+  display:flex;
+  align-items:flex-start;
+  margin-top:14px;
+  margin-bottom:14px;
+}
+
+.cifra-instrument-button{
+  min-height:38px;
+  padding:0 14px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.03);
+  color:var(--text);
+  cursor:pointer;
+}
+
+.cifra-instrument-button.is-single{
+  cursor:default;
+  opacity:.92;
+}
+
+.cifra-instrument-menu{
+  position:absolute;
+  top:calc(100% + 8px);
+  left:0;
+  min-width:180px;
+  padding:8px;
+  border:1px solid var(--border);
+  border-radius:18px;
+  background:var(--surface);
+  box-shadow:var(--shadow);
+  z-index:15;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.cifra-instrument-option{
+  display:block;
+  padding:10px 12px;
+  border-radius:12px;
+  color:var(--text);
+  text-decoration:none;
+  background:rgba(255,255,255,.03);
+}
+
+.cifra-instrument-option:hover,
+.cifra-instrument-option.is-active{
+  background:rgba(255,255,255,.08);
+}
+
+
+#cifra-content .chord-token{
+  font-weight:700;
+  color:var(--seven-chord-color, #0d0d0d);
+}
+
+
+/* ===== V2 item 17: barra lateral fixa / menu mobile ===== */
+.cifra-page .container{position:relative;}
+.cifra-top-controls{
+  margin-top:14px;
+}
+.cifra-top-controls button{
+  min-height:40px;
+}
+
+@media (min-width: 901px){
+  .cifra-page .container{
+    padding-left:90px;
+  }
+
+  .cifra-top-controls{
+    position:fixed;
+    left:14px;
+    top:50%;
+    transform:translateY(-50%);
+    z-index:35;
+    display:flex;
+    flex-direction:column;
+    flex-wrap:nowrap;
+    gap:8px;
+    padding:8px;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:22px;
+    background:rgba(14,16,28,.88);
+    box-shadow:0 14px 34px rgba(0,0,0,.22);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+  }
+
+  .cifra-top-controls button{
+    min-width:54px;
+    padding:0 10px;
+  }
+}
+
+@media (max-width: 900px){
+  .cifra-page{
+    padding-bottom:96px;
+  }
+
+  .cifra-top-controls{
+    position:fixed;
+    left:50%;
+    bottom:12px;
+    transform:translateX(-50%);
+    z-index:45;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-wrap:nowrap;
+    gap:6px;
+    width:max-content;
+    max-width:calc(100vw - 20px);
+    overflow-x:auto;
+    padding:10px 12px;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:22px;
+    background:rgba(14,16,28,.92);
+    box-shadow:0 14px 34px rgba(0,0,0,.24);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+  }
+
+  .cifra-top-controls button{
+    min-width:44px;
+    min-height:38px;
+    padding:0 10px;
+    font-size:.95rem;
+    flex:0 0 auto;
+  }
+
+  .cifra-top-controls .pdf-modern-btn{
+    min-width:48px;
+  }
+}
+
+
+
+/* Ajuste fino desktop: barra lateral fora do card da cifra */
+@media (min-width: 901px){
+  .cifra-top-controls{
+    left: max(10px, calc(50% - 620px)) !important;
+    top: 58% !important;
+    transform: translateY(-58%) !important;
+  }
+
+  .cifra-page .container{
+    padding-left: 45px !important;
+  }
+}
+
+/* ===== Responsividade automática da barra flutuante (mobile/tablet) ===== */
+@media (max-width: 1024px){
+  .cifra-top-controls{
+    width: min(94vw, 560px) !important;
+    max-width: calc(100vw - 12px) !important;
+    left: 50% !important;
+    bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    transform: translateX(-50%) !important;
+
+    padding: clamp(4px, 1.2vw, 10px) clamp(6px, 1.5vw, 12px) !important;
+    gap: clamp(4px, 1vw, 8px) !important;
+    border-radius: clamp(16px, 2vw, 22px) !important;
+
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    white-space: nowrap !important;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .cifra-top-controls::-webkit-scrollbar{
+    display: none;
+  }
+
+  .cifra-top-controls button{
+    flex: 0 0 auto !important;
+    min-width: clamp(32px, 8vw, 42px) !important;
+    height: clamp(32px, 8vw, 42px) !important;
+    min-height: clamp(32px, 8vw, 42px) !important;
+    padding: 0 clamp(6px, 1.8vw, 10px) !important;
+    font-size: clamp(.76rem, 2.2vw, .92rem) !important;
+    border-radius: clamp(12px, 2vw, 16px) !important;
+  }
+
+  #transpose-down,
+  #transpose-up{
+    min-width: clamp(34px, 8.4vw, 46px) !important;
+  }
+
+  .pdf-modern-btn{
+    min-width: clamp(40px, 10vw, 52px) !important;
+    padding: 4px clamp(6px, 1.8vw, 10px) !important;
+  }
+
+  .pdf-btn-icon{
+    font-size: clamp(11px, 2.8vw, 14px) !important;
+  }
+
+  .pdf-btn-label{
+    font-size: clamp(8px, 1.9vw, 10px) !important;
+  }
+
+  .cifra-page{
+    padding-bottom: max(82px, calc(72px + env(safe-area-inset-bottom))) !important;
+  }
+}
+
+/* Celulares pequenos */
+@media (max-width: 480px){
+  .cifra-top-controls{
+    width: min(96vw, 420px) !important;
+    max-width: calc(100vw - 8px) !important;
+    padding: 4px 6px !important;
+    gap: 4px !important;
+    border-radius: 16px !important;
+  }
+
+  .cifra-top-controls button{
+    min-width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    padding: 0 6px !important;
+    font-size: .76rem !important;
+    border-radius: 14px !important;
+  }
+
+  .pdf-modern-btn{
+    min-width: 40px !important;
+  }
+}
+
+/* Auto-hide da barra flutuante no mobile/tablet */
+@media (max-width: 1024px){
+  .cifra-top-controls{
+    transition: transform .22s ease, opacity .22s ease, visibility .22s ease !important;
+    will-change: transform, opacity;
+  }
+
+  .cifra-top-controls.controls-hidden{
+    transform: translateX(-50%) translateY(calc(100% + 18px)) !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+}
+
+
+/* ===== Auto-rolagem mobile/tablet: barra fixa inferior moderna ===== */
+.mobile-scroll-slider{
+  display:none;
+}
+
+@media (max-width: 1024px){
+  .scroll-bubble{
+    left: 50% !important;
+    right: auto !important;
+    top: auto !important;
+    bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    transform: translateX(-50%);
+    width: min(92vw, 520px) !important;
+    min-width: 0 !important;
+    max-width: calc(100vw - 16px) !important;
+    padding: 4px 8px !important;
+    gap: 8px !important;
+    border-radius: 18px !important;
+    min-height: 36px !important;
+    height: 36px !important;
+    justify-content: space-between !important;
+    cursor: default !important;
+    touch-action: auto !important;
+    z-index: 80 !important;
+  }
+
+  .scroll-bubble.is-mobile-scroll-bar{
+    display: flex;
+    align-items: center;
+  }
+
+  .scroll-bubble #scroll-slower,
+  .scroll-bubble #scroll-faster,
+  .scroll-bubble #scroll-speed-label{
+    display: none !important;
+  }
+
+  .scroll-bubble .mobile-scroll-slider{
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0 2px;
+    accent-color: #f59b3a;
+  }
+
+  .scroll-bubble #scroll-toggle{
+    order: 3;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    font-size: .9rem !important;
+  }
+
+  .scroll-bubble .mobile-scroll-slider{
+    order: 2;
+  }
+
+  .scroll-bubble .scroll-bubble-close{
+    position: static !important;
+    order: 1;
+    width: 28px !important;
+    height: 28px !important;
+    min-width: 28px !important;
+    min-height: 28px !important;
+    transform: none !important;
+    border-radius: 14px !important;
+    background: rgba(255,255,255,.04) !important;
+  }
+}
+
+/* Auto-rolagem mobile/tablet mais baixa, alinhada aos botões */
+@media (max-width: 1024px){
+  .mobile-scroll-bar,
+  .scroll-bubble.mobile-scroll-bar,
+  .scroll-bubble.is-mobile-bar{
+    min-height: 36px !important;
+    height: 36px !important;
+    padding: 4px 8px !important;
+    border-radius: 18px !important;
+    gap: 8px !important;
+    align-items: center !important;
+  }
+
+  .mobile-scroll-bar button,
+  .scroll-bubble.mobile-scroll-bar button,
+  .scroll-bubble.is-mobile-bar button,
+  .mobile-scroll-bar .scroll-close,
+  .mobile-scroll-bar .scroll-play,
+  .mobile-scroll-bar .scroll-toggle,
+  .mobile-scroll-bar .scroll-pause{
+    min-width: 28px !important;
+    width: 28px !important;
+    min-height: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    border-radius: 14px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+    font-size: 0.95rem !important;
+  }
+
+  .mobile-scroll-bar input[type="range"],
+  .mobile-scroll-bar .scroll-slider{
+    height: 18px !important;
+    margin: 0 !important;
+  }
+}
+
+@media (max-width: 1024px){
+  .scroll-bubble.is-mobile-scroll-bar{
+    z-index: 120 !important;
+  }
+
+  .scroll-bubble.is-mobile-scroll-bar .scroll-bubble-close{
+    pointer-events: auto !important;
+    z-index: 121 !important;
+  }
+}
+
+
+.cifra-mini-metronome{
+  margin: 8px 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  background: rgba(14,16,28,.55);
+  box-shadow: 0 10px 24px rgba(0,0,0,.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.cifra-mini-metronome-meta{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  white-space: nowrap;
+  font-weight: 700;
+}
+.cifra-mini-metronome-bpm,
+.cifra-mini-metronome-compasso{
+  color: var(--text);
+  font-size: .95rem;
+}
+.cifra-mini-metronome-divider{
+  color: var(--text-soft);
+}
+.cifra-mini-metronome-pulses{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+.cifra-mini-metronome-pulse{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  background: rgba(255,255,255,.18);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+  transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.cifra-mini-metronome-pulse.is-accent{
+  width:12px;
+  height:12px;
+}
+.cifra-mini-metronome-pulse.is-active{
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(255,255,255,.08);
+  transform: scale(1.08);
+}
+.cifra-mini-metronome-pulse.is-accent.is-active{
+  background: #f4b14f;
+  box-shadow: 0 0 0 4px rgba(244,177,79,.16);
+}
+.cifra-mini-metronome-toggle{
+  min-width:42px;
+  min-height:42px;
+  width:42px;
+  height:42px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background: rgba(255,255,255,.03);
+  color: var(--text);
+  font-size: 1rem;
+  line-height:1;
+}
+.cifra-mini-metronome-toggle.is-running{
+  box-shadow: 0 0 0 3px rgba(34,197,94,.12);
+}
+@media (max-width: 900px){
+  .cifra-mini-metronome{
+    width: 100%;
+    max-width: 100%;
+    gap: 10px;
+    padding: 10px 12px;
+    flex-wrap: wrap;
+  }
+  .cifra-mini-metronome-meta{
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .cifra-mini-metronome-pulses{
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .cifra-mini-metronome-toggle{
+    flex: 0 0 auto;
+  }
+}
+
+
+.mini-metronome-floating-toggle{
+  min-width:44px;
+  min-height:38px;
+  padding:0 10px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.03);
+  color:var(--text);
+}
+
+.mini-metronome-floating-toggle.is-running{
+  color:#22c55e;
+  box-shadow:0 0 0 1px rgba(34,197,94,.25), inset 0 0 0 1px rgba(34,197,94,.18);
+}
+
+
+/* ===== Ajustes de tema e navegação da cifra ===== */
+[data-theme="light"] .cifra-top-controls{
+  background: rgba(255,255,255,.96) !important;
+  border-color: rgba(15,23,42,.12) !important;
+  box-shadow: 0 14px 34px rgba(15,23,42,.12) !important;
+}
+[data-theme="light"] .cifra-top-controls button,
+[data-theme="light"] .mini-metronome-floating-toggle{
+  color: #111827 !important;
+  background: rgba(17,24,39,.04) !important;
+}
+[data-theme="light"] .cifra-mini-metronome{
+  background: rgba(255,255,255,.96);
+  border-color: rgba(15,23,42,.12);
+  box-shadow: 0 10px 24px rgba(15,23,42,.10);
+}
+[data-theme="light"] .cifra-mini-metronome-pulse{
+  background: rgba(17,24,39,.12);
+  box-shadow: inset 0 0 0 1px rgba(15,23,42,.08);
+}
+[data-theme="light"] .cifra-mini-metronome-toggle,
+[data-theme="light"] #cifra-mini-metronome-edit{
+  color: #111827 !important;
+  background: rgba(17,24,39,.04) !important;
+  border-color: rgba(15,23,42,.12) !important;
+}
+.cifra-mini-metronome-edit-layer{
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.cifra-mini-metronome-edit-overlay{
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+}
+.cifra-mini-metronome-edit-card{
+  position: relative;
+  z-index: 1;
+  width: min(92vw, 360px);
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+.cifra-mini-metronome-edit-title{
+  margin: 0 0 12px;
+  font-size: 1.05rem;
+}
+.cifra-mini-metronome-edit-field{
+  display: block;
+  margin-bottom: 12px;
+}
+.cifra-mini-metronome-edit-label{
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-soft);
+  font-size: .92rem;
+}
+.cifra-mini-metronome-edit-input,
+.cifra-mini-metronome-edit-select{
+  width: 100%;
+  min-height: 42px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-2, var(--surface));
+  color: var(--text);
+  padding: 0 12px;
+}
+.cifra-mini-metronome-edit-select option{
+  background: var(--surface);
+  color: var(--text);
+}
+.cifra-mini-metronome-edit-actions{
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.cifra-mini-metronome-edit-btn{
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,.03);
+  color: var(--text);
+}
+.cifra-mini-metronome-edit-btn.is-primary{
+  background: rgba(255,255,255,.08);
+  font-weight: 700;
+}
+.musica-cifra-selector{
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 180px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.musica-cifra-selector-option{
+  display: block;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: var(--text);
+  text-decoration: none;
+  background: rgba(255,255,255,.03);
+}
+.musica-cifra-selector-option:hover{
+  background: rgba(255,255,255,.08);
+}
+/* Infraestrutura base da visualização interativa de acordes — etapa 1 */
+.chord-tooltip{
+  position:absolute;
+  z-index:120;
+  min-width:260px;
+  max-width:320px;
+  padding:10px;
+  border-radius:18px;
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--text);
+  box-shadow:var(--shadow);
+}
+
+.chord-tooltip.hidden{
+  display:none !important;
+}
+
+.chord-sheet-overlay{
+  position:fixed;
+  inset:0;
+  z-index:140;
+  background:rgba(0,0,0,.42);
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:12px;
+}
+
+.chord-sheet-overlay.hidden{
+  display:none !important;
+}
+
+.chord-sheet{
+  width:min(100%, 520px);
+  border-radius:22px 22px 0 0;
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:var(--text);
+  box-shadow:var(--shadow);
+  padding:16px;
+}
+
+.chord-sheet__close{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:36px;
+  height:36px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.03);
+  color:var(--text);
+  margin-left:auto;
+}
+
+.chord-viewer{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.chord-viewer__header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.chord-viewer__title{
+  font-size:1.05rem;
+}
+
+.chord-viewer__nav{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.chord-viewer__nav button{
+  width:32px;
+  height:32px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.03);
+  color:var(--text);
+}
+
+.chord-viewer__body{
+  min-height:120px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:rgba(255,255,255,.02);
+  padding:12px;
+}
+
+.chord-viewer__notes{
+  font-size:.92rem;
+  color:var(--text-soft);
+}
+
+.chord-keys{
+  display:grid;
+  grid-template-columns:repeat(12, minmax(18px, 1fr));
+  gap:4px;
+  width:100%;
+}
+
+.chord-key{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:54px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  font-size:.72rem;
+}
+
+.chord-key.is-white{
+  background:rgba(255,255,255,.92);
+  color:#111827;
+}
+
+.chord-key.is-black{
+  background:#111827;
+  color:#f9fafb;
+}
+
+.chord-key.is-active{
+  outline:2px solid #f59b3a;
+  outline-offset:1px;
+}
+
+.chord-strings{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.chord-strings__fallback{
+  font-size:.82rem;
+  color:var(--text-soft);
+  text-align:center;
+}
+
+.chord-strings__diagram{
+  display:grid;
+  grid-template-columns:repeat(6, 1fr);
+  gap:8px;
+  align-items:center;
+  min-height:82px;
+}
+
+.chord-strings--baixo .chord-strings__diagram{
+  grid-template-columns:repeat(4, 1fr);
+}
+
+.chord-strings__string{
+  height:82px;
+  width:2px;
+  background:rgba(255,255,255,.22);
+  justify-self:center;
+}
+
+.chord-strings__fret{
+  display:none;
+}
+
+.is-chord-interactive{
+  cursor:pointer;
+  text-decoration-thickness:1px;
+}
+
+@media (max-width: 1024px){
+  .chord-tooltip{
+    display:none !important;
+  }
+}
+
+/* Etapa 2 da visualização interativa de acordes */
+.chord-tooltip{
+  pointer-events:auto;
+}
+
+.chord-viewer__body{
+  min-height: 168px;
+}
+
+.chord-grid{
+  display:grid;
+  width:100%;
+  gap:0;
+}
+
+.chord-grid--6{
+  grid-template-columns:repeat(6, 1fr);
+}
+
+.chord-grid--4{
+  grid-template-columns:repeat(4, 1fr);
+}
+
+.chord-grid--head{
+  margin-bottom:6px;
+}
+
+.chord-grid__topmark{
+  text-align:center;
+  font-size:.92rem;
+  color:var(--text-soft);
+}
+
+.chord-grid__cell{
+  min-height:24px;
+  border-right:1px solid rgba(255,255,255,.18);
+  border-bottom:1px solid rgba(255,255,255,.18);
+}
+
+.chord-grid__cell:nth-child(-n+6){
+  border-top:2px solid rgba(255,255,255,.32);
+}
+
+.chord-grid--4 .chord-grid__cell:nth-child(-n+4){
+  border-top:2px solid rgba(255,255,255,.32);
+}
+
+.chord-grid__cell:nth-child(6n+1){
+  border-left:1px solid rgba(255,255,255,.18);
+}
+
+.chord-grid--4 .chord-grid__cell:nth-child(4n+1){
+  border-left:1px solid rgba(255,255,255,.18);
+}
+
+.chord-grid__dot,
+.chord-grid__barre{
+  align-self:center;
+  justify-self:center;
+  z-index:2;
+}
+
+.chord-grid__dot{
+  width:18px;
+  height:18px;
+  border-radius:999px;
+  background:#f59b3a;
+  color:#111827;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.65rem;
+  font-weight:800;
+}
+
+.chord-grid__barre{
+  height:14px;
+  border-radius:999px;
+  background:#f59b3a;
+  opacity:.9;
+  align-self:center;
+}
+
+.chord-strings__label{
+  text-align:center;
+  color:var(--text-soft);
+  font-size:.85rem;
+  margin-bottom:4px;
+}
+
+.chord-strings__footer{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:8px;
+  font-size:.82rem;
+  color:var(--text-soft);
+}
+
+.chord-strings__fretlabel{
+  font-weight:700;
+}
+
+[data-theme="light"] .chord-grid__cell{
+  border-right:1px solid rgba(15,23,42,.18);
+  border-bottom:1px solid rgba(15,23,42,.18);
+}
+[data-theme="light"] .chord-grid__cell:nth-child(-n+6){
+  border-top:2px solid rgba(15,23,42,.32);
+}
+[data-theme="light"] .chord-grid--4 .chord-grid__cell:nth-child(-n+4){
+  border-top:2px solid rgba(15,23,42,.32);
+}
+[data-theme="light"] .chord-grid__cell:nth-child(6n+1){
+  border-left:1px solid rgba(15,23,42,.18);
+}
+[data-theme="light"] .chord-grid--4 .chord-grid__cell:nth-child(4n+1){
+  border-left:1px solid rgba(15,23,42,.18);
+}
+
+@media (max-width:1024px){
+  .chord-sheet__content .chord-viewer__body{
+    min-height:190px;
+  }
+}
+
+
+/* Melhorias visuais — visualização interativa de acordes */
+.chord-tooltip{
+  min-width: 290px;
+  max-width: 340px;
+}
+
+.chord-viewer__body{
+  min-height: 0;
+  padding: 14px;
+}
+
+.chord-viewer__empty{
+  color: var(--text-soft);
+}
+
+.chord-strings__variation-label{
+  text-align:center;
+  color:var(--text-soft);
+  font-weight:600;
+  margin-bottom:4px;
+}
+
+.chord-diagram{
+  width:100%;
+}
+
+.chord-diagram__markers{
+  display:grid;
+  grid-template-columns:repeat(var(--strings),1fr);
+  gap:0;
+  padding:0 12px 10px;
+  align-items:end;
+}
+
+.chord-diagram__marker{
+  text-align:center;
+  font-size:1rem;
+  color:var(--text-soft);
+  line-height:1;
+  min-height:18px;
+}
+
+.chord-diagram__board{
+  position:relative;
+  height:170px;
+  margin:0 12px;
+}
+
+.chord-diagram__string{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:2px;
+  background:rgba(255,255,255,.22);
+  transform:translateX(-50%);
+}
+
+.chord-diagram__fret{
+  position:absolute;
+  left:0;
+  right:0;
+  height:1px;
+  background:rgba(255,255,255,.18);
+  transform:translateY(-50%);
+}
+
+.chord-diagram__fret.is-nut{
+  height:3px;
+  background:rgba(255,255,255,.42);
+}
+
+.chord-diagram__dot{
+  position:absolute;
+  width:26px;
+  height:26px;
+  border-radius:999px;
+  background:#f59b3a;
+  color:#111827;
+  font-weight:800;
+  font-size:.78rem;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transform:translate(-50%,-50%);
+  box-shadow:0 6px 14px rgba(0,0,0,.25);
+  z-index:2;
+}
+
+.chord-diagram__barre{
+  position:absolute;
+  height:16px;
+  border-radius:999px;
+  background:#f59b3a;
+  transform:translateY(-50%);
+  z-index:1;
+  opacity:.95;
+}
+
+.chord-diagram__base-fret{
+  margin-top:10px;
+  text-align:right;
+  font-size:.82rem;
+  color:var(--text-soft);
+}
+
+.chord-diagram__caption{
+  text-align:center;
+  margin-top:8px;
+  font-size:.9rem;
+  color:var(--text-soft);
+}
+
+[data-theme="light"] .chord-diagram__string{
+  background:rgba(17,24,39,.22);
+}
+[data-theme="light"] .chord-diagram__fret{
+  background:rgba(17,24,39,.16);
+}
+[data-theme="light"] .chord-diagram__fret.is-nut{
+  background:rgba(17,24,39,.36);
+}
+
+
+/* ===== Ajuste mobile/tablet da janela de acordes ===== */
+@media (max-width: 1024px){
+  .chord-sheet-overlay{
+    padding: 10px;
+    align-items: center;
+  }
+
+  .chord-sheet{
+    width: min(100%, 430px);
+    max-height: min(74vh, 620px);
+    border-radius: 18px;
+    padding: 12px;
+    overflow: auto;
+  }
+
+  .chord-viewer__body{
+    padding: 10px;
+  }
+
+  .chord-sheet__content .chord-viewer__body{
+    min-height: 0;
+  }
+
+  .chord-diagram__board{
+    height: 132px;
+    margin: 0 8px;
+  }
+
+  .chord-diagram__markers{
+    padding: 0 8px 8px;
+  }
+
+  .chord-diagram__dot{
+    width: 21px;
+    height: 21px;
+    font-size: .7rem;
+  }
+
+  .chord-diagram__barre{
+    height: 12px;
+  }
+
+  .chord-viewer__notes{
+    font-size: .86rem;
+  }
+}
+
+@media (max-width: 768px) and (orientation: portrait){
+  .chord-sheet-overlay{
+    padding: 8px;
+    align-items: center;
+  }
+
+  .chord-sheet{
+    width: min(100%, 344px);
+    max-height: min(66vh, 500px);
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .chord-viewer{
+    gap: 8px;
+  }
+
+  .chord-viewer__header{
+    gap: 8px;
+  }
+
+  .chord-viewer__title{
+    font-size: .92rem;
+  }
+
+  .chord-viewer__nav button{
+    width: 28px;
+    height: 28px;
+  }
+
+  .chord-viewer__body{
+    padding: 8px;
+    border-radius: 14px;
+  }
+
+  .chord-diagram__board{
+    height: 102px;
+    margin: 0 4px;
+  }
+
+  .chord-diagram__markers{
+    padding: 0 4px 6px;
+  }
+
+  .chord-diagram__marker{
+    font-size: .84rem;
+    min-height: 14px;
+  }
+
+  .chord-diagram__dot{
+    width: 18px;
+    height: 18px;
+    font-size: .62rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,.22);
+  }
+
+  .chord-diagram__barre{
+    height: 10px;
+  }
+
+  .chord-diagram__base-fret{
+    margin-top: 6px;
+    font-size: .74rem;
+  }
+
+  .chord-diagram__caption{
+    margin-top: 4px;
+    font-size: .76rem;
+  }
+
+  .chord-viewer__notes{
+    font-size: .78rem;
+  }
+}
+
+@media (max-width: 932px) and (orientation: landscape){
+  .chord-sheet-overlay{
+    padding: 8px;
+    align-items: center;
+  }
+
+  .chord-sheet{
+    width: min(100%, 300px);
+    max-height: min(86vh, 360px);
+    padding: 9px;
+    border-radius: 16px;
+  }
+
+  .chord-viewer{
+    gap: 6px;
+  }
+
+  .chord-viewer__header{
+    gap: 6px;
+  }
+
+  .chord-viewer__title{
+    font-size: .88rem;
+  }
+
+  .chord-viewer__counter{
+    font-size: .86rem;
+  }
+
+  .chord-viewer__nav{
+    gap: 4px;
+  }
+
+  .chord-viewer__nav button{
+    width: 26px;
+    height: 26px;
+  }
+
+  .chord-viewer__body{
+    padding: 6px;
+    border-radius: 12px;
+  }
+
+  .chord-diagram__board{
+    height: 84px;
+    margin: 0 2px;
+  }
+
+  .chord-diagram__markers{
+    padding: 0 2px 4px;
+  }
+
+  .chord-diagram__marker{
+    font-size: .78rem;
+    min-height: 12px;
+  }
+
+  .chord-diagram__dot{
+    width: 16px;
+    height: 16px;
+    font-size: .56rem;
+    box-shadow: 0 3px 8px rgba(0,0,0,.20);
+  }
+
+  .chord-diagram__barre{
+    height: 8px;
+  }
+
+  .chord-diagram__base-fret{
+    margin-top: 4px;
+    font-size: .68rem;
+  }
+
+  .chord-diagram__caption{
+    margin-top: 3px;
+    font-size: .72rem;
+  }
+
+  .chord-viewer__notes{
+    font-size: .72rem;
+  }
+}
+
+
+.cifra-live-update-banner{
+  position: fixed;
+  left: 50%;
+  top: 14px;
+  transform: translateX(-50%);
+  z-index: 160;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(245,155,58,.35);
+  background: rgba(245,155,58,.96);
+  color: #111827;
+  font-weight: 800;
+  font-size: .92rem;
+  box-shadow: 0 14px 32px rgba(0,0,0,.18);
+}
+
+.cifra-live-update-banner.hidden{
+  display: none !important;
+}
+
+@media (max-width: 768px){
+  .cifra-live-update-banner{
+    width: min(92vw, 360px);
+    min-height: 40px;
+    padding: 8px 14px;
+    font-size: .84rem;
+    text-align: center;
+    line-height: 1.25;
+  }
+}
+
+
+/* Ajuste do aviso de atualização da cifra no celular */
+@media (max-width: 768px){
+  .cifra-live-update-banner{
+    position: fixed !important;
+    left: 50% !important;
+    top: max(10px, env(safe-area-inset-top)) !important;
+    transform: translateX(-50%) !important;
+    z-index: 220 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: min(94vw, 360px) !important;
+    max-width: calc(100vw - 12px) !important;
+    min-height: 42px !important;
+    padding: 10px 14px !important;
+    border-radius: 16px !important;
+    font-size: .82rem !important;
+    text-align: center !important;
+    line-height: 1.22 !important;
+    white-space: normal !important;
+    box-shadow: 0 12px 28px rgba(0,0,0,.22) !important;
+  }
+
+  .cifra-live-update-banner.hidden{
+    display: none !important;
+  }
+}
+
+
+/* Redesign desktop da auto rolagem */
+@media (min-width: 1025px){
+  .scroll-bubble.is-hidden,
+  .scroll-bubble[hidden]{
+    display:none !important;
+  }
+  .scroll-bubble.is-open{
+    display:flex !important;
+  }
+  .scroll-bubble{
+    right:auto !important;
+    bottom:auto !important;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:12px 16px !important;
+    border-radius:24px !important;
+    min-height:auto !important;
+    width:auto !important;
+    max-width:none !important;
+    background:rgba(14,16,28,.96) !important;
+    border:1px solid rgba(255,255,255,.10) !important;
+    box-shadow:0 16px 40px rgba(0,0,0,.35) !important;
+    backdrop-filter: blur(14px);
+    cursor:grab;
+  }
+  .scroll-bubble.is-dragging{ cursor:grabbing; }
+  .scroll-bubble #scroll-slower,
+  .scroll-bubble #scroll-faster,
+  .scroll-bubble #scroll-speed-label{
+    display:none !important;
+  }
+  .scroll-bubble .mobile-scroll-slider{
+    display:none !important;
+  }
+  .scroll-bubble .desktop-scroll-slider{
+    display:block !important;
+    width:120px;
+    accent-color:#f59b3a;
+  }
+  .scroll-bubble #scroll-toggle{
+    width:38px !important;
+    height:38px !important;
+    min-width:38px !important;
+    min-height:38px !important;
+    border-radius:50% !important;
+  }
+  .scroll-bubble .scroll-bubble-close{
+    position:absolute !important;
+    right:8px !important;
+    top:8px !important;
+    width:18px !important;
+    height:18px !important;
+    min-width:18px !important;
+    min-height:18px !important;
+    border-radius:50% !important;
+    font-size:11px !important;
+  }
+}
+
+
+/* Ajuste do redesign desktop da auto rolagem no modo claro da cifra */
+@media (min-width: 1025px){
+  [data-theme="light"] .scroll-bubble{
+    background: rgba(255,255,255,.96) !important;
+    border: 1px solid rgba(15,23,42,.12) !important;
+    box-shadow:
+      0 14px 34px rgba(15,23,42,.12),
+      inset 0 1px 0 rgba(255,255,255,.92) !important;
+  }
+
+  [data-theme="light"] .scroll-bubble button{
+    color: #111827 !important;
+    background: rgba(255,255,255,.92) !important;
+    border: 1px solid rgba(15,23,42,.12) !important;
+  }
+
+  [data-theme="light"] .scroll-bubble button:hover{
+    background: rgba(17,24,39,.07) !important;
+  }
+
+  [data-theme="light"] .scroll-bubble #scroll-toggle{
+    color: #111827 !important;
+    background: rgba(255,255,255,.98) !important;
+    border-color: rgba(15,23,42,.12) !important;
+  }
+
+  [data-theme="light"] .scroll-bubble .desktop-scroll-slider{
+    accent-color: #f59b3a;
+  }
+
+  [data-theme="light"] .scroll-bubble .scroll-bubble-close{
+    border-color: rgba(15,23,42,.12) !important;
+    background: rgba(255,255,255,.98) !important;
+    color: #111827 !important;
+  }
+}

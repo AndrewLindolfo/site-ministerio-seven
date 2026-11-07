@@ -1,0 +1,70 @@
+.admin-modal.hidden{
+  display: none !important;
+}
+
+.admin-modal{
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+}
+
+.admin-modal-overlay{
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+}
+
+.admin-modal-panel{
+  position: relative;
+  width: min(720px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  margin: 16px auto;
+  background: var(--surface, #111);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.35);
+}
+
+.admin-modal-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.admin-modal-close{
+  border: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  border-radius: 999px;
+  width: 40px;
+  height: 40px;
+}
+
+.admin-modal-form{
+  display: grid;
+  gap: 14px;
+}
+
+.admin-modal-form label{
+  display: grid;
+  gap: 6px;
+}
+
+.admin-modal-form input,
+.admin-modal-form textarea{
+  width: 100%;
+}
+
+.admin-modal-actions{
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+body.modal-open{
+  overflow: hidden;
+}

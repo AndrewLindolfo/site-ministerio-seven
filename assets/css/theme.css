@@ -1,0 +1,16 @@
+html[data-theme="light"]{
+  --bg:#f7f7fa;
+  --bg-soft:#ffffff;
+  --surface:#ffffff;
+  --surface-2:#f1f2f7;
+  --text:#121319;
+  --text-soft:#4f5567;
+  --muted:#71788a;
+  --border:rgba(0,0,0,.10);
+  --shadow:0 14px 30px rgba(18,19,25,.08);
+  color-scheme:light;
+}
+
+html[data-theme="dark"]{
+  color-scheme:dark;
+}

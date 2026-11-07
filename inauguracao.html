@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-DKM3MTBKQ6');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inauguração | Ministério Seven</title>
+  <meta name="description" content="Contagem regressiva para a inauguração do site do Ministério Seven." />
+  <meta property="og:title" content="Inauguração | Ministério Seven" />
+  <meta property="og:description" content="Contagem regressiva para a inauguração do site do Ministério Seven." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://ministerioseven.online/inauguracao.html" />
+  <meta property="og:image" content="https://ministerioseven.online/assets/img/logo/logo_dark.png" />
+  <link rel="icon" href="assets/img/favicon/favicon.ico" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+  <link rel="stylesheet" href="assets/css/pages/inauguracao.css" />
+</head>
+<body>
+  <main class="inauguracao-page">
+    <section class="container">
+      <div class="countdown-card">
+        <div class="countdown-topbar">
+          <span class="inauguracao-v7-wrap">
+            <img id="header-v7-logo" src="assets/img/v7/icon_dark.png" alt="V7" class="brand-v7" />
+          </span>
+          <button type="button" id="theme-toggle" class="inauguracao-theme-button" aria-label="Alternar tema">🌙</button>
+        </div>
+
+        <img id="inauguracao-logo" src="assets/img/logo/logo_dark.png" alt="Ministério Seven" class="inauguracao-logo" />
+
+        <p class="inauguracao-kicker">Contagem regressiva</p><h1>O site do Ministério Seven está chegando</h1>
+        <p class="inauguracao-texto">Em breve, letras, cifras, agenda, fotos, downloads e muito mais em um só lugar.</p>
+
+        <div class="countdown-grid" id="countdown-grid" aria-live="polite">
+          <div class="countdown-item"><span class="countdown-value" id="dias">00</span><span class="countdown-label">Dias</span></div>
+          <div class="countdown-item"><span class="countdown-value" id="horas">00</span><span class="countdown-label">Horas</span></div>
+          <div class="countdown-item"><span class="countdown-value" id="minutos">00</span><span class="countdown-label">Min</span></div>
+          <div class="countdown-item"><span class="countdown-value" id="segundos">00</span><span class="countdown-label">Seg</span></div>
+        </div>
+
+        <p class="inauguracao-data">Lançamento: <strong>26/03/2026 às 19:00</strong></p>
+        <p class="inauguracao-data"><strong>Será redirecionado ao final da contagem, aproveitem.</strong></p>
+
+
+        <div class="inauguracao-actions">
+          <a class="button-primary" href="https://www.instagram.com/ministeriosev7en/" target="_blank" rel="noopener noreferrer">Instagram</a>
+        </div>
+
+        <p id="countdown-status" class="countdown-status hidden">O lançamento já aconteceu. Redirecionando...</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <img id="footer-logo" src="assets/img/logo/logo_dark.png" alt="Ministério Seven" class="footer-logo" />
+      <p>Ministério Seven</p>
+      <a href="https://www.instagram.com/ministeriosev7en/" target="_blank" rel="noopener noreferrer">Instagram</a>
+      <small>© <span id="footer-year"></span> Ministério Seven — Todos os direitos reservados</small>
+    </div>
+  </footer>
+
+  <script type="module" src="assets/js/pages/inauguracao.js"></script>
+</body>
+</html>

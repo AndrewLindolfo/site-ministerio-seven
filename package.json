@@ -1,0 +1,12 @@
+{
+  "name": "ministerio-seven-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "audit:static": "node scripts/audit-static.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

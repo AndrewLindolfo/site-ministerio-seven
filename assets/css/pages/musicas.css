@@ -1,0 +1,12 @@
+.listing-page h1{margin-bottom:18px}
+.list-search-bar{margin-bottom:20px}
+.alphabet-group{margin-bottom:28px}
+.alphabet-letter{
+  font-size:1.55rem;
+  font-weight:800;
+  margin-bottom:12px;
+}
+.music-list-item{
+  padding:12px 0;
+  border-bottom:1px solid var(--border);
+}

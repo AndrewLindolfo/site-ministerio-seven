@@ -1,0 +1,35 @@
+.backup-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  align-items:center;
+  margin-top:18px;
+}
+
+.backup-file-label{
+  cursor:pointer;
+}
+
+.backup-file-name{
+  opacity:.85;
+  font-size:.95rem;
+}
+
+.backup-help{
+  margin-top:18px;
+  padding:16px 18px;
+  border:1px solid var(--border);
+  border-radius:18px;
+  background:var(--surface);
+}
+
+.backup-help p,
+.backup-help small{
+  margin:0;
+  display:block;
+}
+
+.backup-help small{
+  margin-top:8px;
+  opacity:.8;
+}

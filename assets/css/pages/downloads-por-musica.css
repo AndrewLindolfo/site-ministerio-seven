@@ -1,0 +1,56 @@
+.downloads-music-row{
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) auto;
+  gap:16px;
+  align-items:center;
+  padding:14px 16px;
+  border:1px solid var(--border);
+  border-radius:18px;
+  background:var(--surface);
+  margin-bottom:12px;
+}
+
+.downloads-music-title{
+  min-width:0;
+  font-weight:700;
+  color:var(--text);
+}
+
+.downloads-music-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.downloads-music-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:52px;
+  min-height:38px;
+  padding:0 14px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.04);
+  color:var(--text);
+  font-weight:800;
+  text-decoration:none;
+  transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.downloads-music-btn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 18px rgba(0,0,0,.18);
+}
+
+@media (max-width: 680px){
+  .downloads-music-row{
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+
+  .downloads-music-actions{
+    justify-content:flex-start;
+  }
+}

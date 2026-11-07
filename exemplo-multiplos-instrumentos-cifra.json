@@ -1,0 +1,19 @@
+{
+  "collection": "cifras",
+  "note": "Exemplo temporário para testar múltiplos instrumentos. Cadastre/importe este documento como uma nova cifra usando o mesmo musicaId da cifra já existente no seu site.",
+  "document": {
+    "musicaId": "cikc1kMFrokDZZ4f7l7Q",
+    "title": "Rumo Ao Lar",
+    "slug": "rumo-ao-lar",
+    "normalizedTitle": "rumo ao lar",
+    "subtitle": "Coral Universitário do UNASP-EC",
+    "instrumento": "teclado",
+    "cifraText": "[Exemplo temporário de Teclado]\n\nC Am C Am\n\nC Am\nA estrada é longa, o sol atroz\nF C\nE os perigos muitos são\nF C G Am\nMas certo estou que aqui não é o meu lugar\nF G C\nEu vou rumo àquele lar",
+    "cifraHtml": "<p><span style=\"background-color:#f1c40f;color:#000000;\">[Exemplo temporário de Teclado]</span></p><p>C Am C Am</p><p>C Am<br>A estrada é longa, o sol atroz<br>F C<br>E os perigos muitos são<br>F C G Am<br>Mas certo estou que aqui não é o meu lugar<br>F G C<br>Eu vou rumo àquele lar</p>",
+    "originalKey": "C",
+    "capo": "",
+    "bpm": "118/236",
+    "views": 0,
+    "active": true
+  }
+}

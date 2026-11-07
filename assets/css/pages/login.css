@@ -1,0 +1,12 @@
+.login-panel{
+  max-width:480px;
+  margin:60px auto 0;
+  padding:28px;
+  border:1px solid var(--border);
+  border-radius:24px;
+  background:var(--surface);
+  box-shadow:var(--shadow);
+  text-align:center;
+  display:grid;
+  gap:16px;
+}

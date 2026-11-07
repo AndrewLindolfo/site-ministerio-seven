@@ -1,0 +1,34 @@
+.admin-grid-two,
+.admin-grid-three,
+.admin-switches-grid{
+  display:grid;
+  gap:14px;
+}
+
+.admin-grid-two{grid-template-columns:repeat(2,minmax(0,1fr));}
+.admin-grid-three{grid-template-columns:repeat(3,minmax(0,1fr));}
+.admin-switches-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+.admin-toolbar-spaced{margin-top:28px;}
+.admin-subtitle{font-size:1.2rem;}
+.admin-field-block{display:grid;gap:8px;color:var(--text-soft);font-size:.95rem;}
+.admin-form select{width:100%;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:14px;padding:14px 16px;outline:none;}
+.admin-check{display:flex;align-items:center;gap:10px;min-height:50px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);}
+.admin-check input{width:auto;}
+.admin-notificacao-card{align-items:flex-start;}
+.admin-notificacao-card.is-inactive{opacity:.7;}
+.admin-notificacao-content{display:grid;gap:10px;flex:1;min-width:min(100%,520px);}
+.admin-notificacao-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.admin-notificacao-meta{display:flex;flex-wrap:wrap;gap:8px;color:var(--text-soft);font-size:.92rem;}
+.admin-notificacao-meta span{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--border);}
+.notificacao-chip{display:inline-flex;align-items:center;justify-content:center;padding:6px 12px;border-radius:999px;font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;border:1px solid transparent;}
+.tipo-aviso{background:rgba(249,1,1,.14);border-color:rgba(249,1,1,.22);color:#ff8c8c;}
+.tipo-novidade{background:rgba(80,140,255,.14);border-color:rgba(80,140,255,.24);color:#9bc0ff;}
+.tipo-evento{background:rgba(255,170,0,.14);border-color:rgba(255,170,0,.24);color:#ffd37a;}
+.tipo-destaque{background:rgba(24,169,87,.14);border-color:rgba(24,169,87,.24);color:#81e3ad;}
+@media (max-width: 860px){
+  .admin-grid-two,.admin-grid-three,.admin-switches-grid{grid-template-columns:1fr;}
+}
+
+.admin-notificacao-preview p{
+  white-space: pre-line;
+}

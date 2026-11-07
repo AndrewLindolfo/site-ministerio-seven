@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-DKM3MTBKQ6');
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard | Admin Seven</title>
+  <link rel="stylesheet" href="../assets/css/main.css" />
+  <link rel="stylesheet" href="../assets/css/theme.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css" />
+  <link rel="stylesheet" href="../assets/css/animations.css" />
+  <link rel="stylesheet" href="../assets/css/responsive.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <link rel="stylesheet" href="../assets/css/pages/admin-dashboard.css" />
+</head>
+<body>
+
+<header class="admin-topbar">
+  <div class="container admin-topbar-inner">
+    <a href="./index.html" class="admin-brand" aria-label="Voltar ao painel">
+      <img src="../assets/img/v7/icon_120.png" alt="V7" class="admin-v7" />
+      <strong>Área de Administração</strong>
+    </a>
+
+    <div class="header-actions">
+      <button type="button" id="theme-toggle" aria-label="Alternar tema">🌙</button>
+      <div class="admin-account">
+        <button type="button" id="admin-account-toggle">Conta</button>
+        <div id="admin-account-menu" class="admin-account-menu hidden">
+          <img id="admin-user-photo" src="../assets/img/v7/icon_120.png" alt="Conta" class="admin-user-photo" />
+          <p id="admin-user-email">admin@exemplo.com</p>
+          <button type="button" id="admin-logout-button">Sair</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="admin-dashboard-page">
+  <section class="container">
+    <h1>Painel Administrativo</h1>
+    <p class="admin-intro">Escolha uma área para gerenciar o conteúdo do site.</p>
+
+    <div class="admin-cards-grid">
+      <a href="./musicas.html" class="admin-card" data-admin-module="musicas"><img src="../assets/img/admin-cards/card-musicas.png" alt=""><span>Músicas</span></a>
+      <a href="./cifras.html" class="admin-card" data-admin-module="cifras"><img src="../assets/img/admin-cards/card-cifras.png" alt=""><span>Cifras</span></a>
+      <a href="./programacoes.html" class="admin-card" data-admin-module="programacoes"><img src="../assets/img/admin-cards/card-programacoes.png" alt=""><span>Programações</span></a>
+      <a href="./fotos.html" class="admin-card" data-admin-module="fotos"><img src="../assets/img/admin-cards/card-fotos.png" alt=""><span>Fotos</span></a>
+      <a href="./downloads.html" class="admin-card" data-admin-module="downloads"><img src="../assets/img/admin-cards/card-downloads.png" alt=""><span>Downloads</span></a>
+      <a href="./contatos.html" class="admin-card" data-admin-module="contatos"><img src="../assets/img/admin-cards/card-contatos.png" alt=""><span>Contatos</span></a>
+      <a href="./links.html" class="admin-card" data-admin-module="links"><img src="../assets/img/admin-cards/card-config.png" alt=""><span>Links</span></a>
+      <a href="./notificacoes.html" class="admin-card" data-admin-module="notificacoes"><img src="../assets/img/admin-cards/card-notificacoes.png" alt=""><span>Notificações</span></a>
+      <a href="./backup.html" class="admin-card" data-admin-module="backup"><img src="../assets/img/admin-cards/card-backup.png" alt=""><span>Backup</span></a>
+      <a href="./admins.html" class="admin-card" data-admin-module="admins"><img src="../assets/img/admin-cards/card-config.png" alt=""><span>ADMs</span></a>
+      <a href="./logs.html" class="admin-card" data-admin-module="logs"><img src="../assets/img/admin-cards/card-config.png" alt=""><span>Log de atividades</span></a>
+    
+      <a class="admin-card" id="admin-ensaios-card" href="./ensaios.html" data-admin-module="ensaios">
+        <img src="../assets/img/admin-cards/card-programacoes.png" alt="Ensaios" class="admin-card-image" />
+        <div class="admin-card-content">
+          <h3>Ensaios</h3>
+          <p>Cadastre e organize ensaios com setlist.</p>
+        </div>
+      </a>
+</div>
+  </section>
+</main>
+
+<div id="global-loading" class="global-loading hidden" aria-hidden="true">
+  <div class="spinner"></div>
+</div>
+<script type="module" src="../assets/js/app.js"></script>
+<script type="module" src="../assets/js/auth-guard.js"></script>
+<script type="module" src="../assets/js/pages/admin-dashboard.js"></script>
+</body>
+</html>

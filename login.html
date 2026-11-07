@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -15,11 +14,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Login | Ministério Seven</title>
   <meta name="description" content="Acesso à área administrativa do Ministério Seven." />
-  <meta property="og:title" content="Login | Ministério Seven" />
-  <meta property="og:description" content="Acesso à área administrativa do Ministério Seven." />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://ministerioseven.online/" />
-  <meta property="og:image" content="https://ministerioseven.online/assets/img/logo/logo_dark.png" />
+  <meta name="robots" content="noindex, nofollow" />
   <link rel="icon" href="assets/img/favicon/favicon.ico" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="assets/css/main.css" />
@@ -78,14 +73,20 @@
 
 <main class="simple-page">
   <section class="container">
-    <h1>Login</h1>
-    
-<section class="login-panel">
-  <h1>Área administrativa</h1>
-  <p>Faça login para acessar o painel.</p>
-  <button type="button" id="google-login-button">Entrar com Google</button>
-</section>
-
+    <section class="login-panel" aria-labelledby="login-title">
+      <h1 id="login-title">Área administrativa</h1>
+      <p>Entre com uma conta autorizada para acessar o painel.</p>
+      <form id="email-login-form" class="login-form">
+        <label for="login-email">E-mail</label>
+        <input id="login-email" name="email" type="email" autocomplete="username" maxlength="254" required />
+        <label for="login-password">Senha</label>
+        <input id="login-password" name="password" type="password" autocomplete="current-password" minlength="6" maxlength="128" required />
+        <button type="submit" id="email-login-button" class="button-primary">Entrar com e-mail</button>
+      </form>
+      <div class="login-divider" aria-hidden="true"><span>ou</span></div>
+      <button type="button" id="google-login-button" class="button-outline">Entrar com Google</button>
+      <p id="login-status" class="login-status" role="status" aria-live="polite"></p>
+    </section>
   </section>
 </main>
 

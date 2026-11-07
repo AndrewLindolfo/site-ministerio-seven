@@ -8,7 +8,7 @@ import { initNotificacoesPopup } from "./modules/notificacoes-popup.js";
 import { initDownloadsSplitMenu } from "./modules/downloads-menu.js";
 import { initPublicAuth } from "./public-auth.js";
 import { initPersonalActions } from "./modules/personal-actions.js";
-import { getAdminProfileByEmail } from "./auth.js";
+import { getAdminProfileForUser } from "./auth.js";
 import { isPrimaryAdmin } from "./services/admin-permissions-service.js";
 import { auth } from "./firebase.js";
 
@@ -38,7 +38,7 @@ async function injectAdminCreateShortcut() {
   if (!topbar || document.getElementById("admin-create-link")) return;
   const user = auth.currentUser;
   if (!user?.email) return;
-  const admin = await getAdminProfileByEmail(user.email);
+  const admin = await getAdminProfileForUser(user);
   if (!isPrimaryAdmin(admin)) return;
 
   const headerActions = topbar.querySelector(".header-actions");
@@ -81,5 +81,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   initAdminAccountMenu();
   injectAdminSiteShortcut();
   await injectAdminCreateShortcut();
-  initNotificacoesPopup();
+  if (document.querySelector(".home-page")) initNotificacoesPopup();
 });

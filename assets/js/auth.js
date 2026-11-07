@@ -2,6 +2,7 @@ import { auth, provider } from "./firebase.js";
 import { getDocument, getOneByField, setDocument, updateDocument, serverTimestamp } from "./db.js";
 import {
   signInWithPopup,
+  signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -62,16 +63,32 @@ async function getPrimaryAdminProfile() {
   return admin;
 }
 
+async function getAccessibleAdminDocument(id = "") {
+  try {
+    return await getDocument(ADMIN_COLLECTION, id);
+  } catch (error) {
+    if (String(error?.code || "").includes("permission-denied")) return null;
+    throw error;
+  }
+}
+
 export async function getAdminProfileForUser(user = null) {
   const uid = String(user?.uid || "").trim();
   const email = normalize(user?.email || "");
   if (!uid || !email) return null;
 
-  const direct = await getDocument(ADMIN_COLLECTION, uid);
+  const direct = await getAccessibleAdminDocument(uid);
   if (direct && direct.active !== false && direct.ativo !== false && normalize(direct.email) === email) return direct;
 
-  const primary = await getPrimaryAdminProfile();
-  if (!primary || String(primary.uid || "").trim() !== uid || normalize(primary.email) !== email) return null;
+  const invited = await getAccessibleAdminDocument(buildAdminDocIdFromEmail(email));
+  if (invited && invited.active !== false && invited.ativo !== false && normalize(invited.email) === email) {
+    const invitedUid = String(invited.uid || "").trim();
+    if (!invitedUid || invitedUid === uid) return invited;
+  }
+
+  const primary = await getAccessibleAdminDocument(PRIMARY_ADMIN_DOC_ID);
+  if (!primary || primary.active === false || primary.ativo === false) return null;
+  if (String(primary.uid || "").trim() !== uid || normalize(primary.email) !== email) return null;
   return primary;
 }
 
@@ -104,7 +121,7 @@ export async function validateAdminUser(user = null) {
     return { ok: false, reason: "missing-user", admin: null, email, uid };
   }
 
-  const admin = await getAdminProfileByEmail(email);
+  const admin = await getAdminProfileForUser(user);
   if (!admin) {
     return { ok: false, reason: "not-authorized", admin: null, email, uid };
   }
@@ -140,27 +157,41 @@ export async function validateAdminUser(user = null) {
 export async function loginWithGoogle() {
   try {
     const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    const validation = await validateAdminUser(user);
-
-    if (!validation.ok) {
-      persistAdminIdentity(null, null);
-    await signOut(auth);
-      if (validation.reason === "uid-mismatch") {
-        alert("Este administrador já está vinculado a outro UID de acesso administrativo.\n\nUse a mesma conta Google já vinculada ou atualize o UID desse ADM no painel principal.");
-        return;
-      }
-
-      alert("Seu e-mail não está autorizado como administrador.\n\nE-mail detectado: " + validation.email);
-      return;
-    }
-
-    persistAdminIdentity(validation.admin, user);
+    await completeAdminLogin(result.user);
     window.location.href = "/admin/index.html";
   } catch (error) {
     console.error("Erro no login:", error);
-    alert(`Erro ao fazer login com Google: ${error.code || error.message || "desconhecido"}`);
+    throw error;
   }
+}
+
+export async function loginWithEmailPassword(email = "", password = "") {
+  try {
+    const result = await signInWithEmailAndPassword(auth, normalize(email), String(password));
+    await completeAdminLogin(result.user);
+    window.location.href = "/admin/index.html";
+  } catch (error) {
+    console.error("Erro no login:", error);
+    throw error;
+  }
+}
+
+async function completeAdminLogin(user) {
+  const validation = await validateAdminUser(user);
+  if (validation.ok) {
+    persistAdminIdentity(validation.admin, user);
+    return validation;
+  }
+
+  persistAdminIdentity(null, null);
+  await signOut(auth);
+  const error = new Error(
+    validation.reason === "uid-mismatch"
+      ? "Este administrador já está vinculado a outra conta de acesso."
+      : "Este e-mail não está autorizado como administrador."
+  );
+  error.code = validation.reason === "uid-mismatch" ? "admin/uid-mismatch" : "admin/not-authorized";
+  throw error;
 }
 
 export async function logout() {
@@ -169,27 +200,6 @@ export async function logout() {
   window.location.href = "/login.html";
 }
 
-export async function ensureAdminUidSynced(user = null) {
-  if (!user?.email || !user?.uid) return null;
-  const admin = await getAdminProfileByEmail(user.email);
-  if (!admin) return null;
-  const savedUid = String(admin.uid || "").trim();
-  if (!savedUid) {
-    return finalizePendingAdmin(admin, user);
-  }
-  return admin;
-}
-
 export function watchAuth(callback) {
-  return onAuthStateChanged(auth, async (user) => {
-    if (user?.email && user?.uid) {
-      try {
-        const admin = await ensureAdminUidSynced(user);
-        if (admin) persistAdminIdentity(admin, user);
-      } catch (error) {
-        console.warn("Não foi possível sincronizar UID do administrador:", error);
-      }
-    }
-    callback(user);
-  });
+  return onAuthStateChanged(auth, callback);
 }

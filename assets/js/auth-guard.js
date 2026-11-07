@@ -1,4 +1,4 @@
-import { watchAuth, validateAdminUser } from "./auth.js";
+import { logout, watchAuth, validateAdminUser } from "./auth.js";
 import { canAccessAdminPage } from "./services/admin-permissions-service.js";
 
 function resolveAdminPageKey() {
@@ -40,7 +40,7 @@ export function protectAdminPage() {
         } else {
           alert("Seu e-mail não está autorizado para acessar a área administrativa.");
         }
-        window.location.href = "/login.html";
+        await logout();
         return;
       }
 

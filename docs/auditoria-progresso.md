@@ -40,8 +40,10 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Página temporária `inauguracao.html` e seus arquivos exclusivos removidos após o lançamento; o redirecionamento vencido e desativado também foi retirado de `index.html`.
 - `index.html` e dependências da página inicial revisados; metadados foram corrigidos, URLs dinâmicas são validadas, conteúdo persistido é escapado, carregamentos independentes ocorrem em paralelo e observadores que repetiam consultas foram removidos.
 - As notificações da mesma abertura agora compartilham uma única consulta; armazenamento local bloqueado não interrompe mais a página e dois módulos vazios e sem uso foram removidos.
+- `login.html` e o núcleo de autenticação administrativa revisados; login por e-mail/senha e Google foi estruturado, sessões não autorizadas são encerradas e a validação deixou de depender de consulta ampla por e-mail.
+- O observador global de autenticação não tenta mais sincronizar administradores em toda página, e o popup de comunicados passou a carregar somente onde possui interface e finalidade.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- `login.html`
+- `musica.html`

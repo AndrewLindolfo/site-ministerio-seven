@@ -1,71 +1,80 @@
 import { listDownloadsByMusic } from "../services/downloads-music-service.js";
+import { normalizeSearchText } from "../modules/alphabet-filter.js";
 
-function normalizeInitialLetter(value = "") {
-  const raw = String(value || "").trim();
-  if (!raw) return "#";
-  const first = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").charAt(0).toUpperCase();
-  return /[A-Z]/.test(first) ? first : "#";
+function initialLetter(value = "") {
+  const letter = normalizeSearchText(value).charAt(0).toUpperCase();
+  return /[A-Z]/.test(letter) ? letter : "#";
 }
 
-function groupByLetter(items = []) {
-  return items.reduce((acc, item) => {
-    const letter = normalizeInitialLetter(item.title || "");
-    if (!acc[letter]) acc[letter] = [];
-    acc[letter].push(item);
-    return acc;
-  }, {});
+function addDownloadLink(container, url, label, title) {
+  if (!url) return;
+  const link = document.createElement("a");
+  link.className = "downloads-music-btn";
+  link.href = url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.setAttribute("aria-label", `Baixar ${label} de ${title}`);
+  link.textContent = label;
+  container.appendChild(link);
 }
 
-function renderList(items = []) {
+function renderList(items = [], emptyMessage = "Nenhum download por música encontrado.") {
   const container = document.getElementById("downloads-music-lista-alfabetica");
   if (!container) return;
-
+  container.replaceChildren();
   if (!items.length) {
-    container.innerHTML = "<p>Nenhum download por música encontrado.</p>";
+    const message = document.createElement("p");
+    message.textContent = emptyMessage;
+    container.appendChild(message);
     return;
   }
 
-  const grouped = groupByLetter(items);
-  const letters = Object.keys(grouped).sort((a, b) => {
-    if (a === "#") return 1;
-    if (b === "#") return -1;
-    return a.localeCompare(b, "pt-BR");
-  });
+  const groups = items.reduce((result, item) => {
+    const letter = initialLetter(item.title);
+    (result[letter] ||= []).push(item);
+    return result;
+  }, {});
+  const letters = Object.keys(groups).sort((a, b) => a === "#" ? 1 : b === "#" ? -1 : a.localeCompare(b, "pt-BR"));
 
-  container.innerHTML = letters.map((letter) => `
-    <section class="alphabet-group">
-      <h2 class="alphabet-letter">${letter}</h2>
-      ${grouped[letter]
-        .sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), "pt-BR"))
-        .map((item) => `
-          <div class="downloads-music-row">
-            <div class="downloads-music-title">${item.title || ""}</div>
-            <div class="downloads-music-actions">
-              ${item.pdfUrl ? `<a class="downloads-music-btn" href="${item.pdfUrl}" target="_blank" rel="noopener noreferrer" aria-label="Baixar PDF de ${item.title || ""}">PDF</a>` : ""}
-              ${item.pptUrl ? `<a class="downloads-music-btn" href="${item.pptUrl}" target="_blank" rel="noopener noreferrer" aria-label="Baixar PowerPoint de ${item.title || ""}">PPT</a>` : ""}
-            </div>
-          </div>
-        `).join("")}
-    </section>
-  `).join("");
+  for (const letter of letters) {
+    const section = document.createElement("section");
+    section.className = "alphabet-group";
+    const heading = document.createElement("h2");
+    heading.className = "alphabet-letter";
+    heading.textContent = letter;
+    section.appendChild(heading);
+    groups[letter]
+      .sort((a, b) => a.title.localeCompare(b.title, "pt-BR"))
+      .forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "downloads-music-row";
+        const title = document.createElement("div");
+        title.className = "downloads-music-title";
+        title.textContent = item.title;
+        const actions = document.createElement("div");
+        actions.className = "downloads-music-actions";
+        addDownloadLink(actions, item.pdfUrl, "PDF", item.title);
+        addDownloadLink(actions, item.pptUrl, "PPT", item.title);
+        row.append(title, actions);
+        section.appendChild(row);
+      });
+    container.appendChild(section);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
   const input = document.getElementById("downloads-music-filter-input");
+  renderList([], "Carregando downloads...");
   try {
     const all = await listDownloadsByMusic(true);
     const render = (term = "") => {
-      const normalized = String(term || "").trim().toLowerCase();
-      const filtered = !normalized
-        ? all
-        : all.filter((item) => String(item.title || "").toLowerCase().includes(normalized));
-      renderList(filtered);
+      const query = normalizeSearchText(term);
+      renderList(query ? all.filter((item) => normalizeSearchText(item.title).includes(query)) : all);
     };
-
     render();
     input?.addEventListener("input", (event) => render(event.target.value));
   } catch (error) {
-    console.error("Erro ao carregar downloads por música:", error);
-    renderList([]);
+    console.error("Não foi possível carregar os downloads por música.", error);
+    renderList([], "Não foi possível carregar os downloads por música.");
   }
 });

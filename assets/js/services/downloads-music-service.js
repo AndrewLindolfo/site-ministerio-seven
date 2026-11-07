@@ -9,6 +9,7 @@ import {
   normalizeText
 } from "../db.js";
 import { convertGoogleDriveToDirectPdf, convertGoogleDriveToDirectPowerPoint } from "../utils/google-drive-links.js";
+import { normalizeHttpsOrLocalUrl } from "../lib/url-safety.js";
 
 const COLLECTION = "downloadsPorMusica";
 const CACHE_KEY = "seven_cache_downloads_music_v1";
@@ -41,7 +42,14 @@ function clearCache() {
 
 function normalizeList(all = [], activeOnly = false) {
   return all
-    .filter((item) => activeOnly ? item.active !== false : true)
+    .map((item) => ({
+      ...item,
+      title: String(item.title || "").trim().slice(0, 200),
+      pdfUrl: normalizeHttpsOrLocalUrl(item.pdfUrl),
+      pptUrl: normalizeHttpsOrLocalUrl(item.pptUrl),
+      active: item.active !== false
+    }))
+    .filter((item) => activeOnly ? item.active && item.title && (item.pdfUrl || item.pptUrl) : true)
     .sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), "pt-BR"));
 }
 
@@ -64,10 +72,10 @@ export async function getDownloadByMusicByMusicaId(musicaId = "") {
 }
 
 export async function saveDownloadByMusic(payload, id = "") {
-  const title = String(payload.title || "").trim();
-  const musicaId = String(payload.musicaId || "").trim();
-  const pdfUrl = String(convertGoogleDriveToDirectPdf(payload.pdfUrl || "") || "").trim();
-  const pptUrl = String(convertGoogleDriveToDirectPowerPoint(payload.pptUrl || "") || "").trim();
+  const title = String(payload.title || "").trim().slice(0, 200);
+  const musicaId = String(payload.musicaId || "").trim().slice(0, 200);
+  const pdfUrl = normalizeHttpsOrLocalUrl(convertGoogleDriveToDirectPdf(payload.pdfUrl || ""));
+  const pptUrl = normalizeHttpsOrLocalUrl(convertGoogleDriveToDirectPowerPoint(payload.pptUrl || ""));
 
   if (!musicaId || !title || (!pdfUrl && !pptUrl)) {
     throw new Error("Preencha a música e pelo menos um link (PDF ou PPT).");
@@ -77,7 +85,7 @@ export async function saveDownloadByMusic(payload, id = "") {
     musicaId,
     title,
     normalizedTitle: normalizeText(title),
-    slug: payload.slug || "",
+    slug: String(payload.slug || "").trim().slice(0, 200),
     pdfUrl,
     pptUrl,
     active: payload.active !== false,

@@ -1,26 +1,53 @@
 import { listDownloads } from "../services/downloads-service.js";
 
+function setMessage(grid, message) {
+  grid.replaceChildren();
+  const text = document.createElement("p");
+  text.textContent = message;
+  grid.appendChild(text);
+}
+
 function renderDownloads(grid, items = []) {
-  grid.innerHTML = items.length ? items.map((item) => `
-    <a class="destaque-box" href="${item.url || "#"}" target="_blank" rel="noopener noreferrer">
-      ${item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.title}" loading="lazy" decoding="async" />` : ""}
-      <strong>${item.title || ""}</strong>
-      ${item.description ? `<p>${item.description}</p>` : ""}
-    </a>
-  `).join("") : "<p>Nenhum download disponível.</p>";
+  grid.replaceChildren();
+  if (!items.length) {
+    setMessage(grid, "Nenhum download disponível.");
+    return;
+  }
+
+  for (const item of items) {
+    const link = document.createElement("a");
+    link.className = "destaque-box";
+    link.href = item.url;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    if (item.imageUrl) {
+      const image = document.createElement("img");
+      image.src = item.imageUrl;
+      image.alt = "";
+      image.loading = "lazy";
+      image.decoding = "async";
+      link.appendChild(image);
+    }
+    const title = document.createElement("strong");
+    title.textContent = item.title;
+    link.appendChild(title);
+    if (item.description) {
+      const description = document.createElement("p");
+      description.textContent = item.description;
+      link.appendChild(description);
+    }
+    grid.appendChild(link);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
   const grid = document.getElementById("downloads-grid");
   if (!grid) return;
-
-  grid.innerHTML = "<p>Carregando downloads...</p>";
-
+  setMessage(grid, "Carregando downloads...");
   try {
-    const items = await listDownloads(true);
-    renderDownloads(grid, items);
+    renderDownloads(grid, await listDownloads(true));
   } catch (error) {
-    console.error("Erro ao carregar downloads:", error);
-    grid.innerHTML = "<p>Não foi possível carregar os downloads.</p>";
+    console.error("Não foi possível carregar os downloads.", error);
+    setMessage(grid, "Não foi possível carregar os downloads.");
   }
 });

@@ -33,8 +33,9 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - `conta.html` e o fluxo público de autenticação revisados; observadores duplicados foram centralizados, gravações de perfil em toda página foram eliminadas, dados e fotos são normalizados e a identificação administrativa passou a usar UID em vez de listar administradores por e-mail.
 - Testes de URLs de perfil adicionados e aprovados.
 - `contato.html` e `assets/js/pages/contato.js` revisados; limites, validação, proteção contra duplo envio, campo-isca e estados de erro foram adicionados, com testes unitários do payload persistido.
+- `downloads.html` e `downloads-por-musica.html` revisados; conteúdo passou a ser criado por DOM, URLs externas são limitadas a HTTPS, campos persistidos têm limites e a busca por música ignora acentos.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- `downloads-por-musica.html`
+- `favoritos.html`

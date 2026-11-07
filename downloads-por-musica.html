@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -18,8 +17,9 @@
   <meta property="og:title" content="Downloads por Música | Ministério Seven" />
   <meta property="og:description" content="Downloads por música do Ministério Seven." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://ministerioseven.online/downloads-por-musica.html" />
-  <meta property="og:image" content="https://ministerioseven.online/assets/img/logo/logo_dark.png" />
+  <meta property="og:url" content="https://ministerioseven.site/downloads-por-musica.html" />
+  <meta property="og:image" content="https://ministerioseven.site/assets/img/logo/logo_dark.png" />
+  <link rel="canonical" href="https://ministerioseven.site/downloads-por-musica.html" />
   <link rel="icon" href="assets/img/favicon/favicon.ico" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="assets/css/main.css" />
@@ -79,9 +79,10 @@
   <section class="container">
     <h1>Downloads por Música</h1>
     <div class="list-search-bar">
-      <input type="search" id="downloads-music-filter-input" placeholder="Buscar música..." />
+      <label class="sr-only" for="downloads-music-filter-input">Buscar música</label>
+      <input type="search" id="downloads-music-filter-input" placeholder="Buscar música..." autocomplete="off" />
     </div>
-    <div id="downloads-music-lista-alfabetica" class="alphabet-list"></div>
+    <div id="downloads-music-lista-alfabetica" class="alphabet-list" aria-live="polite"></div>
   </section>
 </main>
 

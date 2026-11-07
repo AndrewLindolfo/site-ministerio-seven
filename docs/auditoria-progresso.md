@@ -67,8 +67,9 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Gestão e editor de músicas revisados; a listagem consulta uma vez e filtra localmente, usa DOM seguro, respeita permissões antes das ações e não deixa listeners duplicados, enquanto o editor valida permissões, mantém o estado ativo e consulta títulos duplicados diretamente.
 - Exclusão de música agora é bloqueada quando há cifras ou downloads vinculados, evitando documentos órfãos; dois arquivos CSS vazios e redundantes foram removidos.
 - Listagem administrativa de cifras revisada; a coleção é carregada uma vez, filtros são locais e sem acentos, a interface usa DOM seguro e somente variantes de instrumentos autorizados são expostas, e o seletor de instrumento deixou de injetar estilos e listeners residuais.
+- Editor administrativo de cifras revisado; músicas são carregadas uma vez e renderizadas por DOM, permissões são aplicadas também à persistência, campos protegidos preservam o valor existente, conteúdo inativo não é reativado e duplicidades são consultadas somente pela música vinculada.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- Editor administrativo de cifra
+- Páginas administrativas de programações

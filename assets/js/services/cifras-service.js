@@ -146,17 +146,24 @@ export async function getCifraBySlug(slug, instrumento = "", bypassCache = false
 
 export async function findDuplicateCifraTitle(title, ignoreId = "") {
   const normalizedTitle = normalizeText(title);
-  const all = await getCollection(COLLECTION);
-  return all.find((item) => item.normalizedTitle === normalizedTitle && item.id !== ignoreId) || null;
+  if (!normalizedTitle) return null;
+  const matches = await getCollection(COLLECTION, {
+    where: [["normalizedTitle", "==", normalizedTitle]],
+    limit: 2
+  });
+  return matches.find((item) => item.id !== ignoreId) || null;
 }
 
 export async function findDuplicateCifraInstrument(musicaId, instrumento, ignoreId = "") {
   const musicaIdSafe = String(musicaId || "").trim();
   const instrumentoSafe = normalizeInstrument(instrumento || "violao");
-  const all = await getCollection(COLLECTION);
-  return all.find((item) => {
+  if (!musicaIdSafe) return null;
+  const matches = await getCollection(COLLECTION, {
+    where: [["musicaId", "==", musicaIdSafe]]
+  });
+  return matches.find((item) => {
     const itemInstrumento = normalizeInstrument(item.instrumento || "violao");
-    return item.musicaId === musicaIdSafe && itemInstrumento === instrumentoSafe && item.id !== ignoreId;
+    return itemInstrumento === instrumentoSafe && item.id !== ignoreId;
   }) || null;
 }
 

@@ -36,8 +36,9 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - `downloads.html` e `downloads-por-musica.html` revisados; conteúdo passou a ser criado por DOM, URLs externas são limitadas a HTTPS, campos persistidos têm limites e a busca por música ignora acentos.
 - `favoritos.html` e `playlists.html` revisados; referência CSS inexistente removida, renderização convertida para DOM seguro, leituras concorrentes deduplicadas e limites da biblioteca ajustados ao teto de documento do Firestore.
 - `ferramentas.html` revisado; microfone e contextos de áudio são encerrados com segurança, análise do afinador foi reduzida e reutiliza memória, entradas do metrônomo são limitadas e a matemática de áudio recebeu testes automatizados.
+- `fotos.html` revisado; cartões são criados por DOM e links e capas de álbuns são normalizados como HTTPS tanto na leitura quanto na gravação.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- `fotos.html`
+- `inauguracao.html`

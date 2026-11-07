@@ -1,5 +1,6 @@
 import { addDocument, updateDocument, deleteDocument, getCollection, getDocument, serverTimestamp, normalizeText } from "../db.js";
 import { convertDriveLinksInPayload } from "../utils/google-drive-links.js";
+import { normalizeHttpsOrLocalUrl } from "../lib/url-safety.js";
 const COLLECTION = "albuns";
 const CACHE_KEY = "seven_cache_albuns_v1";
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -31,7 +32,15 @@ function clearCache() {
 
 function normalizeList(all = [], activeOnly = false) {
   return all
-    .filter((item) => activeOnly ? item.active !== false : true)
+    .map((item) => ({
+      ...item,
+      title: String(item.title || "").trim().slice(0, 200),
+      description: String(item.description || "").trim().slice(0, 1000),
+      albumUrl: normalizeHttpsOrLocalUrl(item.albumUrl),
+      coverUrl: normalizeHttpsOrLocalUrl(item.coverUrl),
+      active: item.active !== false
+    }))
+    .filter((item) => activeOnly ? item.active && item.title && item.albumUrl : true)
     .sort((a, b) => (a.title || "").localeCompare(b.title || "", "pt-BR"));
 }
 
@@ -50,12 +59,16 @@ export async function getAlbum(id) {
 
 export async function saveAlbum(payload, id = "") {
   const normalizedPayload = convertDriveLinksInPayload(payload);
+  const title = String(normalizedPayload.title || "").trim().slice(0, 200);
+  const albumUrl = normalizeHttpsOrLocalUrl(normalizedPayload.albumUrl);
+  const coverUrl = normalizeHttpsOrLocalUrl(normalizedPayload.coverUrl);
+  if (!title || !albumUrl) throw new Error("Informe o título e um link HTTPS válido para o álbum.");
   const docData = {
-    title: normalizedPayload.title || "",
-    normalizedTitle: normalizeText(normalizedPayload.title || ""),
-    albumUrl: normalizedPayload.albumUrl || "",
-    coverUrl: normalizedPayload.coverUrl || "",
-    description: normalizedPayload.description || "",
+    title,
+    normalizedTitle: normalizeText(title),
+    albumUrl,
+    coverUrl,
+    description: String(normalizedPayload.description || "").trim().slice(0, 1000),
     active: normalizedPayload.active !== false,
     updatedAt: serverTimestamp()
   };

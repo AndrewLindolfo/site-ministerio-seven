@@ -1,18 +1,50 @@
 import { addDocument, updateDocument, deleteDocument, getCollection, getDocument, serverTimestamp } from "../db.js";
 
 const COLLECTION = "programacoes";
+const MAX_SONGS = 100;
+
+function normalizeString(value = "", maxLength = 200) {
+  return String(value ?? "").trim().slice(0, maxLength);
+}
+
+function normalizeDate(value = "") {
+  const date = normalizeString(value, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return "";
+  const [year, month, day] = date.split("-").map(Number);
+  const parsed = new Date(year, month - 1, day);
+  return parsed.getFullYear() === year && parsed.getMonth() === month - 1 && parsed.getDate() === day ? date : "";
+}
+
+function normalizeTime(value = "") {
+  const time = normalizeString(value, 5);
+  return /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time) ? time : "";
+}
+
+function normalizeSong(song = {}) {
+  return {
+    id: normalizeString(song.id || song.musicaId, 150),
+    musicaId: normalizeString(song.musicaId || song.id, 150),
+    title: normalizeString(song.title || song.titulo || song.name, 150),
+    subtitle: normalizeString(song.subtitle, 200),
+    slug: normalizeString(song.slug, 150),
+    cifraSlug: normalizeString(song.cifraSlug, 150),
+    hasCifra: song.hasCifra === true || Boolean(song.cifraSlug)
+  };
+}
 
 function toLocalDateTime(dateStr = "", timeStr = "") {
   if (!dateStr) return null;
 
-  const parts = String(dateStr).split("-");
-  if (parts.length !== 3) return null;
+  const date = normalizeDate(dateStr);
+  const time = normalizeTime(timeStr || "00:00");
+  if (!date || !time) return null;
 
+  const parts = date.split("-");
   const year = Number(parts[0]);
   const month = Number(parts[1]) - 1;
   const day = Number(parts[2]);
 
-  const timeParts = String(timeStr || "00:00").split(":");
+  const timeParts = time.split(":");
   const hours = Number(timeParts[0] || 0);
   const minutes = Number(timeParts[1] || 0);
 
@@ -73,14 +105,23 @@ export async function getProgramacao(id) {
 }
 
 export async function saveProgramacao(payload, id = "") {
+  const title = normalizeString(payload.title, 150);
+  const date = normalizeDate(payload.date);
+  const time = normalizeTime(payload.time);
+  if (!title || !date || !time) throw new Error("Informe título, data e horário válidos.");
+  const hideAfterRaw = normalizeString(payload.hideAfter, 40);
+  if (hideAfterRaw && !normalizeTime(hideAfterRaw) && Number.isNaN(new Date(hideAfterRaw).getTime())) {
+    throw new Error("Horário de ocultação inválido.");
+  }
+  const hideAfter = hideAfterRaw;
   const docData = {
-    title: payload.title || "",
-    date: payload.date || "",
-    time: payload.time || "",
-    location: payload.location || "",
-    description: payload.description || "",
-    hideAfter: payload.hideAfter || "",
-    songs: Array.isArray(payload.songs) ? payload.songs : [],
+    title,
+    date,
+    time,
+    location: normalizeString(payload.location, 300),
+    description: normalizeString(payload.description, 2000),
+    hideAfter,
+    songs: Array.isArray(payload.songs) ? payload.songs.slice(0, MAX_SONGS).map(normalizeSong).filter((song) => song.title) : [],
     active: payload.active !== false,
     updatedAt: serverTimestamp()
   };

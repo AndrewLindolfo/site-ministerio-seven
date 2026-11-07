@@ -56,8 +56,10 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Dois serviços desconectados do site, de preferências antigas de cifra e contador de visualizações, foram removidos após confirmação de ausência de referências.
 - Consultas públicas de músicas, cifras, álbuns, downloads, comunicados e programações agora exigem `active == true` no Firestore; conteúdo desativado deixou de ser baixado para filtragem no navegador.
 - Cache de listas públicas e administrativas foi separado e centralizado, com deduplicação de consultas concorrentes e testes automatizados; 20 testes estão aprovados.
+- Configuração do site agora usa atualização parcial e não apaga mais a foto principal ao salvar links; URLs, agenda e e-mail são normalizados antes da persistência.
+- Serviços de ensaios e programações receberam limites, timestamps, leitura direta por ID e validação de títulos, datas, horários e listas de músicas.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- Serviços públicos de conteúdo em `assets/js/services/`
+- Validação dos serviços de músicas e cifras

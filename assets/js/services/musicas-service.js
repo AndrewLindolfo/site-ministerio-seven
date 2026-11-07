@@ -53,7 +53,7 @@ function normalizeList(all = [], activeOnly = false) {
 
 export async function listMusicas(activeOnly = false) {
   const cached = readCache();
-  if (cached && cached.length) {
+  if (cached) {
     return normalizeList(cached, activeOnly);
   }
 

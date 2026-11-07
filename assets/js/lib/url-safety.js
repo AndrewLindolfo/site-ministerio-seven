@@ -3,7 +3,8 @@ export function normalizeHttpsOrLocalUrl(value = "", maxLength = 2000) {
   if (!raw) return "";
   try {
     const url = new URL(raw, window.location.origin);
-    if (url.origin === window.location.origin || url.protocol === "https:") return url.href;
+    if (url.protocol === "https:") return url.href;
+    if (url.origin === window.location.origin && ["http:", "file:"].includes(url.protocol)) return url.href;
   } catch {
     return "";
   }

@@ -190,11 +190,17 @@ textarea{
 }
 
 .search-result-item{
-  display:block;
+  display:grid;
+  gap:4px;
   padding:12px 14px;
   border:1px solid var(--border);
   border-radius:16px;
   background:var(--surface);
+}
+
+.search-result-item small{
+  display:block;
+  opacity:.8;
 }
 
 .focus-mode .site-header,

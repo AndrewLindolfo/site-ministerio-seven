@@ -5,10 +5,12 @@ import { listDownloads } from "./services/downloads-service.js";
 import { listAlbuns } from "./services/albuns-service.js";
 import { listProgramacoes } from "./services/programacoes-service.js";
 import { listDownloadsByMusic } from "./services/downloads-music-service.js";
+import { normalizeHttpsOrLocalUrl } from "./lib/url-safety.js";
 
 let SEARCH_INDEX = [];
 let searchLoaded = false;
-let searchLoading = false;
+let searchLoadPromise = null;
+let previousFocus = null;
 
 function normalize(value = "") {
   return String(value || "")
@@ -18,32 +20,34 @@ function normalize(value = "") {
     .trim();
 }
 
-function escapeHtml(value = "") {
-  return String(value || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
 function buildSearchText(...parts) {
   return normalize(parts.filter(Boolean).join(" "));
 }
 
-function uniqueByHref(items = []) {
+function uniqueItems(items = []) {
   const seen = new Set();
   return items.filter((item) => {
-    if (!item?.href || seen.has(item.href)) return false;
-    seen.add(item.href);
+    const key = `${item?.type || ""}|${item?.href || ""}|${normalize(item?.label)}`;
+    if (!item?.href || !item?.label || seen.has(key)) return false;
+    seen.add(key);
     return true;
   });
 }
 
-async function loadSearchIndex() {
-  if (searchLoaded || searchLoading) return;
-  searchLoading = true;
+function normalizeSearchHref(value = "", fallback = "./index.html") {
+  return normalizeHttpsOrLocalUrl(value) || normalizeHttpsOrLocalUrl(fallback);
+}
 
-  try {
-    const [musicas, cifras, downloads, downloadsMusic, albuns, programacoes] = await Promise.all([
+function getFulfilled(result) {
+  return result?.status === "fulfilled" && Array.isArray(result.value) ? result.value : [];
+}
+
+async function loadSearchIndex() {
+  if (searchLoaded) return;
+  if (searchLoadPromise) return searchLoadPromise;
+
+  searchLoadPromise = (async () => {
+    const results = await Promise.allSettled([
       listMusicas(true),
       listCifras(true),
       listDownloads(true),
@@ -51,12 +55,19 @@ async function loadSearchIndex() {
       listAlbuns(true),
       listProgramacoes(true)
     ]);
+    if (results.every((result) => result.status === "rejected")) {
+      throw new Error("Nenhuma fonte da busca pôde ser carregada.");
+    }
+    results.forEach((result) => {
+      if (result.status === "rejected") console.warn("Uma fonte da busca não pôde ser carregada:", result.reason);
+    });
+    const [musicas, cifras, downloads, downloadsMusic, albuns, programacoes] = results.map(getFulfilled);
 
     const musicaItems = (musicas || []).map((item) => ({
       type: "Música",
       label: item.title || "",
       description: item.subtitle || "",
-      href: item.slug ? `./musica.html?slug=${item.slug}` : "./musicas.html",
+      href: normalizeSearchHref(item.slug ? `./musica.html?slug=${encodeURIComponent(item.slug)}` : "./musicas.html"),
       searchText: buildSearchText(item.title, item.subtitle)
     }));
 
@@ -64,7 +75,7 @@ async function loadSearchIndex() {
       type: "Cifra",
       label: item.title || "",
       description: item.subtitle || "",
-      href: item.slug ? `./cifra.html?slug=${item.slug}` : "./cifras.html",
+      href: normalizeSearchHref(item.slug ? `./cifra.html?slug=${encodeURIComponent(item.slug)}` : "./cifras.html"),
       searchText: buildSearchText(item.title, item.subtitle)
     }));
 
@@ -72,7 +83,7 @@ async function loadSearchIndex() {
       type: "Download",
       label: item.title || "",
       description: item.description || "",
-      href: item.url || "./downloads.html",
+      href: normalizeSearchHref(item.url, "./downloads.html"),
       searchText: buildSearchText(item.title, item.description)
     }));
 
@@ -80,7 +91,7 @@ async function loadSearchIndex() {
       type: "Download por música",
       label: item.title || "",
       description: [item.pdfUrl ? "PDF" : "", item.pptUrl ? "PPT" : ""].filter(Boolean).join(" • "),
-      href: "./downloads-por-musica.html",
+      href: normalizeSearchHref("./downloads-por-musica.html"),
       searchText: buildSearchText(item.title, "download por musica", item.pdfUrl ? "pdf" : "", item.pptUrl ? "ppt" : "")
     }));
 
@@ -88,7 +99,7 @@ async function loadSearchIndex() {
       type: "Álbum",
       label: item.title || "",
       description: item.description || "",
-      href: item.albumUrl || "./fotos.html",
+      href: normalizeSearchHref(item.albumUrl, "./fotos.html"),
       searchText: buildSearchText(item.title, item.description)
     }));
 
@@ -96,7 +107,7 @@ async function loadSearchIndex() {
       type: "Programação",
       label: item.title || "Programação",
       description: [item.description || "", item.location || ""].filter(Boolean).join(" • "),
-      href: "./index.html#programacao-section",
+      href: normalizeSearchHref("./index.html#programacao-section"),
       searchText: buildSearchText(item.title, item.description, item.location)
     }));
 
@@ -105,47 +116,33 @@ async function loadSearchIndex() {
         type: "Página",
         label: "Downloads por Música",
         description: "PDF e PowerPoint por música",
-        href: "./downloads-por-musica.html",
+        href: normalizeSearchHref("./downloads-por-musica.html"),
         searchText: buildSearchText("Downloads por Música", "PDF", "PPT")
       },
       {
         type: "Ferramenta",
         label: "Ferramentas",
         description: "Afinador e metrônomo",
-        href: "./ferramentas.html",
+        href: normalizeSearchHref("./ferramentas.html"),
         searchText: buildSearchText("Ferramentas", "Afinador", "Metrônomo")
-      },
-      {
-        type: "Página",
-        label: "Downloads por Música",
-        description: "PDF e PowerPoint por música",
-        href: "./downloads-por-musica.html",
-        searchText: buildSearchText("Downloads por Música", "PDF", "PPT")
       },
       {
         type: "Ferramenta",
         label: "Afinador",
         description: "Afinador cromático",
-        href: "./ferramentas.html#tool-card-afinador",
+        href: normalizeSearchHref("./ferramentas.html#tool-card-afinador"),
         searchText: buildSearchText("Afinador", "Ferramentas", "cromático", "Hz")
-      },
-      {
-        type: "Página",
-        label: "Downloads por Música",
-        description: "PDF e PowerPoint por música",
-        href: "./downloads-por-musica.html",
-        searchText: buildSearchText("Downloads por Música", "PDF", "PPT")
       },
       {
         type: "Ferramenta",
         label: "Metrônomo",
         description: "Controle de BPM e compasso",
-        href: "./ferramentas.html#tool-card-metronomo",
+        href: normalizeSearchHref("./ferramentas.html#tool-card-metronomo"),
         searchText: buildSearchText("Metrônomo", "Ferramentas", "BPM", "compasso")
       }
     ];
 
-    SEARCH_INDEX = uniqueByHref([
+    SEARCH_INDEX = uniqueItems([
       ...musicaItems,
       ...cifraItems,
       ...downloadItems,
@@ -156,21 +153,31 @@ async function loadSearchIndex() {
     ]);
 
     searchLoaded = true;
-  } catch (error) {
+  })().catch((error) => {
     console.error("Erro ao carregar índice da busca:", error);
     SEARCH_INDEX = [];
-  } finally {
-    searchLoading = false;
-  }
+    throw error;
+  }).finally(() => {
+    searchLoadPromise = null;
+  });
+  return searchLoadPromise;
 }
 
 export function openSearchModal() {
-  $("#search-modal")?.classList.remove("hidden");
+  const modal = $("#search-modal");
+  previousFocus = document.activeElement;
+  modal?.classList.remove("hidden");
+  modal?.setAttribute("aria-hidden", "false");
   $("#search-input")?.focus();
 }
 
 export function closeSearchModal() {
-  $("#search-modal")?.classList.add("hidden");
+  const modal = $("#search-modal");
+  if (!modal || modal.classList.contains("hidden")) return;
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
+  if (previousFocus instanceof HTMLElement) previousFocus.focus();
+  previousFocus = null;
 }
 
 function scoreResult(item, term) {
@@ -191,8 +198,11 @@ function renderSearchResults(term = "") {
   if (!resultsBox) return;
 
   const normalized = normalize(term);
+  resultsBox.replaceChildren();
   if (!normalized) {
-    resultsBox.innerHTML = "<p>Digite para buscar no site.</p>";
+    const message = document.createElement("p");
+    message.textContent = "Digite para buscar no site.";
+    resultsBox.appendChild(message);
     return;
   }
 
@@ -203,17 +213,44 @@ function renderSearchResults(term = "") {
     .slice(0, 20);
 
   if (!filtered.length) {
-    resultsBox.innerHTML = "<p>Nenhum resultado encontrado.</p>";
+    const message = document.createElement("p");
+    message.textContent = "Nenhum resultado encontrado.";
+    resultsBox.appendChild(message);
     return;
   }
 
-  resultsBox.innerHTML = filtered.map((item) => `
-    <a class="search-result-item" href="${item.href}" target="${item.type === "Download" || item.type === "Álbum" ? "_blank" : "_self"}" rel="noopener noreferrer">
-      <strong>${escapeHtml(item.type)}</strong><br>
-      <span>${escapeHtml(item.label)}</span>
-      ${item.description ? `<small style="display:block;opacity:.8;margin-top:4px;">${escapeHtml(item.description)}</small>` : ""}
-    </a>
-  `).join("");
+  filtered.forEach((item) => {
+    const link = document.createElement("a");
+    const url = new URL(item.href, window.location.origin);
+    link.className = "search-result-item";
+    link.href = item.href;
+    if (url.origin !== window.location.origin) {
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+    }
+    const type = document.createElement("strong");
+    type.textContent = item.type;
+    const label = document.createElement("span");
+    label.textContent = item.label;
+    link.append(type, label);
+    if (item.description) {
+      const description = document.createElement("small");
+      description.textContent = item.description;
+      link.appendChild(description);
+    }
+    resultsBox.appendChild(link);
+  });
+}
+
+async function loadAndRender(input) {
+  const resultsBox = $("#search-results");
+  if (resultsBox && !searchLoaded) resultsBox.textContent = "Carregando busca…";
+  try {
+    await loadSearchIndex();
+    renderSearchResults(input?.value || "");
+  } catch {
+    if (resultsBox) resultsBox.textContent = "Não foi possível carregar a busca agora.";
+  }
 }
 
 export function initSearch() {
@@ -221,27 +258,32 @@ export function initSearch() {
   const closeButton = $("#search-modal-close");
   const overlay = $("#search-modal-overlay");
   const input = $("#search-input");
+  const panel = document.querySelector(".search-modal-panel");
+  const results = $("#search-results");
+
+  panel?.setAttribute("role", "dialog");
+  panel?.setAttribute("aria-modal", "true");
+  panel?.setAttribute("aria-label", "Busca no site");
+  input?.setAttribute("aria-label", "Buscar no site");
+  results?.setAttribute("aria-live", "polite");
 
   openButton?.addEventListener("click", async () => {
     openSearchModal();
-    await loadSearchIndex();
-    renderSearchResults(input?.value || "");
+    await loadAndRender(input);
   });
 
   closeButton?.addEventListener("click", closeSearchModal);
   overlay?.addEventListener("click", closeSearchModal);
 
   input?.addEventListener("input", async (event) => {
-    await loadSearchIndex();
-    renderSearchResults(event.target.value);
+    await loadAndRender(event.target);
   });
 
   document.addEventListener("keydown", async (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
       event.preventDefault();
       openSearchModal();
-      await loadSearchIndex();
-      renderSearchResults(input?.value || "");
+      await loadAndRender(input);
     }
 
     if (event.key === "Escape") {

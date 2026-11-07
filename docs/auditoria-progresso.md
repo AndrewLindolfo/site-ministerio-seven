@@ -47,8 +47,10 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Testes automatizados de URLs do YouTube adicionados e aprovados.
 - `musicas.html` revisado; listagem passou a usar DOM seguro, slugs são codificados, itens incompletos são descartados e a busca ignora maiúsculas e acentos.
 - `notificacoes.html` revisado; a leitura duplicada em tempo real foi removida, cartões usam DOM seguro, links são validados e datas aceitam valores nativos e `Timestamp` do Firestore.
+- Busca global revisada; carregamentos concorrentes aguardam a mesma promessa, falhas parciais não apagam todo o índice, resultados com destino compartilhado não são mais descartados e links são normalizados antes da exibição.
+- A busca passou a usar DOM seguro e melhorou estado de carregamento e acessibilidade; dois módulos vazios ou sem referências foram removidos e a validação compartilhada de URLs recebeu testes.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- `assets/js/search.js`
+- `assets/js/app.js`

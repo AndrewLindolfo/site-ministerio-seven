@@ -67,4 +67,10 @@ export function initDownloadsSplitMenu() {
       document.querySelectorAll(".downloads-nav-group > a").forEach((item) => item.setAttribute("aria-expanded", "false"));
     }
   });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    document.querySelectorAll("[data-downloads-submenu]").forEach((item) => item.classList.add("hidden"));
+    document.querySelectorAll("[data-submenu-toggle='1'], .downloads-nav-group > a").forEach((item) => item.setAttribute("aria-expanded", "false"));
+  });
 }

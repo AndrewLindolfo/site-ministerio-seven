@@ -3,6 +3,7 @@ import { normalizeHttpsOrLocalUrl } from "../lib/url-safety.js";
 
 const COLLECTION = "usuariosPublicos";
 const LOCAL_PREFIX = "seven_public_user_profile_";
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
 function normalizeString(value = "", maxLength = 200) {
   return String(value ?? "").trim().slice(0, maxLength);
@@ -29,21 +30,38 @@ function localKey(uid = "") {
   return `${LOCAL_PREFIX}${uid}`;
 }
 
-export async function getPublicUserProfile(uid = "") {
-  if (!uid) return null;
-  try {
-    const remote = await getDocument(COLLECTION, uid);
-    if (remote) return { ...remote, ...normalizeProfile(remote) };
-  } catch (error) {
-    console.warn("Perfil público remoto indisponível, usando fallback local:", error);
-  }
-
+function readLocalProfile(uid = "") {
   try {
     const raw = localStorage.getItem(localKey(uid));
-    return raw ? normalizeProfile(JSON.parse(raw)) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return { profile: normalizeProfile(parsed), cachedAt: Number(parsed.cachedAt || 0) };
   } catch {
     return null;
   }
+}
+
+function writeLocalProfile(uid = "", profile = {}) {
+  try {
+    localStorage.setItem(localKey(uid), JSON.stringify({ ...normalizeProfile(profile), cachedAt: Date.now() }));
+  } catch {}
+}
+
+export async function getPublicUserProfile(uid = "") {
+  if (!uid) return null;
+  const local = readLocalProfile(uid);
+  if (local && Date.now() - local.cachedAt <= CACHE_TTL_MS) return local.profile;
+  try {
+    const remote = await getDocument(COLLECTION, uid);
+    if (remote) {
+      const normalized = { ...remote, ...normalizeProfile(remote) };
+      writeLocalProfile(uid, normalized);
+      return normalized;
+    }
+  } catch (error) {
+    console.warn("Perfil público remoto indisponível, usando fallback local:", error);
+  }
+  return local?.profile || null;
 }
 
 export async function savePublicUserProfile(uid = "", data = {}) {
@@ -60,9 +78,7 @@ export async function savePublicUserProfile(uid = "", data = {}) {
     console.warn("Não foi possível salvar perfil público no Firestore, usando fallback local:", error);
   }
 
-  try {
-    localStorage.setItem(localKey(uid), JSON.stringify({ id: uid, ...payload }));
-  } catch {}
+  writeLocalProfile(uid, payload);
 
   return uid;
 }

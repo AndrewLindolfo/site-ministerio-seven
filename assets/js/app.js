@@ -8,9 +8,15 @@ import { initNotificacoesPopup } from "./modules/notificacoes-popup.js";
 import { initDownloadsSplitMenu } from "./modules/downloads-menu.js";
 import { initPublicAuth } from "./public-auth.js";
 import { initPersonalActions } from "./modules/personal-actions.js";
-import { getAdminProfileForUser } from "./auth.js";
-import { isPrimaryAdmin } from "./services/admin-permissions-service.js";
-import { auth } from "./firebase.js";
+
+const PERSONAL_ACTION_PAGES = new Set([
+  "cifra.html",
+  "cifras.html",
+  "favoritos.html",
+  "musica.html",
+  "musicas.html",
+  "playlists.html"
+]);
 
 function injectAdminSiteShortcut() {
   const topbar = document.querySelector(".admin-topbar-inner");
@@ -33,29 +39,6 @@ function injectAdminSiteShortcut() {
   }
 }
 
-async function injectAdminCreateShortcut() {
-  const topbar = document.querySelector(".admin-topbar-inner");
-  if (!topbar || document.getElementById("admin-create-link")) return;
-  const user = auth.currentUser;
-  if (!user?.email) return;
-  const admin = await getAdminProfileForUser(user);
-  if (!isPrimaryAdmin(admin)) return;
-
-  const headerActions = topbar.querySelector(".header-actions");
-  const link = document.createElement("a");
-  link.id = "admin-create-link";
-  link.className = "admin-view-site-link";
-  link.href = "./admins.html";
-  link.textContent = "Criar ADM";
-
-  if (headerActions) {
-    topbar.insertBefore(link, headerActions);
-  } else {
-    topbar.appendChild(link);
-  }
-}
-
-
 function injectHomeLinks() {
   document.querySelectorAll(".main-nav, .mobile-menu-panel").forEach((nav) => {
     if (!nav || nav.querySelector('[data-home-link="1"]')) return;
@@ -68,18 +51,28 @@ function injectHomeLinks() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
+function isPersonalActionPage() {
+  const name = window.location.pathname.split("/").pop() || "index.html";
+  return PERSONAL_ACTION_PAGES.has(name.toLowerCase());
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const isAdminPage = Boolean(document.querySelector(".admin-topbar"));
   initTheme();
-  injectHomeLinks();
   initThemeBranding();
   setFooterYear();
+
+  if (isAdminPage) {
+    initAdminAccountMenu();
+    injectAdminSiteShortcut();
+    return;
+  }
+
+  injectHomeLinks();
   initSearch();
   initMobileMenu();
   initDownloadsSplitMenu();
   initPublicAuth();
-  initPersonalActions();
-  initAdminAccountMenu();
-  injectAdminSiteShortcut();
-  await injectAdminCreateShortcut();
+  if (isPersonalActionPage()) initPersonalActions();
   if (document.querySelector(".home-page")) initNotificacoesPopup();
 });

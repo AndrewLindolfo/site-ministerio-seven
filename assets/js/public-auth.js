@@ -13,7 +13,10 @@ let firebaseAuthUnsubscribe = null;
 let lastFirebaseUser = null;
 let authStateKnown = false;
 const authSubscribers = new Set();
+const ADMIN_CACHE_PREFIX = "seven_public_admin_status_";
+const ADMIN_CACHE_TTL_MS = 5 * 60 * 1000;
 let authReadyResolver = null;
+let authModalPreviousFocus = null;
 const authReadyPromise = new Promise((resolve) => {
   authReadyResolver = resolve;
 });
@@ -26,12 +29,39 @@ function $(selector) {
   return document.querySelector(selector);
 }
 
+function readAdminStatus(uid = "") {
+  try {
+    const raw = sessionStorage.getItem(`${ADMIN_CACHE_PREFIX}${uid}`);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Date.now() - Number(parsed.savedAt || 0) > ADMIN_CACHE_TTL_MS) return null;
+    return parsed.isAdmin === true;
+  } catch {
+    return null;
+  }
+}
+
+function writeAdminStatus(uid = "", isAdmin = false) {
+  try {
+    sessionStorage.setItem(`${ADMIN_CACHE_PREFIX}${uid}`, JSON.stringify({ isAdmin, savedAt: Date.now() }));
+  } catch {}
+}
+
+async function resolveAdminStatus(user) {
+  const cached = readAdminStatus(user?.uid || "");
+  if (cached !== null) return cached;
+  const isAdmin = Boolean(await getAdminProfileForUser(user));
+  writeAdminStatus(user?.uid || "", isAdmin);
+  return isAdmin;
+}
+
 function ensureAuthModal() {
   if ($("#public-auth-modal")) return;
 
   const modal = document.createElement("div");
   modal.id = "public-auth-modal";
   modal.className = "public-auth-modal hidden";
+  modal.setAttribute("aria-hidden", "true");
   modal.innerHTML = `
     <div class="public-auth-modal__overlay" data-close-public-auth="1"></div>
     <div class="public-auth-modal__panel" role="dialog" aria-modal="true" aria-labelledby="public-auth-modal-title">
@@ -40,7 +70,7 @@ function ensureAuthModal() {
       <h2 id="public-auth-modal-title">Entrar</h2>
       <p class="public-auth-modal__text">Faça login para acessar favoritos, playlists e recursos pessoais do site.</p>
       <button type="button" id="public-google-login-button" class="public-auth-modal__google-btn">
-        <span class="public-auth-modal__google-icon" aria-hidden="true"><img src="./assets/img/ui/logo-g-login.png" alt="" class="public-auth-modal__google-image" /></span>
+        <span class="public-auth-modal__google-icon" aria-hidden="true"><img src="/assets/img/ui/logo-g-login.png" alt="" class="public-auth-modal__google-image" /></span>
         <span>Continuar com Google</span>
       </button>
       <p class="public-auth-modal__footnote">O login não é obrigatório para navegar no site. Ele é usado apenas para recursos pessoais.</p>
@@ -61,7 +91,12 @@ function ensureAuthModal() {
       closePublicAuthModal();
     } catch (error) {
       console.error("Erro ao fazer login público:", error);
-      alert(`Não foi possível entrar com Google: ${error.code || error.message || "erro desconhecido"}`);
+      const code = String(error?.code || "");
+      if (code !== "auth/popup-closed-by-user") {
+        alert(code === "auth/popup-blocked"
+          ? "O navegador bloqueou a janela do Google. Libere pop-ups e tente novamente."
+          : "Não foi possível entrar com Google. Tente novamente.");
+      }
     } finally {
       button.disabled = false;
     }
@@ -70,14 +105,22 @@ function ensureAuthModal() {
 
 export function openPublicAuthModal() {
   ensureAuthModal();
-  $("#public-auth-modal")?.classList.remove("hidden");
+  authModalPreviousFocus = document.activeElement;
+  const modal = $("#public-auth-modal");
+  modal?.classList.remove("hidden");
+  modal?.setAttribute("aria-hidden", "false");
   document.body.classList.add("modal-open");
   $("#public-google-login-button")?.focus();
 }
 
 export function closePublicAuthModal() {
-  $("#public-auth-modal")?.classList.add("hidden");
+  const modal = $("#public-auth-modal");
+  if (!modal || modal.classList.contains("hidden")) return;
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
   document.body.classList.remove("modal-open");
+  if (authModalPreviousFocus instanceof HTMLElement) authModalPreviousFocus.focus();
+  authModalPreviousFocus = null;
 }
 
 function ensureHeaderSlot() {
@@ -122,8 +165,8 @@ async function buildProfileData(user) {
 async function renderLoggedOut(slot) {
   slot.innerHTML = `
     <button type="button" id="public-login-button" class="public-login-button public-login-button--image-only" aria-label="Entrar">
-      <img src="./assets/img/ui/login-user-preto.png" alt="Entrar" class="public-login-button__image public-login-button__image--light" />
-      <img src="./assets/img/ui/login-user-branco.png" alt="Entrar" class="public-login-button__image public-login-button__image--dark" />
+      <img src="/assets/img/ui/login-user-preto.png" alt="Entrar" class="public-login-button__image public-login-button__image--light" />
+      <img src="/assets/img/ui/login-user-branco.png" alt="Entrar" class="public-login-button__image public-login-button__image--dark" />
     </button>`;
   $("#public-login-button")?.addEventListener("click", openPublicAuthModal);
 }
@@ -183,7 +226,7 @@ async function renderHeaderAuth(user) {
 
   const profile = await buildProfileData(user);
   try {
-    profile.isAdmin = !!(await getAdminProfileForUser(user));
+    profile.isAdmin = await resolveAdminStatus(user);
   } catch (error) {
     console.warn("Não foi possível verificar o acesso administrativo.", error);
   }

@@ -49,8 +49,11 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - `notificacoes.html` revisado; a leitura duplicada em tempo real foi removida, cartões usam DOM seguro, links são validados e datas aceitam valores nativos e `Timestamp` do Firestore.
 - Busca global revisada; carregamentos concorrentes aguardam a mesma promessa, falhas parciais não apagam todo o índice, resultados com destino compartilhado não são mais descartados e links são normalizados antes da exibição.
 - A busca passou a usar DOM seguro e melhorou estado de carregamento e acessibilidade; dois módulos vazios ou sem referências foram removidos e a validação compartilhada de URLs recebeu testes.
+- Inicialização global revisada; páginas administrativas não carregam mais a conta pública e páginas sem ações pessoais deixaram de consultar favoritos e playlists.
+- Tema, menus móvel e administrativo e autenticação pública foram endurecidos; perfil e estado visual de administrador usam cache curto para evitar novas leituras a cada navegação.
+- Quinze módulos vazios, demonstrativos ou substituídos e quatro funções globais sem uso foram removidos após confirmação de ausência de referências.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- `assets/js/app.js`
+- `assets/js/modules/personal-actions.js`

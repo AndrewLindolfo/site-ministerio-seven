@@ -73,8 +73,4 @@ export function initThemeBranding() {
     attributes: true,
     attributeFilter: ["data-theme"]
   });
-
-  document.getElementById("theme-toggle")?.addEventListener("click", () => {
-    setTimeout(applyThemeBranding, 0);
-  });
 }

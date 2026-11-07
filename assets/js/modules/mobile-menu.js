@@ -8,6 +8,7 @@ function closeMenu(menu) {
   menu.setAttribute("aria-hidden", "true");
   menu.style.display = "none";
   document.body.classList.remove("menu-open");
+  document.getElementById("mobile-menu-toggle")?.setAttribute("aria-expanded", "false");
 }
 
 function openMenu(menu) {
@@ -16,6 +17,9 @@ function openMenu(menu) {
   menu.setAttribute("aria-hidden", "false");
   menu.style.display = "block";
   document.body.classList.add("menu-open");
+  const toggle = document.getElementById("mobile-menu-toggle");
+  toggle?.setAttribute("aria-expanded", "true");
+  menu.querySelector("#mobile-menu-close")?.focus();
 }
 
 function isMobileOrTablet() {
@@ -30,6 +34,8 @@ export function initMobileMenu() {
   const links = document.querySelectorAll(".mobile-nav-link");
 
   if (!menu || !toggle) return;
+  toggle.setAttribute("aria-controls", menu.id || "mobile-menu");
+  toggle.setAttribute("aria-expanded", "false");
 
   const applyResponsiveState = () => {
     if (isMobileOrTablet()) {
@@ -59,5 +65,11 @@ export function initMobileMenu() {
   }));
 
   window.addEventListener("resize", applyResponsiveState);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && menu.classList.contains("is-open")) {
+      closeMenu(menu);
+      toggle.focus();
+    }
+  });
   applyResponsiveState();
 }

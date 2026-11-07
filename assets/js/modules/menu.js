@@ -1,12 +1,13 @@
 import { $, $$ } from "../utils.js";
 import { logout, watchAuth } from "../auth.js";
+import { normalizeProfilePhotoUrl } from "../services/public-user-service.js";
 
 function fillAdminUser(user) {
   const emailEls = $$("#admin-user-email");
   const photoEls = $$("#admin-user-photo");
   const toggle = $("#admin-account-toggle");
-  const photoSrc = user?.photoURL || "../assets/img/v7/icon_120.png";
-  const altText = user?.displayName || user?.email || "Conta";
+  const photoSrc = normalizeProfilePhotoUrl(user?.photoURL) || "../assets/img/v7/icon_120.png";
+  const altText = String(user?.displayName || user?.email || "Conta").trim().slice(0, 200);
 
   emailEls.forEach((el) => {
     el.textContent = user?.email || "";
@@ -18,7 +19,11 @@ function fillAdminUser(user) {
   });
 
   if (toggle) {
-    toggle.innerHTML = `<img src="${photoSrc}" alt="${altText}" class="admin-account-toggle-photo" />`;
+    const image = document.createElement("img");
+    image.src = photoSrc;
+    image.alt = altText;
+    image.className = "admin-account-toggle-photo";
+    toggle.replaceChildren(image);
     toggle.setAttribute("aria-label", altText);
     toggle.title = altText;
   }
@@ -49,20 +54,38 @@ export function initAdminAccountMenu() {
   ensureAdminViewSiteLink(menu);
 
   if (toggle && menu) {
+    toggle.setAttribute("aria-expanded", "false");
+    const close = () => {
+      menu.classList.add("hidden");
+      toggle.setAttribute("aria-expanded", "false");
+    };
     toggle.addEventListener("click", () => {
-      menu.classList.toggle("hidden");
+      const hidden = menu.classList.toggle("hidden");
+      toggle.setAttribute("aria-expanded", hidden ? "false" : "true");
     });
 
     document.addEventListener("click", (event) => {
       if (!menu.contains(event.target) && !toggle.contains(event.target)) {
-        menu.classList.add("hidden");
+        close();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !menu.classList.contains("hidden")) {
+        close();
+        toggle.focus();
       }
     });
   }
 
   if (logoutButton) {
     logoutButton.addEventListener("click", async () => {
-      await logout();
+      logoutButton.disabled = true;
+      try {
+        await logout();
+      } catch (error) {
+        console.error("Não foi possível sair da conta administrativa.", error);
+        logoutButton.disabled = false;
+      }
     });
   }
 

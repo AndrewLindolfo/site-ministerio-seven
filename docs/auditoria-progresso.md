@@ -86,8 +86,18 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - SDK Firebase consolidado em `10.12.2`; o helper `11.7.1` foi removido por não possuir consumidores, e a auditoria estática deixou de acusar versões divergentes.
 - Consulta administrativa por e-mail foi eliminada do código; a edição pública de metrônomo agora usa UID e exige permissões de editar cifra, BPM e compasso.
 - Módulos desconectados `admin-shell.js`, `router.js`, `stats.js`, JSON demonstrativo, CSS vazio do dashboard e pasta local vazia de uploads foram removidos.
+- Aplicação ligada ao SDK do projeto novo `ministerio-seven-site`; a configuração antiga deixou de ser referenciada pelo código.
+- Convites de administradores secundários usam IDs verificáveis pelas regras (`email_<email normalizado>`); formatos históricos serão convertidos durante a migração e não geram leituras extras no login novo.
+- Regras de produção do Firestore foram criadas com negação por padrão, conteúdo público condicionado a `active == true`, dados pessoais isolados por UID, permissões administrativas por módulo, logs imutáveis e validação de campos e tamanhos.
+- Regras do Storage permanecem fechadas porque o site atual não envia arquivos ao bucket; links de mídia continuam validados e salvos no Firestore.
+- Firebase Hosting configurado para servir a raiz do projeto, excluir arquivos de desenvolvimento e segurança, evitar cache imutável em ativos sem hash e enviar cabeçalhos de proteção.
+- Dependências oficiais de teste do Firebase fixadas em versões compatíveis com Node 22; `npm audit` aprovado sem vulnerabilidades.
+- Regras e configuração de Firestore, Storage e Hosting compiladas com sucesso pelo Firebase CLI em modo `--dry-run`, sem publicação.
+- 10 testes de regras foram aprovados no emulador, além dos 20 testes unitários existentes.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
-## Próximo arquivo
+## Próxima etapa
 
-- Regras, índices, configuração e testes locais do Firebase de destino
+- Criar ou confirmar a conta principal no Authentication e inicializar `admins/master` por operação confiável.
+- Migrar os documentos válidos do Firebase antigo para o projeto novo, adaptando IDs administrativos históricos sem copiar regras antigas.
+- Publicar um canal de pré-visualização do Firebase Hosting e concluir a validação visual responsiva e dos fluxos autenticados antes de qualquer troca de domínio.

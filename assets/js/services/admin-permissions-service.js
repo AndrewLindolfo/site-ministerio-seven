@@ -170,11 +170,7 @@ export async function getAdminByEmail(email = "") {
 }
 
 export function buildAdminDocIdFromEmail(email = "") {
-  return `email_${encodeURIComponent(normalizeEmail(email))}`;
-}
-
-export function buildLegacyAdminDocIdFromEmail(email = "") {
-  return normalizeEmail(email).replace(/[^a-z0-9]/gi, "_").toLowerCase();
+  return `email_${normalizeEmail(email)}`;
 }
 
 export async function saveSecondaryAdmin(payload = {}, existingId = "") {

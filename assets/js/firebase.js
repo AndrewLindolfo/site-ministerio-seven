@@ -4,13 +4,13 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebas
 import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDIHB-clMayqI7ltnluGITvu3mNwTwuO_o",
-  authDomain: "ministerio-seven-v2.firebaseapp.com",
-  projectId: "ministerio-seven-v2",
-  storageBucket: "ministerio-seven-v2.firebasestorage.app",
-  messagingSenderId: "877779049437",
-  appId: "1:877779049437:web:1c73a1e4c0924d5f9d3434",
-  measurementId: "G-7J2294B6V8"
+  apiKey: "AIzaSyD4PbLKQIUjrU3rY4aaQ1hW7xNpLmR3F4s",
+  authDomain: "ministerio-seven-site.firebaseapp.com",
+  projectId: "ministerio-seven-site",
+  storageBucket: "ministerio-seven-site.firebasestorage.app",
+  messagingSenderId: "232635892630",
+  appId: "1:232635892630:web:a8989fcc54a0cf45bc93b7",
+  measurementId: "G-KS57H6C9H9"
 };
 
 const app = initializeApp(firebaseConfig);

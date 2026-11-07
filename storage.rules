@@ -1,0 +1,12 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // The current application stores only HTTPS references in Firestore and does
+    // not upload files to Cloud Storage. Keep the bucket closed until a concrete
+    // upload path, ownership model and file validation policy are introduced.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

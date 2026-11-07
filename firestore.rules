@@ -1,10 +1,424 @@
 rules_version = '2';
 
-// Safe reconstruction baseline.
-// Keep the new database closed until every collection schema, query and
-// permission path has a validated rule and an emulator test.
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Data model: public content is stored in musicas, cifras, programacoes,
+    // ensaios, albuns, downloads, downloadsPorMusica and notificacoes.
+    // Administrative identities live in admins; master is the primary admin,
+    // and secondary invitations use email_<normalized email> as the document ID.
+    // usuariosPublicos and bibliotecasUsuarios are private, UID-owned documents.
+    // contatos accepts validated public submissions and is otherwise admin-only.
+    // config/site is public configuration; activity_logs is an append-only audit log.
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function verifiedEmail() {
+      return signedIn()
+        && request.auth.token.email is string
+        && request.auth.token.email_verified == true;
+    }
+
+    function primaryPath() {
+      return /databases/$(database)/documents/admins/master;
+    }
+
+    function secondaryId() {
+      return 'email_' + request.auth.token.email;
+    }
+
+    function secondaryPath() {
+      return /databases/$(database)/documents/admins/$(secondaryId());
+    }
+
+    function isPrimary() {
+      return verifiedEmail()
+        && exists(primaryPath())
+        && get(primaryPath()).data.active == true
+        && get(primaryPath()).data.uid == request.auth.uid
+        && get(primaryPath()).data.email == request.auth.token.email;
+    }
+
+    function isSecondary() {
+      return verifiedEmail()
+        && exists(secondaryPath())
+        && get(secondaryPath()).data.active == true
+        && get(secondaryPath()).data.uid == request.auth.uid
+        && get(secondaryPath()).data.email == request.auth.token.email;
+    }
+
+    function isAdmin() {
+      return isPrimary() || isSecondary();
+    }
+
+    function hasPermission(moduleName, permissionName) {
+      return isPrimary()
+        || (isSecondary()
+          && get(secondaryPath()).data.permissions.get(moduleName, {}).get(permissionName, false) == true);
+    }
+
+    function validAuditFields(data) {
+      return data.keys().hasOnly([
+          'clientLogId', 'type', 'action', 'module', 'itemId', 'itemName',
+          'details', 'userUid', 'userEmail', 'userName', 'timestamp',
+          'fallbackCreatedAtIso', 'fallbackCreatedAtMs', 'fallbackCreatedAtDate'
+        ])
+        && data.keys().hasAll([
+          'clientLogId', 'type', 'action', 'module', 'itemId', 'itemName',
+          'details', 'userUid', 'userEmail', 'userName', 'timestamp'
+        ])
+        && data.clientLogId is string && data.clientLogId.size() <= 80
+        && data.type == 'activity_log'
+        && data.action is string && data.action.size() <= 40
+        && data.module is string && data.module.size() <= 60
+        && data.itemId is string && data.itemId.size() <= 200
+        && data.itemName is string && data.itemName.size() > 0 && data.itemName.size() <= 200
+        && data.details is string && data.details.size() <= 2000
+        && data.userUid == request.auth.uid
+        && data.userEmail == request.auth.token.email
+        && data.userName is string && data.userName.size() > 0 && data.userName.size() <= 150
+        && data.timestamp == request.time;
+    }
+
+    function validContentTimes(data) {
+      return (!('createdAt' in data) || data.createdAt is timestamp)
+        && (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function validMusica(data) {
+      return data.keys().hasOnly([
+          'title', 'slug', 'normalizedTitle', 'subtitle', 'author', 'originalKey',
+          'category', 'youtubeUrl', 'internalNotes', 'lyricHtml', 'views', 'active',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasAll(['title', 'slug', 'normalizedTitle', 'active', 'updatedAt'])
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 150
+        && data.slug is string && data.slug.size() > 0 && data.slug.size() <= 180
+        && data.normalizedTitle is string && data.normalizedTitle.size() <= 150
+        && data.subtitle is string && data.subtitle.size() <= 200
+        && data.author is string && data.author.size() <= 150
+        && data.originalKey is string && data.originalKey.size() <= 20
+        && data.category is string && data.category.size() <= 80
+        && data.youtubeUrl is string && data.youtubeUrl.size() <= 500
+        && data.internalNotes is string && data.internalNotes.size() <= 5000
+        && data.lyricHtml is string && data.lyricHtml.size() <= 600000
+        && data.views is int && data.views >= 0 && data.views <= 2147483647
+        && data.active is bool
+        && validContentTimes(data);
+    }
+
+    function validCifra(data) {
+      return data.keys().hasOnly([
+          'musicaId', 'title', 'slug', 'normalizedTitle', 'subtitle', 'cifraText',
+          'cifraHtml', 'originalKey', 'capo', 'bpm', 'compasso', 'instrumento',
+          'chordColor', 'views', 'active', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasAll([
+          'musicaId', 'title', 'slug', 'normalizedTitle', 'cifraText', 'cifraHtml',
+          'capo', 'bpm', 'compasso', 'instrumento', 'active', 'updatedAt'
+        ])
+        && data.musicaId is string && data.musicaId.size() > 0 && data.musicaId.size() <= 150
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 150
+        && data.slug is string && data.slug.size() > 0 && data.slug.size() <= 180
+        && data.normalizedTitle is string && data.normalizedTitle.size() <= 150
+        && data.subtitle is string && data.subtitle.size() <= 200
+        && data.cifraText is string && data.cifraText.size() <= 300000
+        && data.cifraHtml is string && data.cifraHtml.size() <= 300000
+        && data.originalKey is string && data.originalKey.size() <= 20
+        && data.capo is string && data.capo.size() <= 30
+        && data.bpm is string && data.bpm.size() <= 3
+        && data.compasso is string && data.compasso.size() <= 4
+        && data.instrumento in ['violao', 'guitarra', 'baixo', 'teclado']
+        && data.chordColor is string && data.chordColor.size() <= 20
+        && data.views is int && data.views >= 0 && data.views <= 2147483647
+        && data.active is bool
+        && validContentTimes(data);
+    }
+
+    function canWriteCifraFields() {
+      return (request.resource.data.capo == '' || hasPermission('cifras', 'capo'))
+        && (request.resource.data.bpm == '' || hasPermission('cifras', 'bpm'))
+        && (request.resource.data.compasso == '' || hasPermission('cifras', 'compasso'))
+        && hasPermission('cifras', 'inst_' + request.resource.data.instrumento);
+    }
+
+    function canUpdateCifraFields() {
+      return (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['capo']) || hasPermission('cifras', 'capo'))
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['bpm']) || hasPermission('cifras', 'bpm'))
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['compasso']) || hasPermission('cifras', 'compasso'))
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['instrumento'])
+          || hasPermission('cifras', 'inst_' + request.resource.data.instrumento));
+    }
+
+    function validProgramacao(data) {
+      return data.keys().hasOnly([
+          'title', 'date', 'time', 'location', 'description', 'hideAfter', 'songs',
+          'active', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasAll(['title', 'date', 'time', 'songs', 'active', 'updatedAt'])
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 150
+        && data.date is string && data.date.size() == 10
+        && data.time is string && data.time.size() == 5
+        && data.location is string && data.location.size() <= 300
+        && data.description is string && data.description.size() <= 2000
+        && data.hideAfter is string && data.hideAfter.size() <= 40
+        && data.songs is list && data.songs.size() <= 100
+        && data.active is bool
+        && validContentTimes(data);
+    }
+
+    function validEnsaio(data) {
+      return data.keys().hasOnly(['titulo', 'descricao', 'musicas', 'createdAt', 'updatedAt'])
+        && data.keys().hasAll(['titulo', 'descricao', 'musicas', 'updatedAt'])
+        && data.titulo is string && data.titulo.size() > 0 && data.titulo.size() <= 150
+        && data.descricao is string && data.descricao.size() <= 2000
+        && data.musicas is list && data.musicas.size() <= 100
+        && validContentTimes(data);
+    }
+
+    function validAlbum(data) {
+      return data.keys().hasOnly([
+          'title', 'normalizedTitle', 'albumUrl', 'coverUrl', 'description',
+          'active', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasAll(['title', 'normalizedTitle', 'albumUrl', 'active', 'updatedAt'])
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.normalizedTitle is string && data.normalizedTitle.size() <= 200
+        && data.albumUrl is string && data.albumUrl.size() > 0 && data.albumUrl.size() <= 2000
+        && data.coverUrl is string && data.coverUrl.size() <= 2000
+        && data.description is string && data.description.size() <= 1000
+        && data.active is bool
+        && validContentTimes(data);
+    }
+
+    function validDownload(data) {
+      return data.keys().hasOnly([
+          'title', 'normalizedTitle', 'url', 'description', 'imageUrl', 'linkType',
+          'active', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasAll(['title', 'normalizedTitle', 'url', 'linkType', 'active', 'updatedAt'])
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.normalizedTitle is string && data.normalizedTitle.size() <= 200
+        && data.url is string && data.url.size() > 0 && data.url.size() <= 2000
+        && data.description is string && data.description.size() <= 1000
+        && data.imageUrl is string && data.imageUrl.size() <= 2000
+        && data.linkType in ['direct-download', 'drive-folder', 'keep', 'pdf', 'powerpoint']
+        && data.active is bool
+        && validContentTimes(data);
+    }
+
+    function validMusicDownload(data) {
+      return data.keys().hasOnly([
+          'musicaId', 'title', 'normalizedTitle', 'slug', 'pdfUrl', 'pptUrl',
+          'active', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasAll(['musicaId', 'title', 'normalizedTitle', 'pdfUrl', 'pptUrl', 'active', 'updatedAt'])
+        && data.musicaId is string && data.musicaId.size() > 0 && data.musicaId.size() <= 200
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.normalizedTitle is string && data.normalizedTitle.size() <= 200
+        && data.slug is string && data.slug.size() <= 200
+        && data.pdfUrl is string && data.pdfUrl.size() <= 2000
+        && data.pptUrl is string && data.pptUrl.size() <= 2000
+        && (data.pdfUrl.size() > 0 || data.pptUrl.size() > 0)
+        && data.active is bool
+        && validContentTimes(data);
+    }
+
+    function validNotification(data) {
+      return data.keys().hasOnly([
+          'title', 'normalizedTitle', 'message', 'type', 'tipo', 'active',
+          'showPopup', 'showHome', 'showPublic', 'showTop', 'showBeforeStart',
+          'popupMode', 'topMode', 'startsAt', 'expiresAt', 'buttonText',
+          'buttonLink', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasAll([
+          'title', 'normalizedTitle', 'message', 'type', 'tipo', 'active',
+          'showPopup', 'showHome', 'showPublic', 'showTop', 'showBeforeStart',
+          'popupMode', 'topMode', 'startsAt', 'expiresAt', 'buttonText',
+          'buttonLink', 'updatedAt'
+        ])
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 150
+        && data.normalizedTitle is string && data.normalizedTitle.size() <= 150
+        && data.message is string && data.message.size() > 0 && data.message.size() <= 5000
+        && data.type in ['aviso', 'novidade', 'evento', 'destaque']
+        && data.tipo == data.type
+        && data.active is bool
+        && data.showPopup is bool && data.showHome is bool && data.showPublic is bool
+        && data.showTop is bool && data.showBeforeStart is bool
+        && data.popupMode in ['always', 'daily', 'device_once']
+        && data.topMode in ['always', 'daily', 'device_once']
+        && data.startsAt is string && data.startsAt.size() <= 40
+        && data.expiresAt is string && data.expiresAt.size() <= 40
+        && data.buttonText is string && data.buttonText.size() <= 100
+        && data.buttonLink is string && data.buttonLink.size() <= 2000
+        && validContentTimes(data);
+    }
+
+    function canCreateNotificationFields() {
+      return (!request.resource.data.showPopup || hasPermission('notificacoes', 'popup'))
+        && (!request.resource.data.showTop || hasPermission('notificacoes', 'top'))
+        && (!request.resource.data.showBeforeStart || hasPermission('notificacoes', 'beforeStart'))
+        && ((request.resource.data.buttonText == '' && request.resource.data.buttonLink == '')
+          || hasPermission('notificacoes', 'buttonLink'));
+    }
+
+    match /admins/{adminId} {
+      allow get: if isPrimary() || (verifiedEmail() && adminId == secondaryId());
+      allow list: if isPrimary();
+      allow create, delete: if isPrimary();
+      allow update: if isPrimary() || (
+        verifiedEmail()
+        && adminId == secondaryId()
+        && resource.data.email == request.auth.token.email
+        && resource.data.active == true
+        && resource.data.get('uid', '') == ''
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.active == true
+        && request.resource.data.pendingUid == false
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'uid', 'email', 'active', 'pendingUid', 'uidBoundAt', 'updatedAt', 'createdAt'
+        ])
+        && request.resource.data.uidBoundAt == request.time
+        && request.resource.data.updatedAt == request.time
+      );
+    }
+
+    match /musicas/{documentId} {
+      allow get, list: if isAdmin() || resource.data.active == true;
+      allow create: if hasPermission('musicas', 'create') && validMusica(request.resource.data);
+      allow update: if hasPermission('musicas', 'edit') && validMusica(request.resource.data);
+      allow delete: if hasPermission('musicas', 'delete');
+    }
+
+    match /cifras/{documentId} {
+      allow get, list: if isAdmin() || resource.data.active == true;
+      allow create: if hasPermission('cifras', 'create')
+        && validCifra(request.resource.data) && canWriteCifraFields();
+      allow update: if hasPermission('cifras', 'edit')
+        && validCifra(request.resource.data) && canUpdateCifraFields();
+      allow delete: if hasPermission('cifras', 'delete');
+    }
+
+    match /programacoes/{documentId} {
+      allow get, list: if isAdmin() || resource.data.active == true;
+      allow create: if hasPermission('programacoes', 'create') && validProgramacao(request.resource.data);
+      allow update: if hasPermission('programacoes', 'edit') && validProgramacao(request.resource.data);
+      allow delete: if hasPermission('programacoes', 'delete');
+    }
+
+    match /ensaios/{documentId} {
+      allow read: if true;
+      allow create: if hasPermission('ensaios', 'create') && validEnsaio(request.resource.data);
+      allow update: if hasPermission('ensaios', 'edit') && validEnsaio(request.resource.data);
+      allow delete: if hasPermission('ensaios', 'delete');
+    }
+
+    match /albuns/{documentId} {
+      allow get, list: if isAdmin() || resource.data.active == true;
+      allow create: if hasPermission('fotos', 'create') && validAlbum(request.resource.data);
+      allow update: if hasPermission('fotos', 'edit') && validAlbum(request.resource.data);
+      allow delete: if hasPermission('fotos', 'delete');
+    }
+
+    match /downloads/{documentId} {
+      allow get, list: if isAdmin() || resource.data.active == true;
+      allow create: if hasPermission('downloadsGerais', 'create') && validDownload(request.resource.data);
+      allow update: if hasPermission('downloadsGerais', 'edit') && validDownload(request.resource.data);
+      allow delete: if hasPermission('downloadsGerais', 'delete');
+    }
+
+    match /downloadsPorMusica/{documentId} {
+      allow get, list: if isAdmin() || resource.data.active == true;
+      allow create: if hasPermission('downloadsPorMusica', 'create') && validMusicDownload(request.resource.data);
+      allow update: if hasPermission('downloadsPorMusica', 'edit') && validMusicDownload(request.resource.data);
+      allow delete: if hasPermission('downloadsPorMusica', 'delete');
+    }
+
+    match /notificacoes/{documentId} {
+      allow get, list: if isAdmin() || resource.data.active == true;
+      allow create: if hasPermission('notificacoes', 'create')
+        && validNotification(request.resource.data)
+        && canCreateNotificationFields();
+      allow update: if hasPermission('notificacoes', 'edit') && validNotification(request.resource.data)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['showPopup', 'popupMode']) || hasPermission('notificacoes', 'popup'))
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['showTop', 'topMode']) || hasPermission('notificacoes', 'top'))
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['buttonText', 'buttonLink']) || hasPermission('notificacoes', 'buttonLink'))
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['showBeforeStart']) || hasPermission('notificacoes', 'beforeStart'));
+      allow delete: if hasPermission('notificacoes', 'delete');
+    }
+
+    match /contatos/{documentId} {
+      allow create: if request.resource.data.keys().hasOnly([
+          'nome', 'email', 'assunto', 'mensagem', 'createdAt', 'lido'
+        ])
+        && request.resource.data.keys().hasAll([
+          'nome', 'email', 'assunto', 'mensagem', 'createdAt', 'lido'
+        ])
+        && request.resource.data.nome is string
+        && request.resource.data.nome.size() >= 2 && request.resource.data.nome.size() <= 120
+        && request.resource.data.email is string
+        && request.resource.data.email.size() >= 5 && request.resource.data.email.size() <= 254
+        && request.resource.data.assunto is string
+        && request.resource.data.assunto.size() >= 2 && request.resource.data.assunto.size() <= 160
+        && request.resource.data.mensagem is string
+        && request.resource.data.mensagem.size() >= 10 && request.resource.data.mensagem.size() <= 5000
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.lido == false;
+      allow get, list: if hasPermission('contatos', 'view');
+      allow update: if hasPermission('contatos', 'view')
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lido', 'readAt'])
+        && request.resource.data.lido == true
+        && request.resource.data.readAt == request.time;
+      allow delete: if hasPermission('contatos', 'delete');
+    }
+
+    match /config/{documentId} {
+      allow get: if documentId == 'site';
+      allow list: if false;
+      allow create, update, delete: if isPrimary();
+    }
+
+    match /activity_logs/{documentId} {
+      allow create: if isAdmin() && validAuditFields(request.resource.data);
+      allow get, list: if hasPermission('logs', 'view');
+      allow update, delete: if false;
+    }
+
+    match /usuariosPublicos/{userId} {
+      allow get: if signedIn() && request.auth.uid == userId;
+      allow list, delete: if false;
+      allow create, update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly([
+          'firstName', 'lastName', 'displayName', 'email', 'phone', 'photoURL', 'updatedAt'
+        ])
+        && request.resource.data.keys().hasAll([
+          'firstName', 'lastName', 'displayName', 'email', 'phone', 'photoURL', 'updatedAt'
+        ])
+        && request.resource.data.firstName is string && request.resource.data.firstName.size() <= 80
+        && request.resource.data.lastName is string && request.resource.data.lastName.size() <= 120
+        && request.resource.data.displayName is string && request.resource.data.displayName.size() <= 200
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.phone is string && request.resource.data.phone.size() <= 30
+        && request.resource.data.photoURL is string && request.resource.data.photoURL.size() <= 2000
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /bibliotecasUsuarios/{userId} {
+      allow get: if signedIn() && request.auth.uid == userId;
+      allow list, delete: if false;
+      allow create, update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['favorites', 'playlists'])
+        && request.resource.data.keys().hasAll(['favorites', 'playlists'])
+        && request.resource.data.favorites is list
+        && request.resource.data.favorites.size() <= 100
+        && request.resource.data.playlists is list
+        && request.resource.data.playlists.size() <= 10;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

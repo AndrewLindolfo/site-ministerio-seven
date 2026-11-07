@@ -1,6 +1,6 @@
 import { auth, provider } from "./firebase.js";
-import { getDocument, setDocument, updateDocument, serverTimestamp } from "./db.js";
-import { buildAdminDocIdFromEmail, buildLegacyAdminDocIdFromEmail } from "./services/admin-permissions-service.js";
+import { getDocument, setDocument, serverTimestamp } from "./db.js";
+import { buildAdminDocIdFromEmail } from "./services/admin-permissions-service.js";
 import {
   signInWithPopup,
   signInWithEmailAndPassword,
@@ -67,32 +67,16 @@ export async function getAdminProfileForUser(user = null) {
   const email = normalize(user?.email || "");
   if (!uid || !email) return null;
 
-  const direct = await getAccessibleAdminDocument(uid);
-  if (direct && direct.active !== false && direct.ativo !== false && normalize(direct.email) === email) return direct;
-
   const invited = await getAccessibleAdminDocument(buildAdminDocIdFromEmail(email));
   if (invited && invited.active !== false && invited.ativo !== false && normalize(invited.email) === email) {
     const invitedUid = String(invited.uid || "").trim();
     if (!invitedUid || invitedUid === uid) return invited;
   }
 
-  const legacyInvited = await getAccessibleAdminDocument(buildLegacyAdminDocIdFromEmail(email));
-  if (legacyInvited && legacyInvited.active !== false && legacyInvited.ativo !== false && normalize(legacyInvited.email) === email) {
-    const invitedUid = String(legacyInvited.uid || "").trim();
-    if (!invitedUid || invitedUid === uid) return legacyInvited;
-  }
-
   const primary = await getAccessibleAdminDocument(PRIMARY_ADMIN_DOC_ID);
   if (!primary || primary.active === false || primary.ativo === false) return null;
   if (String(primary.uid || "").trim() !== uid || normalize(primary.email) !== email) return null;
   return primary;
-}
-
-export async function bindAdminUid(adminId = "", uid = "") {
-  const normalizedUid = String(uid || "").trim();
-  if (!adminId || !normalizedUid) return false;
-  await updateDocument(ADMIN_COLLECTION, adminId, { uid: normalizedUid, pendingUid: false, uidBoundAt: serverTimestamp(), updatedAt: serverTimestamp() });
-  return true;
 }
 
 export async function validateAdminUser(user = null) {

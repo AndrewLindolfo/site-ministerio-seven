@@ -3,10 +3,24 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "hosting": {
-    "public": "dist",
+    "public": ".",
     "ignore": [
       "firebase.json",
+      ".firebaserc",
+      "firestore.rules",
+      "firestore.indexes.json",
+      "storage.rules",
+      "package.json",
+      "LICENSE",
+      "docs/**",
+      "scripts/**",
+      "tests/**",
+      ".github/**",
+      ".vscode/**",
       "**/.*",
       "**/node_modules/**"
     ],
@@ -18,7 +32,16 @@
         "headers": [
           {
             "key": "Cache-Control",
-            "value": "public,max-age=31536000,immutable"
+            "value": "public,max-age=3600,must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(png|jpg|jpeg|webp|gif|svg|ico|woff|woff2)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public,max-age=604800,stale-while-revalidate=86400"
           }
         ]
       },
@@ -30,6 +53,23 @@
             "value": "no-cache"
           }
         ]
+      },
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "strict-origin-when-cross-origin"
+          },
+          {
+            "key": "Permissions-Policy",
+            "value": "camera=(), geolocation=(), payment=(), usb=()"
+          }
+        ]
       }
     ]
   },
@@ -38,7 +78,7 @@
       "port": 9099
     },
     "firestore": {
-      "port": 8080
+      "port": 8180
     },
     "hosting": {
       "port": 5000

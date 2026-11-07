@@ -75,8 +75,10 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Gestão de fotos revisada; álbuns são carregados uma vez por atualização, títulos e URLs usam DOM seguro, permissões protegem abertura e execução das ações, edições preservam o estado ativo e mensagens do Firebase são exibidas corretamente.
 - Hub e gestões de downloads gerais e por música revisados; cada administrador vê apenas os módulos autorizados, leituras repetidas foram removidas, conteúdo persistido é escapado, selects usam DOM seguro e permissões protegem todas as operações.
 - Edições de downloads preservam o estado ativo, campos receberam limites coerentes com os serviços e falhas de criação, edição e exclusão exibem o erro real sem deixar botões travados.
+- Gestão de contatos revisada; dados pessoais só são consultados após confirmar a permissão de visualização, a leitura foi limitada aos 200 registros mais recentes, toda renderização usa DOM seguro e a permissão de exclusão passou a executar a função correspondente.
+- Marcação de leitura recebeu timestamp e tratamento de erro, e o CSS vazio exclusivo de contatos foi removido.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- Página administrativa de contatos
+- Página administrativa de notificações

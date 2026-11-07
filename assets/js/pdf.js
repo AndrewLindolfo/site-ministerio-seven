@@ -1,15 +1,19 @@
+import { sanitizeRichHtml } from "./lib/sanitize-html.js";
+
 function escapeHtml(text = "") {
   return String(text || "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function getStylesheetTags() {
   return Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
     .map((link) => link.getAttribute("href"))
     .filter(Boolean)
-    .map((href) => `<link rel="stylesheet" href="${href}">`)
+    .map((href) => `<link rel="stylesheet" href="${escapeHtml(href)}">`)
     .join("\n");
 }
 
@@ -124,8 +128,8 @@ ${html}
 function getMusicaExportHtml() {
   const title = document.getElementById("musica-titulo")?.textContent?.trim() || "Música";
   const subtitle = document.getElementById("musica-subtitulo")?.textContent?.trim() || "";
-  const metaHtml = document.getElementById("musica-meta")?.innerHTML || "";
-  const letraHtml = document.getElementById("musica-letra")?.innerHTML || "";
+  const metaHtml = sanitizeRichHtml(document.getElementById("musica-meta")?.innerHTML || "");
+  const letraHtml = sanitizeRichHtml(document.getElementById("musica-letra")?.innerHTML || "");
 
   return {
     title,
@@ -143,8 +147,8 @@ function getMusicaExportHtml() {
 function getCifraExportHtml() {
   const title = document.getElementById("cifra-titulo")?.textContent?.trim() || "Cifra";
   const subtitle = document.getElementById("cifra-subtitulo")?.textContent?.trim() || "";
-  const metaHtml = document.getElementById("cifra-meta")?.innerHTML || "";
-  const cifraHtml = document.getElementById("cifra-content")?.innerHTML || "";
+  const metaHtml = sanitizeRichHtml(document.getElementById("cifra-meta")?.innerHTML || "");
+  const cifraHtml = sanitizeRichHtml(document.getElementById("cifra-content")?.innerHTML || "");
 
   return {
     title,

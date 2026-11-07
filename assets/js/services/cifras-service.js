@@ -20,6 +20,21 @@ const INSTRUMENT_LABELS = {
   teclado: "Teclado"
 };
 const VALID_INSTRUMENTS = new Set(Object.keys(INSTRUMENT_LABELS));
+const VALID_COMPASSOS = new Set(["2/4", "3/4", "4/4", "5/4", "6/8", "7/8", "9/8", "12/8"]);
+
+function normalizeBpm(value = "") {
+  if (String(value ?? "").trim() === "") return "";
+  const bpm = Number(value);
+  if (!Number.isFinite(bpm) || bpm < 20 || bpm > 300) throw new RangeError("BPM inválido.");
+  return String(Math.round(bpm));
+}
+
+function normalizeCompasso(value = "") {
+  const compasso = String(value ?? "").trim();
+  if (!compasso) return "";
+  if (!VALID_COMPASSOS.has(compasso)) throw new RangeError("Compasso inválido.");
+  return compasso;
+}
 
 const CHORD_COLOR_HEX = {
   padrao: "#FF5C00",
@@ -168,8 +183,8 @@ export async function saveCifra(payload, id = "") {
     cifraHtml: payload.cifraHtml || "",
     originalKey: payload.originalKey || "",
     capo: payload.capo || "",
-    bpm: payload.bpm || "",
-    compasso: payload.compasso || "",
+    bpm: normalizeBpm(payload.bpm),
+    compasso: normalizeCompasso(payload.compasso),
     instrumento,
     chordColor: normalizeChordColor(payload.chordColor || "#0d0d0d"),
     views: typeof payload.views === "number" ? payload.views : 0,
@@ -194,8 +209,9 @@ export async function removeCifra(id) {
 }
 
 export async function updateCifraMetronome(id, bpm = "", compasso = "") {
-  const bpmSafe = String(bpm || "").trim();
-  const compassoSafe = String(compasso || "").trim();
+  const bpmSafe = normalizeBpm(bpm);
+  const compassoSafe = normalizeCompasso(compasso);
+  if (!bpmSafe || !compassoSafe) throw new RangeError("BPM e compasso são obrigatórios.");
   clearCache();
   await updateDocument(COLLECTION, id, {
     bpm: bpmSafe,

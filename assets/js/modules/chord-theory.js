@@ -1,17 +1,8 @@
-/**
- * Infraestrutura base de acordes — teoria e normalização.
- * Não integra automaticamente com a página da cifra nesta etapa.
- */
-
 const NOTE_SEQUENCE_SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 const FLAT_TO_SHARP = {
   "Db":"C#","Eb":"D#","Gb":"F#","Ab":"G#","Bb":"A#",
   "Cb":"B","Fb":"E"
 };
-const SHARP_TO_FLAT = {
-  "C#":"Db","D#":"Eb","F#":"Gb","G#":"Ab","A#":"Bb"
-};
-
 const CHORD_REGEX = /^([A-G])([#b]?)([^/]*?)(?:\/([A-G])([#b]?))?$/;
 
 export function normalizeNote(note = "") {
@@ -81,7 +72,6 @@ function intervalPatternFromQuality(quality = "") {
   if (q === "11") return [0, 4, 7, 10, 14, 17];
   if (q === "13") return [0, 4, 7, 10, 14, 21];
 
-  // fallback amplo para manter a infraestrutura tolerante
   if (q.includes("m7")) return [0, 3, 7, 10];
   if (q.includes("maj7")) return [0, 4, 7, 11];
   if (q.includes("m")) return [0, 3, 7];
@@ -105,9 +95,7 @@ export function buildChordNotes(symbol = "") {
   const notes = intervalPatternFromQuality(parsed.quality)
     .map(interval => NOTE_SEQUENCE_SHARP[(rootIdx + interval) % 12]);
 
-  if (parsed.bass && !notes.includes(parsed.bass)) {
-    return [parsed.bass, ...notes];
-  }
+  if (parsed.bass) return [parsed.bass, ...notes.filter((note) => note !== parsed.bass)];
   return notes;
 }
 
@@ -115,10 +103,10 @@ export function normalizeInstrumentName(instrument = "") {
   const raw = String(instrument || "").trim().toLowerCase();
   if (!raw) return "violao";
   if (["violão","violao"].includes(raw)) return "violao";
-  if (["guitarra"].includes(raw)) return "guitarra";
+  if (raw === "guitarra") return "guitarra";
   if (["baixo","bass"].includes(raw)) return "baixo";
   if (["teclado","keyboard","piano"].includes(raw)) return "teclado";
-  return raw;
+  return "violao";
 }
 
 export function buildKeyboardVariation(symbol = "") {
@@ -130,27 +118,5 @@ export function buildKeyboardVariation(symbol = "") {
     label: "Principal",
     notes: buildChordNotes(parsed),
     displayName: chordDisplayName(parsed)
-  };
-}
-
-export function buildStringedFallbackVariation(symbol = "", instrument = "violao") {
-  const parsed = parseChordSymbol(symbol);
-  if (!parsed) return null;
-
-  const noteList = buildChordNotes(parsed);
-  return {
-    id: `${parsed.normalized}-${normalizeInstrumentName(instrument)}-1`,
-    label: "Principal",
-    displayName: chordDisplayName(parsed),
-    root: parsed.root,
-    quality: parsed.quality,
-    bass: parsed.bass,
-    notes: noteList,
-    // fallback simples; etapa 2 pode substituir por shapes reais completos
-    strings: normalizeInstrumentName(instrument) === "baixo" ? 4 : 6,
-    frets: [],
-    fingers: [],
-    barre: null,
-    isFallback: true
   };
 }

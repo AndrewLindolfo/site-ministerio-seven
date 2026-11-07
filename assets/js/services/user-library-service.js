@@ -2,37 +2,56 @@ import { getDocument, setDocument } from "../db.js";
 
 const COLLECTION = "bibliotecasUsuarios";
 const LOCAL_PREFIX = "seven_user_library_";
+const MAX_FAVORITES = 200;
+const MAX_PLAYLISTS = 50;
+const MAX_PLAYLIST_ITEMS = 200;
+
+function normalizeString(value = "", maxLength = 200) {
+  return String(value ?? "").trim().slice(0, maxLength);
+}
+
+function normalizeHref(value = "") {
+  try {
+    const url = new URL(normalizeString(value, 1000), window.location.origin);
+    if (url.origin !== window.location.origin) return "";
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return "";
+  }
+}
 
 function localKey(uid = "") {
   return `${LOCAL_PREFIX}${uid}`;
 }
 
 function normalizeItem(item = {}) {
+  const type = normalizeString(item.type, 40);
+  const href = normalizeHref(item.href);
   return {
-    key: String(item.key || `${item.type || ""}:${item.href || ""}`).trim(),
-    type: String(item.type || "").trim(),
-    title: String(item.title || "").trim(),
-    href: String(item.href || "").trim(),
-    subtitle: String(item.subtitle || "").trim(),
-    slug: String(item.slug || "").trim(),
-    instrument: String(item.instrument || "").trim(),
+    key: normalizeString(item.key || `${type}:${href}`, 500),
+    type,
+    title: normalizeString(item.title, 200),
+    href,
+    subtitle: normalizeString(item.subtitle, 300),
+    slug: normalizeString(item.slug, 200),
+    instrument: normalizeString(item.instrument, 40),
     createdAt: Number(item.createdAt || Date.now())
   };
 }
 
 function normalizePlaylist(item = {}) {
   return {
-    id: String(item.id || `pl_${Date.now()}_${Math.random().toString(36).slice(2,8)}`).trim(),
-    name: String(item.name || "").trim(),
-    items: Array.isArray(item.items) ? item.items.map(normalizeItem) : [],
+    id: normalizeString(item.id || `pl_${globalThis.crypto?.randomUUID?.() || `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`}`, 100),
+    name: normalizeString(item.name, 100),
+    items: Array.isArray(item.items) ? item.items.slice(0, MAX_PLAYLIST_ITEMS).map(normalizeItem) : [],
     createdAt: Number(item.createdAt || Date.now())
   };
 }
 
 function normalizeLibrary(data = {}) {
   return {
-    favorites: Array.isArray(data.favorites) ? data.favorites.map(normalizeItem) : [],
-    playlists: Array.isArray(data.playlists) ? data.playlists.map(normalizePlaylist) : []
+    favorites: Array.isArray(data.favorites) ? data.favorites.slice(0, MAX_FAVORITES).map(normalizeItem) : [],
+    playlists: Array.isArray(data.playlists) ? data.playlists.slice(0, MAX_PLAYLISTS).map(normalizePlaylist) : []
   };
 }
 
@@ -41,11 +60,7 @@ async function readRemote(uid = "") {
   try {
     const doc = await getDocument(COLLECTION, uid);
     if (!doc) return null;
-    const normalized = normalizeLibrary(doc);
-    const hasFavorites = Array.isArray(normalized.favorites) && normalized.favorites.length > 0;
-    const hasPlaylists = Array.isArray(normalized.playlists) && normalized.playlists.length > 0;
-    const hasStructuredData = hasFavorites || hasPlaylists;
-    return hasStructuredData ? normalized : null;
+    return normalizeLibrary(doc);
   } catch (error) {
     console.warn("Biblioteca remota indisponível, usando fallback local:", error);
     return null;

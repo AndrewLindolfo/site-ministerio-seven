@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "audit:static": "node scripts/audit-static.mjs"
+    "audit:static": "node scripts/audit-static.mjs",
+    "test": "node --test",
+    "test:unit": "node --test tests"
   },
   "engines": {
     "node": ">=20"

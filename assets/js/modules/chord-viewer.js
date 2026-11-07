@@ -90,10 +90,10 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function el(tag, className = "", html = "") {
+function el(tag, className = "", text = "") {
   const node = document.createElement(tag);
   if (className) node.className = className;
-  if (html) node.innerHTML = html;
+  if (text) node.textContent = text;
   return node;
 }
 

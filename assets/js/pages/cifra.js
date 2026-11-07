@@ -22,6 +22,17 @@ const CHORD_COLOR_MAP = {
   roxo: "#a855f7",
   laranja: "#FF5C00"
 };
+const COMPASSO_OPTIONS = ["2/4", "3/4", "4/4", "5/4", "6/8", "7/8", "9/8", "12/8"];
+
+function normalizeBpm(value) {
+  const bpm = Number(value);
+  return Number.isFinite(bpm) && bpm >= 20 && bpm <= 300 ? Math.round(bpm) : null;
+}
+
+function normalizeCompasso(value) {
+  const compasso = String(value || "").trim();
+  return COMPASSO_OPTIONS.includes(compasso) ? compasso : "";
+}
 
 function renderPersonalActionsForCifra(cifra) {
   const titleEl = document.getElementById("cifra-titulo");
@@ -345,10 +356,10 @@ let cifraMiniMetroBpm = 72;
 let cifraMiniMetroSignature = "4/4";
 
 function getCompassoBeats(compasso = "4/4") {
-  const raw = String(compasso || "4/4").trim();
+  const raw = normalizeCompasso(compasso) || "4/4";
   const [num] = raw.split("/");
   const beats = Number(num);
-  return Number.isFinite(beats) && beats > 0 ? beats : 4;
+  return beats;
 }
 
 function updateMiniMetronomePulses(activeIndex = -1) {
@@ -495,8 +506,8 @@ function initMiniMetronome(cifra = {}) {
   const button = document.getElementById("cifra-mini-metronome-toggle");
   if (!wrapper || !bpmEl || !compassoEl || !button) return;
 
-  const bpm = String(cifra.bpm || "").trim();
-  const compasso = String(cifra.compasso || "").trim();
+  const bpm = normalizeBpm(cifra.bpm);
+  const compasso = normalizeCompasso(cifra.compasso);
 
   if (!bpm || !compasso) {
     wrapper.classList.add("hidden");
@@ -506,7 +517,7 @@ function initMiniMetronome(cifra = {}) {
     return;
   }
 
-  cifraMiniMetroBpm = Number(bpm) || 72;
+  cifraMiniMetroBpm = bpm;
   cifraMiniMetroSignature = compasso;
   bpmEl.textContent = `${cifraMiniMetroBpm} BPM`;
   compassoEl.textContent = cifraMiniMetroSignature;
@@ -530,7 +541,6 @@ let currentPublicCifra = null;
 let currentAdminCanEditMiniMetronome = false;
 let currentPublicCifraLiveUnsubscribe = null;
 let currentPublicCifraLiveSignature = "";
-const COMPASSO_OPTIONS = ["2/4","3/4","4/4","5/4","6/8","7/8","9/8","12/8"];
 
 function ensureMiniMetronomeEditUi() {
   const wrapper = document.getElementById("cifra-mini-metronome");
@@ -541,19 +551,10 @@ function ensureMiniMetronomeEditUi() {
     editBtn = document.createElement("button");
     editBtn.type = "button";
     editBtn.id = "cifra-mini-metronome-edit";
+    editBtn.className = "cifra-mini-metronome-edit-trigger";
     editBtn.textContent = "Edit";
     editBtn.hidden = true;
     editBtn.setAttribute("aria-label", "Editar BPM e compasso do metrônomo");
-    editBtn.style.minWidth = "46px";
-    editBtn.style.minHeight = "42px";
-    editBtn.style.height = "42px";
-    editBtn.style.padding = "0 12px";
-    editBtn.style.borderRadius = "999px";
-    editBtn.style.border = "1px solid rgba(255,255,255,.08)";
-    editBtn.style.background = "rgba(255,255,255,.03)";
-    editBtn.style.color = "var(--text)";
-    editBtn.style.fontWeight = "700";
-    editBtn.style.cursor = "pointer";
     wrapper.appendChild(editBtn);
   }
 
@@ -563,32 +564,35 @@ function ensureMiniMetronomeEditUi() {
     modal.id = "cifra-mini-metronome-edit-modal";
     modal.hidden = true;
     modal.innerHTML = `
-      <div data-dialog style="position:fixed; inset:0; z-index:120; display:flex; align-items:center; justify-content:center; padding:16px;">
-        <div data-overlay style="position:absolute; inset:0; background:rgba(0,0,0,.55);"></div>
-        <div style="position:relative; z-index:1; width:min(92vw, 360px); padding:18px; border-radius:20px; border:1px solid var(--border); background:var(--surface); box-shadow:var(--shadow); color:var(--text);">
-          <h3 style="margin:0 0 12px; font-size:1.05rem;">Editar metrônomo</h3>
-          <label style="display:block; margin-bottom:10px;">
-            <span style="display:block; margin-bottom:6px; color:var(--text-soft); font-size:.92rem;">BPM</span>
-            <input id="cifra-mini-metronome-edit-bpm" type="number" min="1" max="400" step="1" style="width:100%; min-height:42px; border-radius:14px; border:1px solid var(--border); background:var(--surface); color:var(--text); padding:0 12px;" />
+      <div class="cifra-mini-metronome-edit-layer">
+        <div class="cifra-mini-metronome-edit-overlay" data-overlay></div>
+        <div class="cifra-mini-metronome-edit-card" role="dialog" aria-modal="true" aria-labelledby="cifra-mini-metronome-edit-title">
+          <h3 id="cifra-mini-metronome-edit-title" class="cifra-mini-metronome-edit-title">Editar metrônomo</h3>
+          <label class="cifra-mini-metronome-edit-field">
+            <span class="cifra-mini-metronome-edit-label">BPM</span>
+            <input class="cifra-mini-metronome-edit-input" id="cifra-mini-metronome-edit-bpm" type="number" min="20" max="300" step="1" />
           </label>
-          <label style="display:block; margin-bottom:14px;">
-            <span style="display:block; margin-bottom:6px; color:var(--text-soft); font-size:.92rem;">Compasso</span>
-            <select id="cifra-mini-metronome-edit-compasso" style="width:100%; min-height:42px; border-radius:14px; border:1px solid var(--border); background:var(--surface); color:var(--text); padding:0 12px;">
+          <label class="cifra-mini-metronome-edit-field">
+            <span class="cifra-mini-metronome-edit-label">Compasso</span>
+            <select class="cifra-mini-metronome-edit-select" id="cifra-mini-metronome-edit-compasso">
               ${COMPASSO_OPTIONS.map(item => `<option value="${item}">${item}</option>`).join("")}
             </select>
           </label>
-          <div style="display:flex; gap:10px; justify-content:flex-end;">
-            <button type="button" id="cifra-mini-metronome-edit-cancel" style="min-height:40px; padding:0 14px; border-radius:999px; border:1px solid var(--border); background:var(--surface); color:var(--text);">Cancelar</button>
-            <button type="button" id="cifra-mini-metronome-edit-save" style="min-height:40px; padding:0 14px; border-radius:999px; border:1px solid var(--border); background:var(--surface); color:var(--text); font-weight:700;">Salvar</button>
+          <div class="cifra-mini-metronome-edit-actions">
+            <button class="cifra-mini-metronome-edit-btn" type="button" id="cifra-mini-metronome-edit-cancel">Cancelar</button>
+            <button class="cifra-mini-metronome-edit-btn is-primary" type="button" id="cifra-mini-metronome-edit-save">Salvar</button>
           </div>
         </div>
       </div>
     `;
     document.body.appendChild(modal);
 
-    const closeModal = () => { modal.hidden = true; };
+    const closeModal = () => { modal.hidden = true; editBtn.focus(); };
     modal.querySelector('[data-overlay]')?.addEventListener('click', closeModal);
     modal.querySelector('#cifra-mini-metronome-edit-cancel')?.addEventListener('click', closeModal);
+    modal.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeModal();
+    });
   }
 
   return { wrapper, editBtn, modal };
@@ -621,13 +625,14 @@ async function openMiniMetronomeEditModal() {
   compassoSelect.value = String(currentPublicCifra?.compasso || "4/4");
 
   ui.modal.hidden = false;
+  bpmInput.focus();
 
   const onSave = async () => {
-    const bpm = String(bpmInput.value || "").trim();
-    const compasso = String(compassoSelect.value || "").trim();
+    const bpm = normalizeBpm(bpmInput.value);
+    const compasso = normalizeCompasso(compassoSelect.value);
 
     if (!bpm || !compasso) {
-      alert("Informe BPM e compasso.");
+      alert("Informe um BPM entre 20 e 300 e um compasso válido.");
       return;
     }
 

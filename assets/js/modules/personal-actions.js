@@ -47,9 +47,9 @@ function ensurePlaylistModal() {
   modal.className = "playlist-modal hidden";
   modal.innerHTML = `
     <div class="playlist-modal__overlay" data-close-playlist-modal="1"></div>
-    <div class="playlist-modal__panel">
+    <div class="playlist-modal__panel" role="dialog" aria-modal="true" aria-labelledby="playlist-modal-title">
       <button type="button" class="playlist-modal__close" data-close-playlist-modal="1" aria-label="Fechar">✕</button>
-      <h2>Adicionar à playlist</h2>
+      <h2 id="playlist-modal-title">Adicionar à playlist</h2>
       <div id="playlist-modal-existing"></div>
       <div class="playlist-modal__divider"></div>
       <label class="playlist-modal__label">
@@ -67,7 +67,8 @@ function ensurePlaylistModal() {
     node.addEventListener("click", closePlaylistModal);
   });
 
-  $("#playlist-create-button")?.addEventListener("click", async () => {
+  $("#playlist-create-button")?.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
     const user = getCurrentPublicUser();
     if (!user?.uid) {
       closePlaylistModal();
@@ -77,10 +78,18 @@ function ensurePlaylistModal() {
     const name = ($("#playlist-new-name")?.value || "").trim();
     const item = modal._currentItem;
     if (!name || !item) return;
-    const playlist = await createPlaylist(user.uid, name);
-    await addItemToPlaylist(user.uid, playlist.id, item);
-    await reloadLibrary();
-    closePlaylistModal();
+    button.disabled = true;
+    try {
+      const playlist = await createPlaylist(user.uid, name);
+      await addItemToPlaylist(user.uid, playlist.id, item);
+      await reloadLibrary();
+      closePlaylistModal();
+    } catch (error) {
+      console.error("Não foi possível criar a playlist.", error);
+      alert("Não foi possível criar a playlist. Tente novamente.");
+    } finally {
+      button.disabled = false;
+    }
   });
 }
 
@@ -102,9 +111,17 @@ function renderPlaylistChoices() {
       const user = getCurrentPublicUser();
       const item = $("#playlist-modal")?._currentItem;
       if (!user?.uid || !item) return;
-      await addItemToPlaylist(user.uid, button.dataset.playlistChoice, item);
-      await reloadLibrary();
-      closePlaylistModal();
+      button.disabled = true;
+      try {
+        await addItemToPlaylist(user.uid, button.dataset.playlistChoice, item);
+        await reloadLibrary();
+        closePlaylistModal();
+      } catch (error) {
+        console.error("Não foi possível adicionar o item à playlist.", error);
+        alert("Não foi possível adicionar o item à playlist. Tente novamente.");
+      } finally {
+        button.disabled = false;
+      }
     });
   });
 }
@@ -120,6 +137,7 @@ async function openPlaylistModal(item) {
   renderPlaylistChoices();
   modal.classList.remove("hidden");
   document.body.classList.add("modal-open");
+  $("#playlist-new-name")?.focus();
 }
 
 function closePlaylistModal() {
@@ -147,8 +165,16 @@ async function onFavoriteClick(button) {
   const item = getItemFromElement(button);
   if (!item?.key) return;
   requirePublicLogin(async (user) => {
-    await toggleFavorite(user.uid, item);
-    await reloadLibrary();
+    button.disabled = true;
+    try {
+      await toggleFavorite(user.uid, item);
+      await reloadLibrary();
+    } catch (error) {
+      console.error("Não foi possível atualizar os favoritos.", error);
+      alert("Não foi possível atualizar os favoritos. Tente novamente.");
+    } finally {
+      button.disabled = false;
+    }
   });
 }
 

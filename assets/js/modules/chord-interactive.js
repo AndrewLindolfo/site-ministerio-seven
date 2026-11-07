@@ -3,6 +3,7 @@ import { createChordViewerShell, renderChordViewer } from "./chord-viewer.js";
 import { normalizeInstrumentName } from "./chord-theory.js";
 
 let hideTimer = null;
+let lastFocusedElement = null;
 
 function clearHideTimer() {
   if (hideTimer) {
@@ -25,6 +26,7 @@ function ensureTooltip() {
   tooltip = document.createElement("div");
   tooltip.id = "chord-tooltip";
   tooltip.className = "chord-tooltip hidden";
+  tooltip.setAttribute("role", "tooltip");
   tooltip.appendChild(createChordViewerShell());
 
   tooltip.addEventListener("mouseenter", clearHideTimer);
@@ -41,6 +43,7 @@ function ensureBottomSheet() {
   overlay = document.createElement("div");
   overlay.id = "chord-sheet-overlay";
   overlay.className = "chord-sheet-overlay hidden";
+  overlay.setAttribute("aria-hidden", "true");
   overlay.innerHTML = `
     <div class="chord-sheet" role="dialog" aria-modal="true" aria-label="Visualização do acorde">
       <button type="button" class="chord-sheet__close" aria-label="Fechar visualização">✕</button>
@@ -50,12 +53,21 @@ function ensureBottomSheet() {
 
   overlay.addEventListener("click", (event) => {
     if (event.target === overlay || event.target.closest(".chord-sheet__close")) {
-      overlay.classList.add("hidden");
+      closeChordBottomSheet();
     }
   });
 
   document.body.appendChild(overlay);
   return overlay;
+}
+
+function closeChordBottomSheet() {
+  const overlay = document.getElementById("chord-sheet-overlay");
+  if (!overlay || overlay.classList.contains("hidden")) return;
+  overlay.classList.add("hidden");
+  overlay.setAttribute("aria-hidden", "true");
+  if (lastFocusedElement instanceof HTMLElement) lastFocusedElement.focus();
+  lastFocusedElement = null;
 }
 
 function placeTooltip(tooltip, target) {
@@ -92,7 +104,10 @@ export function openChordBottomSheet(symbol, instrument = "violao") {
   const shell = createChordViewerShell();
   content.appendChild(shell);
   renderChordViewer(shell, symbol, normalizeInstrumentName(instrument), 0);
+  lastFocusedElement = document.activeElement;
   overlay.classList.remove("hidden");
+  overlay.setAttribute("aria-hidden", "false");
+  overlay.querySelector(".chord-sheet__close")?.focus();
 }
 
 export function bindChordInteractions(root, options = {}) {
@@ -105,6 +120,9 @@ export function bindChordInteractions(root, options = {}) {
 
     const symbol = node.getAttribute("data-chord-symbol") || "";
     node.classList.add("is-chord-interactive");
+    node.tabIndex = 0;
+    node.setAttribute("role", "button");
+    node.setAttribute("aria-label", `Visualizar acorde ${symbol}`);
 
     node.addEventListener("mouseenter", () => {
       if (window.innerWidth <= 1024) return;
@@ -122,5 +140,23 @@ export function bindChordInteractions(root, options = {}) {
       event.preventDefault();
       openChordBottomSheet(symbol, getInstrument());
     });
+
+    node.addEventListener("focus", () => {
+      if (window.innerWidth > 1024) showChordTooltip(node, symbol, getInstrument());
+    });
+
+    node.addEventListener("blur", () => {
+      if (window.innerWidth > 1024) hideChordTooltip();
+    });
+
+    node.addEventListener("keydown", (event) => {
+      if (!["Enter", " "].includes(event.key)) return;
+      event.preventDefault();
+      openChordBottomSheet(symbol, getInstrument());
+    });
   });
 }
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeChordBottomSheet();
+});

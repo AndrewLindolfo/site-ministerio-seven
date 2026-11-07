@@ -1,4 +1,10 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /conta.html
+Disallow: /favoritos.html
+Disallow: /login.html
+Disallow: /notificacoes.html
+Disallow: /playlists.html
 
-Sitemap: https://ministerioseven.online/sitemap.xml
+Sitemap: https://ministerioseven.site/sitemap.xml

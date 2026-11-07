@@ -1,4 +1,4 @@
-import { watchAuth, getAdminProfileByEmail } from "../auth.js";
+import { watchAuth, getAdminProfileForUser } from "../auth.js";
 import { hasPermission } from "../services/admin-permissions-service.js";
 import "../editor.js";
 import { getMusica, saveMusica, findDuplicateMusicaTitle, removeMusica } from "../services/musicas-service.js";
@@ -7,6 +7,30 @@ import { recordAdminActivity } from "../services/admin-activity-service.js";
 
 const params = new URLSearchParams(window.location.search);
 const musicaId = params.get("id") || "";
+let currentAdmin = null;
+let currentMusica = null;
+let hasInitialized = false;
+
+function setStatus(message = "", isError = false) {
+  const status = document.getElementById("admin-editor-musica-status");
+  if (!status) return;
+  status.textContent = message;
+  status.classList.toggle("error", isError);
+}
+
+function canSaveMusic() {
+  if (!currentAdmin) return false;
+  return hasPermission(currentAdmin, "musicas", musicaId ? "edit" : "create");
+}
+
+function canDeleteMusic() {
+  return Boolean(currentAdmin && musicaId && hasPermission(currentAdmin, "musicas", "delete"));
+}
+
+function applyPermissions() {
+  document.querySelector('#admin-editor-musica-form button[type="submit"]')?.classList.toggle("hidden", !canSaveMusic());
+  document.getElementById("delete-musica-button")?.classList.toggle("hidden", !canDeleteMusic());
+}
 
 function getLyricHtml() {
   const editor = window.tinymce?.get("musica-letra");
@@ -42,7 +66,8 @@ function setLyricHtml(html = "") {
 async function loadMusicaIfEditing() {
   if (!musicaId) return;
   const musica = await getMusica(musicaId);
-  if (!musica) return;
+  if (!musica) throw new Error("Música não encontrada.");
+  currentMusica = musica;
 
   document.getElementById("musica-titulo").value = musica.title || "";
   document.getElementById("musica-subtitulo").value = musica.subtitle || "";
@@ -56,10 +81,13 @@ async function loadMusicaIfEditing() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await loadMusicaIfEditing();
-
   document.getElementById("admin-editor-musica-form")?.addEventListener("submit", async (event) => {
     event.preventDefault();
+
+    if (!canSaveMusic()) {
+      setStatus("Você não tem permissão para salvar esta música.", true);
+      return;
+    }
 
     const submitButton = event.target.querySelector('button[type="submit"]');
     if (submitButton) submitButton.disabled = true;
@@ -67,7 +95,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const title = document.getElementById("musica-titulo")?.value?.trim() || "";
       if (!title) {
-        alert("Preencha o título da música.");
+        setStatus("Preencha o título da música.", true);
         return;
       }
 
@@ -75,7 +103,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (duplicate) {
         const editExisting = confirm("Já existe uma música com este título. Deseja editar a existente?");
         if (editExisting) {
-          window.location.href = `./editor-musica.html?id=${duplicate.id}`;
+          window.location.href = `./editor-musica.html?id=${encodeURIComponent(duplicate.id)}`;
         }
         return;
       }
@@ -89,9 +117,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         youtubeUrl: document.getElementById("musica-youtube")?.value?.trim() || "",
         internalNotes: document.getElementById("musica-observacao")?.value?.trim() || "",
         lyricHtml: getLyricHtml(),
-        active: true
+        active: musicaId ? currentMusica?.active !== false : true
       };
 
+      setStatus("Salvando música…");
       const savedId = await saveMusica(payload, musicaId);
       await recordAdminActivity({
         action: musicaId ? "update" : "create",
@@ -99,43 +128,53 @@ document.addEventListener("DOMContentLoaded", async () => {
         itemId: savedId,
         itemName: title
       });
-      alert(musicaId ? "✅ Música atualizada com sucesso!" : "✅ Música cadastrada com sucesso!");
+      setStatus(musicaId ? "Música atualizada com sucesso." : "Música cadastrada com sucesso.");
       window.location.href = "./musicas.html";
     } catch (error) {
       console.error("Erro ao salvar música:", error);
-      alert("Erro ao salvar música no Firebase.\n\n" + explainFirebaseError(error));
+      setStatus(explainFirebaseError(error), true);
     } finally {
       if (submitButton) submitButton.disabled = false;
     }
   });
 
   document.getElementById("delete-musica-button")?.addEventListener("click", async () => {
-    if (!musicaId) {
-      alert("Esta música ainda não foi salva.");
+    if (!canDeleteMusic()) {
+      setStatus("Você não tem permissão para excluir esta música.", true);
       return;
     }
 
     try {
       if (!confirm("Deseja excluir esta música?")) return;
+      const deleteButton = document.getElementById("delete-musica-button");
+      if (deleteButton) deleteButton.disabled = true;
       const musicaName = document.getElementById("musica-titulo")?.value?.trim() || "Música";
       await removeMusica(musicaId);
       await recordAdminActivity({ action: "delete", module: "musicas", itemId: musicaId, itemName: musicaName });
-      alert("🗑️ Música excluída com sucesso!");
       window.location.href = "./musicas.html";
     } catch (error) {
       console.error("Erro ao excluir música:", error);
-      alert("Erro ao excluir música no Firebase.\n\n" + explainFirebaseError(error));
+      setStatus(explainFirebaseError(error), true);
+      const deleteButton = document.getElementById("delete-musica-button");
+      if (deleteButton) deleteButton.disabled = false;
     }
   });
 });
 
 watchAuth(async (user) => {
-  if (!user?.email) return;
-  const admin = await getAdminProfileByEmail(user.email);
-  if (!admin) return;
-  const isEdit = !!musicaId;
-  const canSave = isEdit ? hasPermission(admin, 'musicas', 'edit') : hasPermission(admin, 'musicas', 'create');
-  const canDelete = isEdit && hasPermission(admin, 'musicas', 'delete');
-  document.querySelector('#admin-editor-musica-form button[type="submit"]')?.classList.toggle('hidden', !canSave);
-  document.getElementById('delete-musica-button')?.classList.toggle('hidden', !canDelete);
+  if (!user?.uid || !user?.email) return;
+  try {
+    currentAdmin = await getAdminProfileForUser(user);
+    if (!currentAdmin) return;
+    applyPermissions();
+    if (!hasInitialized) {
+      setStatus(musicaId ? "Carregando música…" : "");
+      await loadMusicaIfEditing();
+      hasInitialized = true;
+      setStatus("");
+    }
+  } catch (error) {
+    console.error("Erro ao preparar o editor de música:", error);
+    setStatus(explainFirebaseError(error), true);
+  }
 });

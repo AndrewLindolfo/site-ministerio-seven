@@ -1,64 +1,116 @@
-import { watchAuth, getAdminProfileByEmail } from "../auth.js";
-import { hasPermission, isPrimaryAdmin } from "../services/admin-permissions-service.js";
+import { watchAuth, getAdminProfileForUser } from "../auth.js";
+import { normalizeText, explainFirebaseError } from "../db.js";
+import { hasPermission } from "../services/admin-permissions-service.js";
 import { listMusicas, removeMusica } from "../services/musicas-service.js";
 import { recordAdminActivity } from "../services/admin-activity-service.js";
 
-async function renderMusicas() {
+let currentAdmin = null;
+let allMusicas = [];
+let hasLoaded = false;
+
+function setStatus(message = "", isError = false) {
+  const status = document.getElementById("admin-musicas-status");
+  if (!status) return;
+  status.textContent = message;
+  status.classList.toggle("error", isError);
+}
+
+function buildMusicCard(item) {
+  const card = document.createElement("div");
+  card.className = "admin-list-card";
+
+  const details = document.createElement("div");
+  const title = document.createElement("strong");
+  title.textContent = item.title || "Música sem título";
+  details.append(title);
+
+  if (item.subtitle) {
+    const subtitle = document.createElement("p");
+    subtitle.textContent = item.subtitle;
+    details.append(subtitle);
+  }
+
+  const actions = document.createElement("div");
+  actions.className = "admin-list-actions";
+
+  if (hasPermission(currentAdmin, "musicas", "edit")) {
+    const edit = document.createElement("a");
+    edit.className = "button-outline";
+    edit.href = `./editor-musica.html?id=${encodeURIComponent(item.id)}`;
+    edit.textContent = "Editar";
+    actions.append(edit);
+  }
+
+  if (hasPermission(currentAdmin, "musicas", "delete")) {
+    const remove = document.createElement("button");
+    remove.className = "button-danger";
+    remove.type = "button";
+    remove.textContent = "Excluir";
+    remove.addEventListener("click", async () => {
+      if (!confirm(`Deseja excluir a música “${item.title || "Sem título"}”?`)) return;
+      remove.disabled = true;
+      try {
+        await removeMusica(item.id);
+        await recordAdminActivity({ action: "delete", module: "musicas", itemId: item.id, itemName: item.title || "Música" });
+        allMusicas = allMusicas.filter((entry) => entry.id !== item.id);
+        renderMusicas();
+        setStatus("Música excluída com sucesso.");
+      } catch (error) {
+        console.error("Erro ao excluir música:", error);
+        setStatus(explainFirebaseError(error), true);
+        remove.disabled = false;
+      }
+    });
+    actions.append(remove);
+  }
+
+  card.append(details, actions);
+  return card;
+}
+
+function renderMusicas() {
   const box = document.getElementById("admin-musicas-list");
   const search = document.getElementById("admin-musicas-search");
-  if (!box) return;
+  if (!box || !currentAdmin) return;
 
-  const all = await listMusicas(false);
-  const term = String(search?.value || "").trim().toLowerCase();
-  const filtered = all.filter((item) => String(item.title || "").toLowerCase().includes(term));
+  const term = normalizeText(search?.value || "");
+  const filtered = allMusicas.filter((item) => normalizeText(`${item.title || ""} ${item.subtitle || ""}`).includes(term));
+  box.replaceChildren(...filtered.map(buildMusicCard));
 
-  box.innerHTML = filtered.length ? filtered.map((item) => `
-    <div class="admin-list-card">
-      <div>
-        <strong>${item.title || ""}</strong>
-        ${item.subtitle ? `<p>${item.subtitle}</p>` : ""}
-      </div>
-      <div class="admin-list-actions">
-        <a class="button-outline" href="./editor-musica.html?id=${item.id}">Editar</a>
-        <button class="button-danger" type="button" data-delete-id="${item.id}">Excluir</button>
-      </div>
-    </div>
-  `).join("") : "<p>Nenhuma música cadastrada.</p>";
-
-  box.querySelectorAll("[data-delete-id]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      if (!confirm("Deseja excluir esta música?")) return;
-      const item = filtered.find((entry) => entry.id === button.dataset.deleteId);
-      await removeMusica(button.dataset.deleteId);
-      await recordAdminActivity({ action: "delete", module: "musicas", itemId: button.dataset.deleteId, itemName: item?.title || "Música" });
-      alert("🗑️ Música excluída com sucesso!");
-      await renderMusicas();
-    });
-  });
+  if (!filtered.length) {
+    const empty = document.createElement("p");
+    empty.textContent = term ? "Nenhuma música encontrada." : "Nenhuma música cadastrada.";
+    box.append(empty);
+  }
+  setStatus(`${filtered.length} música(s) exibida(s).`);
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
+async function loadMusicas() {
+  setStatus("Carregando músicas…");
+  try {
+    allMusicas = await listMusicas(false);
+    hasLoaded = true;
+    renderMusicas();
+  } catch (error) {
+    console.error("Erro ao carregar músicas:", error);
+    setStatus(explainFirebaseError(error), true);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("admin-musicas-search")?.addEventListener("input", renderMusicas);
-  await renderMusicas();
 });
 
-function applyMusicPermissions(admin) {
-  const createBtn = document.querySelector('.admin-toolbar .button-primary');
-  if (createBtn) createBtn.classList.toggle('hidden', !hasPermission(admin, 'musicas', 'create'));
-  document.querySelectorAll('.admin-list-actions .button-outline').forEach((el) => {
-    el.classList.toggle('hidden', !hasPermission(admin, 'musicas', 'edit'));
-  });
-  document.querySelectorAll('[data-delete-id]').forEach((el) => {
-    el.classList.toggle('hidden', !hasPermission(admin, 'musicas', 'delete'));
-  });
-}
-
 watchAuth(async (user) => {
-  if (!user?.email) return;
-  const admin = await getAdminProfileByEmail(user.email);
-  if (!admin) return;
-  const rerender = async () => { await renderMusicas(); applyMusicPermissions(admin); };
-  document.getElementById("admin-musicas-search")?.removeEventListener("input", renderMusicas);
-  document.getElementById("admin-musicas-search")?.addEventListener("input", rerender);
-  await rerender();
+  if (!user?.uid || !user?.email) return;
+  try {
+    currentAdmin = await getAdminProfileForUser(user);
+    if (!currentAdmin) return;
+    document.querySelector(".admin-toolbar .button-primary")?.classList.toggle("hidden", !hasPermission(currentAdmin, "musicas", "create"));
+    if (hasLoaded) renderMusicas();
+    else await loadMusicas();
+  } catch (error) {
+    console.error("Erro ao preparar a gestão de músicas:", error);
+    setStatus(explainFirebaseError(error), true);
+  }
 });

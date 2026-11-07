@@ -76,6 +76,15 @@
   flex-wrap:wrap;
 }
 
+.admin-status{
+  min-height:1.5rem;
+  color:var(--text-soft);
+}
+
+.admin-status.error{
+  color:#ff6b6b;
+}
+
 .backup-actions{
   display:grid;
   gap:14px;

@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-DKM3MTBKQ6');
+    gtag("js", new Date());
+    gtag("config", "G-DKM3MTBKQ6");
   </script>
 
   <meta charset="UTF-8" />
@@ -20,7 +18,6 @@
   <link rel="stylesheet" href="../assets/css/animations.css" />
   <link rel="stylesheet" href="../assets/css/responsive.css" />
   <link rel="stylesheet" href="../assets/css/admin.css" />
-  <link rel="stylesheet" href="../assets/css/pages/admin-editor-musica.css" />
 </head>
 <body>
 
@@ -51,19 +48,21 @@
     <h1>Editor de Música</h1>
 
     <form id="admin-editor-musica-form" class="admin-form">
-      <input type="text" id="musica-titulo" placeholder="Título *" required />
-      <input type="text" id="musica-subtitulo" placeholder="Subtítulo (opcional)" />
-      <input type="text" id="musica-autor" placeholder="Autor / compositor (opcional)" />
-      <input type="text" id="musica-tom" placeholder="Tom original (opcional)" />
-      <input type="text" id="musica-categoria" placeholder="Categoria (opcional)" />
-      <input type="url" id="musica-youtube" placeholder="Link do YouTube (opcional)" />
-      <textarea id="musica-observacao" placeholder="Observação interna (opcional)"></textarea>
+      <input type="text" id="musica-titulo" placeholder="Título *" aria-label="Título" maxlength="150" required />
+      <input type="text" id="musica-subtitulo" placeholder="Subtítulo (opcional)" aria-label="Subtítulo" maxlength="200" />
+      <input type="text" id="musica-autor" placeholder="Autor / compositor (opcional)" aria-label="Autor ou compositor" maxlength="150" />
+      <input type="text" id="musica-tom" placeholder="Tom original (opcional)" aria-label="Tom original" maxlength="20" />
+      <input type="text" id="musica-categoria" placeholder="Categoria (opcional)" aria-label="Categoria" maxlength="80" />
+      <input type="url" id="musica-youtube" placeholder="Link do YouTube (opcional)" aria-label="Link do YouTube" maxlength="500" />
+      <textarea id="musica-observacao" placeholder="Observação interna (opcional)" aria-label="Observação interna" maxlength="5000"></textarea>
 
-      <textarea id="musica-letra" placeholder="Letra da música"></textarea>
+      <textarea id="musica-letra" placeholder="Letra da música" aria-label="Letra da música"></textarea>
+
+      <p id="admin-editor-musica-status" class="admin-status" role="status" aria-live="polite"></p>
 
       <div class="admin-form-actions">
-        <button type="submit" class="button-primary">Salvar</button>
-        <button type="button" id="delete-musica-button" class="button-danger">Excluir</button>
+        <button type="submit" class="button-primary hidden">Salvar</button>
+        <button type="button" id="delete-musica-button" class="button-danger hidden">Excluir</button>
       </div>
     </form>
   </section>
@@ -75,7 +74,6 @@
 
 <script type="module" src="../assets/js/app.js"></script>
 
-<script type="module" src="../assets/js/editor.js"></script>
 <script type="module" src="../assets/js/auth-guard.js"></script>
 <script type="module" src="../assets/js/pages/admin-editor-musica.js"></script>
 </body>

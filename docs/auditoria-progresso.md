@@ -104,11 +104,11 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Páginas HTML com URLs limpas foram configuradas explicitamente sem cache; JavaScript e CSS usam revalidação curta e imagens e fontes usam cache semanal.
 - Validação visual aprovada em 14 páginas móveis e 10 páginas desktop, sem rolagem horizontal; detalhes de música, cifra, menu móvel, metrônomo e carregamento de dados foram exercitados no navegador.
 - Authentication do projeto novo confirmado com e-mail/senha e Google ativos; o domínio do canal `auditoria` está autorizado para OAuth.
-- Os seis administradores antigos foram migrados sem os UIDs do projeto anterior: um `master` e cinco convites secundários com permissões normalizadas; a segunda execução confirmou proteção integral contra sobrescrita.
+- O administrador `master` foi migrado sem reutilizar o UID do projeto anterior. Os cinco convites secundários inicialmente importados para validação foram removidos por decisão do responsável; somente `admins/master` permanece no Firebase novo.
 - O UID novo de `lindolfoandrew0@gmail.com` foi vinculado ao `admins/master`, e o login real abriu o painel como Andrew Lindolfo.
 - O primeiro-login do `master` foi corrigido no cliente e nas regras para aceitar um documento ainda sem UID somente quando o e-mail verificado coincide; depois do vínculo, a autorização volta a exigir UID e e-mail exatos.
 - Links do dashboard administrativo passaram a usar caminhos absolutos em `/admin/`, evitando que a URL limpa `/admin` encaminhe os cartões para páginas públicas.
-- Painel, gestão de músicas e gestão de administradores foram validados no canal remoto: 75 músicas e cinco administradores secundários foram carregados com sucesso.
+- Painel, gestão de músicas e gestão de administradores foram validados no canal remoto; 75 músicas foram carregadas e, após a validação, os cinco administradores secundários foram removidos do projeto novo.
 
 ## Próxima etapa
 

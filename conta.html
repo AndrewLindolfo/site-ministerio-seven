@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -13,13 +12,14 @@
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
   <title>Minha Conta | Ministério Seven</title>
   <meta name="description" content="Gerencie sua conta no Ministério Seven." />
   <meta property="og:title" content="Minha Conta | Ministério Seven" />
   <meta property="og:description" content="Gerencie sua conta no Ministério Seven." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://ministerioseven.online/" />
-  <meta property="og:image" content="https://ministerioseven.online/assets/img/logo/logo_dark.png" />
+  <meta property="og:url" content="https://ministerioseven.site/conta.html" />
+  <meta property="og:image" content="https://ministerioseven.site/assets/img/logo/logo_dark.png" />
   <link rel="icon" href="assets/img/favicon/favicon.ico" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="assets/css/main.css" />
@@ -85,26 +85,26 @@
         <img id="conta-photo" src="assets/img/v7/icon_120.png" alt="Foto do perfil" class="account-page-photo" />
         <div>
           <strong id="conta-display-name">Sua conta</strong>
-          <p id="conta-status">Faça login para continuar.</p>
+          <p id="conta-status" aria-live="polite">Verificando sua conta...</p>
         </div>
       </div>
 
       <form id="conta-form" class="account-form hidden">
         <label>
           <span>Nome</span>
-          <input type="text" id="conta-first-name" />
+          <input type="text" id="conta-first-name" maxlength="80" autocomplete="given-name" required />
         </label>
         <label>
           <span>Sobrenome</span>
-          <input type="text" id="conta-last-name" />
+          <input type="text" id="conta-last-name" maxlength="120" autocomplete="family-name" />
         </label>
         <label>
           <span>E-mail</span>
-          <input type="email" id="conta-email" readonly />
+          <input type="email" id="conta-email" autocomplete="email" readonly />
         </label>
         <label>
           <span>Telefone</span>
-          <input type="tel" id="conta-phone" />
+          <input type="tel" id="conta-phone" maxlength="30" autocomplete="tel" />
         </label>
 
         <div class="account-form-actions">

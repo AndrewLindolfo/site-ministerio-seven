@@ -62,6 +62,19 @@ async function getPrimaryAdminProfile() {
   return admin;
 }
 
+export async function getAdminProfileForUser(user = null) {
+  const uid = String(user?.uid || "").trim();
+  const email = normalize(user?.email || "");
+  if (!uid || !email) return null;
+
+  const direct = await getDocument(ADMIN_COLLECTION, uid);
+  if (direct && direct.active !== false && direct.ativo !== false && normalize(direct.email) === email) return direct;
+
+  const primary = await getPrimaryAdminProfile();
+  if (!primary || String(primary.uid || "").trim() !== uid || normalize(primary.email) !== email) return null;
+  return primary;
+}
+
 export async function getAdminProfileByEmail(email = "") {
   const normalizedEmail = normalize(email);
   if (!normalizedEmail) return null;

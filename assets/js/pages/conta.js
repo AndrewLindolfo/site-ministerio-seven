@@ -1,7 +1,5 @@
-import { auth } from "../firebase.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { openPublicAuthModal } from "../public-auth.js";
-import { getPublicUserProfile, savePublicUserProfile } from "../services/public-user-service.js";
+import { getCurrentPublicUser, openPublicAuthModal, watchPublicAuth } from "../public-auth.js";
+import { normalizeProfilePhotoUrl, savePublicUserProfile } from "../services/public-user-service.js";
 
 function $(selector) {
   return document.querySelector(selector);
@@ -13,9 +11,10 @@ function fillProfile(user, profile = null) {
   const displayName = profile?.displayName || user?.displayName || [firstName, lastName].filter(Boolean).join(" ");
   const email = profile?.email || user?.email || "";
   const phone = profile?.phone || "";
-  const photoURL = profile?.photoURL || user?.photoURL || "assets/img/v7/icon_120.png";
+  const photoURL = normalizeProfilePhotoUrl(profile?.photoURL || user?.photoURL) || "/assets/img/v7/icon_120.png";
 
   $("#conta-photo").src = photoURL;
+  $("#conta-photo").onerror = () => { $("#conta-photo").src = "/assets/img/v7/icon_120.png"; };
   $("#conta-display-name").textContent = displayName || "Minha conta";
   $("#conta-status").textContent = email || "Usuário autenticado";
   $("#conta-first-name").value = firstName;
@@ -42,7 +41,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   $("#conta-form")?.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const user = auth.currentUser;
+    const publicUser = getCurrentPublicUser();
+    const user = publicUser?.firebaseUser;
     if (!user?.uid) {
       openPublicAuthModal();
       return;
@@ -50,10 +50,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const firstName = $("#conta-first-name").value.trim();
     const lastName = $("#conta-last-name").value.trim();
-    const email = $("#conta-email").value.trim();
+    const email = String(user.email || "").trim().toLowerCase();
     const phone = $("#conta-phone").value.trim();
     const displayName = [firstName, lastName].filter(Boolean).join(" ");
 
+    const submitButton = event.currentTarget.querySelector('button[type="submit"]');
+    if (submitButton) submitButton.disabled = true;
     try {
       await savePublicUserProfile(user.uid, {
         firstName,
@@ -68,16 +70,17 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Erro ao salvar conta:", error);
       alert("Não foi possível salvar sua conta agora.");
+    } finally {
+      if (submitButton) submitButton.disabled = false;
     }
   });
 
-  onAuthStateChanged(auth, async (user) => {
+  watchPublicAuth(async (user) => {
     if (!user) {
       setLoggedOutState();
       return;
     }
     setLoggedInState();
-    const profile = await getPublicUserProfile(user.uid);
-    fillProfile(user, profile);
+    fillProfile(user, getCurrentPublicUser());
   });
 });

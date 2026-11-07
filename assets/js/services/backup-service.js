@@ -5,19 +5,20 @@ export const BACKUP_COLLECTIONS = [
   "musicas",
   "cifras",
   "programacoes",
+  "ensaios",
   "albuns",
   "downloads",
+  "downloadsPorMusica",
   "notificacoes",
   "contatos",
-  "links",
-  "config"
+  "config",
+  "activity_logs"
 ];
 
-const OPTIONAL_COLLECTIONS = new Set(["admins", "contatos"]);
+const OPTIONAL_COLLECTIONS = new Set(["contatos", "activity_logs"]);
 
 function sanitizeForJson(value) {
-  if (value === undefined) return null;
-  if (value === null) return null;
+  if (value === undefined || value === null) return null;
   if (Array.isArray(value)) return value.map(sanitizeForJson);
   if (typeof value === "object") {
     const out = {};
@@ -34,35 +35,35 @@ export async function exportBackupJson() {
   const result = {
     _meta: {
       app: "Ministerio Seven",
-      version: 1,
+      version: 2,
       backupType: "full-clone",
       exportedAt: new Date().toISOString(),
       collections: [...BACKUP_COLLECTIONS]
     }
   };
+  const summary = { exported: {}, skipped: [], warnings: [] };
+  const responses = await Promise.allSettled(BACKUP_COLLECTIONS.map((name) => getCollection(name)));
 
-  const summary = {
-    exported: {},
-    skipped: [],
-    warnings: []
-  };
-
-  for (const name of BACKUP_COLLECTIONS) {
-    try {
-      const items = await getCollection(name);
+  for (let index = 0; index < BACKUP_COLLECTIONS.length; index += 1) {
+    const name = BACKUP_COLLECTIONS[index];
+    const response = responses[index];
+    if (response.status === "fulfilled") {
+      const items = response.value;
       result[name] = sanitizeForJson(items);
       summary.exported[name] = Array.isArray(items) ? items.length : 0;
-    } catch (error) {
-      const readable = explainFirebaseError(error);
-      if (OPTIONAL_COLLECTIONS.has(name) || error?.code === "permission-denied") {
-        result[name] = [];
-        summary.exported[name] = 0;
-        summary.skipped.push(name);
-        summary.warnings.push(`Coleção \"${name}\" ignorada no backup: ${readable}`);
-        continue;
-      }
-      throw new Error(`Falha ao exportar \"${name}\": ${readable}`);
+      continue;
     }
+
+    const error = response.reason;
+    const readable = explainFirebaseError(error);
+    if (OPTIONAL_COLLECTIONS.has(name)) {
+      result[name] = [];
+      summary.exported[name] = 0;
+      summary.skipped.push(name);
+      summary.warnings.push(`Coleção "${name}" ignorada no backup: ${readable}`);
+      continue;
+    }
+    throw new Error(`Falha ao exportar "${name}": ${readable}`);
   }
 
   result._summary = summary;

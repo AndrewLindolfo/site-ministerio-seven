@@ -1,10 +1,34 @@
 import { addDocument, updateDocument, deleteDocument, getCollection, getDocument, serverTimestamp, normalizeText } from "../db.js";
 import { createCollectionListCache } from "../lib/collection-list-cache.js";
+import { normalizeHttpsOrLocalUrl } from "../lib/url-safety.js";
 
 const COLLECTION = "notificacoes";
 const CACHE_KEY = "seven_cache_notificacoes_v2";
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const listCache = createCollectionListCache(CACHE_KEY, CACHE_TTL_MS);
+const VALID_TYPES = new Set(["aviso", "novidade", "evento", "destaque"]);
+const VALID_MODES = new Set(["always", "daily", "device_once"]);
+
+function normalizeString(value = "", maxLength = 500) {
+  return String(value ?? "").trim().slice(0, maxLength);
+}
+
+function normalizeType(value = "") {
+  const type = normalizeString(value || "aviso", 20).toLowerCase();
+  return VALID_TYPES.has(type) ? type : "aviso";
+}
+
+function normalizeMode(value = "") {
+  const mode = normalizeString(value || "device_once", 20).toLowerCase();
+  return VALID_MODES.has(mode) ? mode : "device_once";
+}
+
+function normalizeDateTime(value = "") {
+  const raw = normalizeString(value, 40);
+  if (!raw) return "";
+  if (Number.isNaN(Date.parse(raw))) throw new Error("Data ou horário de notificação inválido.");
+  return raw;
+}
 
 function toMillis(value) {
   if (!value) return 0;
@@ -15,19 +39,25 @@ function toMillis(value) {
 }
 
 function normalizeItem(item = {}) {
+  const type = normalizeType(item.type || item.tipo);
   return {
     ...item,
-    tipo: item.tipo || "aviso",
-    popupMode: item.popupMode || "device_once",
+    title: normalizeString(item.title, 150),
+    message: normalizeString(item.message, 5000),
+    type,
+    tipo: type,
+    popupMode: normalizeMode(item.popupMode),
     active: item.active !== false,
     showPopup: item.showPopup === true,
     showHome: item.showHome === true,
     showPublic: item.showPublic !== false,
     showTop: item.showTop === true,
     showBeforeStart: item.showBeforeStart === true,
-    topMode: item.topMode || "device_once",
+    topMode: normalizeMode(item.topMode),
     startsAt: item.startsAt || "",
-    expiresAt: item.expiresAt || ""
+    expiresAt: item.expiresAt || "",
+    buttonText: normalizeString(item.buttonText, 100),
+    buttonLink: normalizeHttpsOrLocalUrl(item.buttonLink)
   };
 }
 
@@ -55,7 +85,7 @@ export async function listNotificacoes(activeOnly = false) {
     where: [["active", "==", true]]
   } : {}));
   const normalized = all.map(normalizeItem);
-  return sortByDateDesc(activeOnly ? normalized.filter((item) => isNotificationActive(item)) : normalized);
+  return sortByDateDesc(normalized);
 }
 
 export async function getNotificacao(id) {
@@ -64,24 +94,39 @@ export async function getNotificacao(id) {
 }
 
 export async function saveNotificacao(payload, id = "") {
+  const title = normalizeString(payload.title, 150);
+  const message = normalizeString(payload.message, 5000);
+  if (!title || !message) throw new Error("Informe título e mensagem do comunicado.");
+  const startsAt = normalizeDateTime(payload.startsAt);
+  const expiresAt = normalizeDateTime(payload.expiresAt);
+  if (startsAt && expiresAt && toMillis(expiresAt) <= toMillis(startsAt)) {
+    throw new Error("O encerramento deve ser posterior ao início.");
+  }
+  const rawButtonLink = normalizeString(payload.buttonLink, 2000);
+  const buttonLink = normalizeHttpsOrLocalUrl(rawButtonLink);
+  const buttonText = normalizeString(payload.buttonText, 100);
+  if ((rawButtonLink && !buttonLink) || Boolean(buttonLink) !== Boolean(buttonText)) {
+    throw new Error("Preencha o texto e um link HTTPS válido para o botão.");
+  }
+  const type = normalizeType(payload.type || payload.tipo);
   const docData = {
-    title: String(payload.title || "").trim(),
-    normalizedTitle: normalizeText(payload.title || ""),
-    message: payload.message || "",
-    type: payload.type || payload.tipo || "aviso",
-    tipo: payload.type || payload.tipo || "aviso",
+    title,
+    normalizedTitle: normalizeText(title),
+    message,
+    type,
+    tipo: type,
     active: payload.active !== false,
     showPopup: payload.showPopup === true,
     showHome: payload.showHome === true,
     showPublic: payload.showPublic !== false,
     showTop: payload.showTop === true,
     showBeforeStart: payload.showBeforeStart === true,
-    popupMode: payload.popupMode || "device_once",
-    topMode: payload.topMode || "device_once",
-    startsAt: payload.startsAt || "",
-    expiresAt: payload.expiresAt || "",
-    buttonText: payload.buttonText || "",
-    buttonLink: payload.buttonLink || "",
+    popupMode: normalizeMode(payload.popupMode),
+    topMode: normalizeMode(payload.topMode),
+    startsAt,
+    expiresAt,
+    buttonText,
+    buttonLink,
     updatedAt: serverTimestamp()
   };
 
@@ -101,7 +146,7 @@ export async function removeNotificacao(id) {
 
 export async function listHomeNotificacoes(limitCount = null) {
   const all = await listNotificacoes(true);
-  const items = all.filter((item) => item.showHome);
+  const items = all.filter((item) => item.showHome && isNotificationActive(item));
   if (typeof limitCount === "number" && limitCount > 0) {
     return items.slice(0, limitCount);
   }
@@ -122,11 +167,11 @@ export async function listPublicNotificacoes() {
 
 export async function getPopupNotificacao() {
   const all = await listNotificacoes(true);
-  return all.find((item) => item.showPopup) || null;
+  return all.find((item) => item.showPopup && isNotificationActive(item)) || null;
 }
 
 
 export async function getTopNotificacao() {
   const all = await listNotificacoes(true);
-  return all.find((item) => item.showTop) || null;
+  return all.find((item) => item.showTop && isNotificationActive(item)) || null;
 }

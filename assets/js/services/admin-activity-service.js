@@ -1,10 +1,8 @@
 import { auth } from "../firebase.js";
-import { addDocument, getCollection, serverTimestamp, setDocument } from "../db.js";
-import { getAdminProfileByEmail } from "../auth.js";
+import { addDocument, getCollection, serverTimestamp } from "../db.js";
+import { getAdminProfileForUser } from "../auth.js";
 
 const COLLECTION = "activity_logs";
-const CONFIG_COLLECTION = "config";
-const CONFIG_PREFIX = "activity_log__";
 const CACHE_KEY = "seven_admin_identity";
 
 function normalizeEmail(value = "") {
@@ -34,14 +32,6 @@ function persistCachedAdminIdentity(identity = null) {
   }
 }
 
-function toComparableTime(value) {
-  if (!value) return 0;
-  if (typeof value?.toMillis === "function") return value.toMillis();
-  if (typeof value?.seconds === "number") return value.seconds * 1000;
-  const parsed = Date.parse(value);
-  return Number.isNaN(parsed) ? 0 : parsed;
-}
-
 function buildClientLogId() {
   return `${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 }
@@ -66,7 +56,7 @@ function buildPayload(base = {}, admin = null, user = null, cached = null) {
     base.userName ||
     email ||
     "Administrador"
-  ).trim();
+  ).trim().slice(0, 150);
   const fallbackTimestamp = buildFallbackTimestamp();
 
   persistCachedAdminIdentity({ uid, email, name });
@@ -74,11 +64,11 @@ function buildPayload(base = {}, admin = null, user = null, cached = null) {
   return {
     clientLogId: String(base.clientLogId || buildClientLogId()),
     type: "activity_log",
-    action: String(base.action || "update").trim().toLowerCase(),
-    module: String(base.module || "geral").trim().toLowerCase(),
-    itemId: String(base.itemId || "").trim(),
-    itemName: String(base.itemName || "Sem item").trim() || "Sem item",
-    details: String(base.details || "").trim(),
+    action: String(base.action || "update").trim().toLowerCase().slice(0, 40),
+    module: String(base.module || "geral").trim().toLowerCase().slice(0, 60),
+    itemId: String(base.itemId || "").trim().slice(0, 200),
+    itemName: String(base.itemName || "Sem item").trim().slice(0, 200) || "Sem item",
+    details: String(base.details || "").trim().slice(0, 2000),
     userUid: uid || null,
     userEmail: email || null,
     userName: name || "Administrador",
@@ -92,69 +82,33 @@ function buildPayload(base = {}, admin = null, user = null, cached = null) {
 export async function recordAdminActivity(payload = {}) {
   const user = auth.currentUser;
   const cached = readCachedAdminIdentity();
-  const email = normalizeEmail(user?.email || cached?.email || payload.userEmail || "");
 
   let admin = null;
-  if (email) {
+  if (!cached?.name && user?.uid) {
     try {
-      admin = await getAdminProfileByEmail(email);
+      admin = await getAdminProfileForUser(user);
     } catch {}
   }
 
   const logPayload = buildPayload(payload, admin, user, cached);
-  const configDocId = `${CONFIG_PREFIX}${logPayload.clientLogId}`;
-
-  let primaryError = null;
   try {
     await addDocument(COLLECTION, logPayload);
     return true;
   } catch (error) {
-    primaryError = error;
     console.error("Erro ao registrar log em activity_logs:", error);
-  }
-
-  try {
-    await setDocument(CONFIG_COLLECTION, configDocId, {
-      ...logPayload,
-      storedIn: "config"
-    }, { merge: true });
-    return true;
-  } catch (fallbackError) {
-    console.error("Erro ao registrar log em config fallback:", fallbackError);
-    if (primaryError) throw primaryError;
-    throw fallbackError;
+    return false;
   }
 }
 
 export async function listAdminActivities() {
-  const logs = [];
-
   try {
-    const all = await getCollection(COLLECTION);
-    logs.push(...all.filter((item) => !item?.type || item.type === "activity_log"));
+    const all = await getCollection(COLLECTION, {
+      orderBy: { field: "timestamp", direction: "desc" },
+      limit: 500
+    });
+    return all.filter((item) => !item?.type || item.type === "activity_log");
   } catch (error) {
     console.warn("Não foi possível ler activity_logs:", error);
+    return [];
   }
-
-  try {
-    const configItems = await getCollection(CONFIG_COLLECTION);
-    logs.push(...configItems.filter((item) => item?.type === "activity_log" || String(item?.id || "").startsWith(CONFIG_PREFIX)));
-  } catch (error) {
-    console.warn("Não foi possível ler logs em config:", error);
-  }
-
-  const deduped = [];
-  const seen = new Set();
-  for (const item of logs) {
-    const key = item.clientLogId || item.id;
-    if (!key || seen.has(key)) continue;
-    seen.add(key);
-    deduped.push(item);
-  }
-
-  return deduped.sort((a, b) => {
-    const timeA = toComparableTime(a.timestamp) || toComparableTime(a.createdAt) || Number(a.fallbackCreatedAtMs || 0);
-    const timeB = toComparableTime(b.timestamp) || toComparableTime(b.createdAt) || Number(b.fallbackCreatedAtMs || 0);
-    return timeB - timeA;
-  });
 }

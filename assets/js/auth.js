@@ -1,5 +1,6 @@
 import { auth, provider } from "./firebase.js";
 import { getDocument, getOneByField, setDocument, updateDocument, serverTimestamp } from "./db.js";
+import { buildAdminDocIdFromEmail, buildLegacyAdminDocIdFromEmail } from "./services/admin-permissions-service.js";
 import {
   signInWithPopup,
   signInWithEmailAndPassword,
@@ -15,10 +16,6 @@ function normalize(email = "") {
   return String(email).trim().toLowerCase();
 }
 
-
-function buildAdminDocIdFromEmail(email = "") {
-  return normalize(email).replace(/[^a-z0-9]/gi, "_").toLowerCase();
-}
 
 async function finalizePendingAdmin(admin = null, user = null) {
   const uid = String(user?.uid || "").trim();
@@ -84,6 +81,12 @@ export async function getAdminProfileForUser(user = null) {
   if (invited && invited.active !== false && invited.ativo !== false && normalize(invited.email) === email) {
     const invitedUid = String(invited.uid || "").trim();
     if (!invitedUid || invitedUid === uid) return invited;
+  }
+
+  const legacyInvited = await getAccessibleAdminDocument(buildLegacyAdminDocIdFromEmail(email));
+  if (legacyInvited && legacyInvited.active !== false && legacyInvited.ativo !== false && normalize(legacyInvited.email) === email) {
+    const invitedUid = String(legacyInvited.uid || "").trim();
+    if (!invitedUid || invitedUid === uid) return legacyInvited;
   }
 
   const primary = await getAccessibleAdminDocument(PRIMARY_ADMIN_DOC_ID);

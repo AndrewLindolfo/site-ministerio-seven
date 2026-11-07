@@ -1,7 +1,7 @@
 import { getCollection, getOneByField, getDocument, setDocument, deleteDocument, serverTimestamp } from "../db.js";
 
 function normalizeEmail(value = "") {
-  return String(value || "").trim().toLowerCase();
+  return String(value || "").trim().toLowerCase().slice(0, 254);
 }
 
 export const ADMIN_COLLECTION = "admins";
@@ -48,9 +48,7 @@ function mergePermissions(base = {}, incoming = {}) {
 
 export function isPrimaryAdmin(admin = null) {
   if (!admin) return false;
-  if (admin.isPrimary === true || admin.principal === true) return true;
-  const perms = admin.permissions;
-  return !perms || typeof perms !== "object" || !Object.keys(perms).length;
+  return admin.id === PRIMARY_ADMIN_DOC_ID || admin.isPrimary === true || admin.principal === true;
 }
 
 export function getEffectivePermissions(admin = null) {
@@ -172,21 +170,26 @@ export async function getAdminByEmail(email = "") {
 }
 
 export function buildAdminDocIdFromEmail(email = "") {
+  return `email_${encodeURIComponent(normalizeEmail(email))}`;
+}
+
+export function buildLegacyAdminDocIdFromEmail(email = "") {
   return normalizeEmail(email).replace(/[^a-z0-9]/gi, "_").toLowerCase();
 }
 
 export async function saveSecondaryAdmin(payload = {}, existingId = "") {
   const email = normalizeEmail(payload.email || "");
-  const name = String(payload.name || "").trim();
-  if (!email || !name) {
+  const name = String(payload.name || "").trim().slice(0, 150);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !name) {
     throw new Error("Preencha nome e e-mail do administrador.");
   }
 
   const maybeExisting = await getAdminByEmail(email);
   const targetId = existingId || maybeExisting?.id || buildAdminDocIdFromEmail(email);
+  if (targetId === PRIMARY_ADMIN_DOC_ID) throw new Error("O administrador principal não pode ser alterado por este formulário.");
 
   const current = maybeExisting?.id === targetId ? maybeExisting : null;
-  const resolvedUid = String(payload.uid || current?.uid || maybeExisting?.uid || "").trim();
+  const resolvedUid = String(payload.uid || current?.uid || maybeExisting?.uid || "").trim().slice(0, 128);
   const docData = {
     name,
     email,
@@ -210,5 +213,6 @@ export async function saveSecondaryAdmin(payload = {}, existingId = "") {
 
 export async function removeSecondaryAdmin(id = "") {
   if (!id) return;
+  if (id === PRIMARY_ADMIN_DOC_ID) throw new Error("O administrador principal não pode ser removido.");
   await deleteDocument(ADMIN_COLLECTION, id);
 }

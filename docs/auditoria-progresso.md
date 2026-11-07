@@ -60,8 +60,11 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Serviços de ensaios e programações receberam limites, timestamps, leitura direta por ID e validação de títulos, datas, horários e listas de músicas.
 - Serviços de músicas e cifras agora preservam visualizações em edições, limitam o tamanho dos documentos, sanitizam HTML na gravação e validam vídeos e campos essenciais.
 - Abertura de cifra por `slug` ou música vinculada passou a consultar somente as variantes necessárias, sem baixar toda a coleção.
+- Comunicados agendados com exibição antecipada foram corrigidos; tipos, modos, datas, botões e tamanhos agora são validados antes da gravação.
+- Permissão principal deixou de ser inferida pela ausência de permissões; documento `master` e flags explícitas são os únicos caminhos, e IDs de novos convites por e-mail não sofrem colisão.
+- Logs administrativos não vazam mais dados para `config`; backup inclui as coleções de conteúdo faltantes, exporta em paralelo e a restauração recebeu limites e preserva IDs internos.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- Serviços de notificações, permissões e backup
+- Páginas administrativas, iniciando pelo painel e administradores

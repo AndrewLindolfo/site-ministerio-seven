@@ -1,1 +1,51 @@
-/* admin-cifras.css */
+.admin-cifra-chooser-overlay{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+}
+
+.admin-cifra-chooser-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.55);
+}
+
+.admin-cifra-chooser-card{
+  position:relative;
+  max-width:420px;
+  margin:10vh auto 0;
+  padding:18px;
+  color:inherit;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+}
+
+.admin-cifra-chooser-card h3{margin:0 0 6px;}
+.admin-cifra-chooser-card p{margin:0 0 14px;color:var(--text-soft);}
+.admin-cifra-chooser-options{display:grid;gap:10px;}
+
+.admin-cifra-chooser-option{
+  width:100%;
+  padding:12px 14px;
+  color:inherit;
+  text-align:left;
+  background:transparent;
+  border:1px solid var(--border);
+  border-radius:12px;
+  cursor:pointer;
+}
+
+.admin-cifra-chooser-option:hover{background:rgba(255,255,255,.06);}
+
+.admin-cifra-chooser-close{
+  position:absolute;
+  top:10px;
+  right:10px;
+  color:inherit;
+  font-size:18px;
+  background:transparent;
+  border:0;
+  cursor:pointer;
+}

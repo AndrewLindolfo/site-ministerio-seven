@@ -9,6 +9,7 @@ import {
   normalizeText
 } from "../db.js";
 import { createCollectionListCache } from "../lib/collection-list-cache.js";
+import { sanitizeRichHtml } from "../lib/sanitize-html.js";
 
 const COLLECTION = "cifras";
 const CACHE_KEY = "seven_cache_cifras_v2";
@@ -23,6 +24,15 @@ const INSTRUMENT_LABELS = {
 };
 const VALID_INSTRUMENTS = new Set(Object.keys(INSTRUMENT_LABELS));
 const VALID_COMPASSOS = new Set(["2/4", "3/4", "4/4", "5/4", "6/8", "7/8", "9/8", "12/8"]);
+
+function normalizeString(value = "", maxLength = 200) {
+  return String(value ?? "").trim().slice(0, maxLength);
+}
+
+function normalizeViews(value = 0) {
+  const views = Number(value);
+  return Number.isFinite(views) && views >= 0 ? Math.min(Math.floor(views), 2_147_483_647) : 0;
+}
 
 function normalizeBpm(value = "") {
   if (String(value ?? "").trim() === "") return "";
@@ -74,12 +84,22 @@ export function getInstrumentLabel(value = "") {
 
 function normalizeList(all = [], activeOnly = false) {
   return all
-    .filter((item) => (activeOnly ? item.active !== false : true))
     .map((item) => ({
       ...item,
+      musicaId: normalizeString(item.musicaId, 150),
+      title: normalizeString(item.title, 150),
+      slug: normalizeString(item.slug, 180),
+      subtitle: normalizeString(item.subtitle, 200),
+      cifraText: String(item.cifraText || "").slice(0, 300_000),
+      cifraHtml: String(item.cifraHtml || "").slice(0, 300_000),
+      originalKey: normalizeString(item.originalKey, 20),
+      capo: normalizeString(item.capo, 30),
       instrumento: normalizeInstrument(item.instrumento || "violao"),
-      chordColor: normalizeChordColor(item.chordColor || "#FF5C00")
+      chordColor: normalizeChordColor(item.chordColor || "#FF5C00"),
+      views: normalizeViews(item.views),
+      active: item.active !== false
     }))
+    .filter((item) => (activeOnly ? item.active && item.title && item.slug : true))
     .sort((a, b) => String(a.title || "").localeCompare(String(b.title || ""), "pt-BR"));
 }
 
@@ -94,16 +114,18 @@ export async function listCifras(activeOnly = false, bypassCache = false) {
 export async function getCifra(id) {
   const item = await getDocument(COLLECTION, id);
   if (!item) return null;
-  return {
-    ...item,
-    instrumento: normalizeInstrument(item.instrumento || "violao"),
-    chordColor: normalizeChordColor(item.chordColor || "#FF5C00")
-  };
+  return normalizeList([item])[0] || null;
 }
 
 export async function listCifrasBySlug(slug, activeOnly = true, bypassCache = false) {
   const wantedSlug = String(slug || "").trim();
   if (!wantedSlug) return [];
+  if (activeOnly) {
+    const items = await getCollection(COLLECTION, {
+      where: [["slug", "==", wantedSlug], ["active", "==", true]]
+    });
+    return normalizeList(items, true);
+  }
   const all = await listCifras(activeOnly, bypassCache);
   return all.filter((item) => String(item.slug || "").trim() === wantedSlug);
 }
@@ -140,32 +162,42 @@ export async function findDuplicateCifraInstrument(musicaId, instrumento, ignore
 
 export async function listCifrasByMusica(musicaId, activeOnly = true) {
   const musicaIdSafe = String(musicaId || "").trim();
+  if (!musicaIdSafe) return [];
+  if (activeOnly) {
+    const items = await getCollection(COLLECTION, {
+      where: [["musicaId", "==", musicaIdSafe], ["active", "==", true]]
+    });
+    return normalizeList(items, true);
+  }
   const all = await listCifras(activeOnly);
   return all.filter((item) => String(item.musicaId || "").trim() === musicaIdSafe);
 }
 
 export async function saveCifra(payload, id = "") {
-  const title = String(payload.title || "").trim();
+  const title = normalizeString(payload.title, 150);
+  const musicaId = normalizeString(payload.musicaId, 150);
+  if (!title || !musicaId) throw new Error("Selecione a música e informe o título da cifra.");
   const instrumento = normalizeInstrument(payload.instrumento || "violao");
 
   const docData = {
-    musicaId: payload.musicaId || "",
+    musicaId,
     title,
     slug: slugify(title),
     normalizedTitle: normalizeText(title),
-    subtitle: payload.subtitle || "",
-    cifraText: payload.cifraText || "",
-    cifraHtml: payload.cifraHtml || "",
-    originalKey: payload.originalKey || "",
-    capo: payload.capo || "",
+    subtitle: normalizeString(payload.subtitle, 200),
+    cifraText: String(payload.cifraText || "").slice(0, 300_000),
+    cifraHtml: sanitizeRichHtml(String(payload.cifraHtml || "").slice(0, 300_000)),
+    originalKey: normalizeString(payload.originalKey, 20),
+    capo: normalizeString(payload.capo, 30),
     bpm: normalizeBpm(payload.bpm),
     compasso: normalizeCompasso(payload.compasso),
     instrumento,
     chordColor: normalizeChordColor(payload.chordColor || "#0d0d0d"),
-    views: typeof payload.views === "number" ? payload.views : 0,
     active: payload.active !== false,
     updatedAt: serverTimestamp()
   };
+
+  if (Object.hasOwn(payload, "views") || !id) docData.views = normalizeViews(payload.views);
 
   listCache.clear();
 

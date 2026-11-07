@@ -58,8 +58,10 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Cache de listas públicas e administrativas foi separado e centralizado, com deduplicação de consultas concorrentes e testes automatizados; 20 testes estão aprovados.
 - Configuração do site agora usa atualização parcial e não apaga mais a foto principal ao salvar links; URLs, agenda e e-mail são normalizados antes da persistência.
 - Serviços de ensaios e programações receberam limites, timestamps, leitura direta por ID e validação de títulos, datas, horários e listas de músicas.
+- Serviços de músicas e cifras agora preservam visualizações em edições, limitam o tamanho dos documentos, sanitizam HTML na gravação e validam vídeos e campos essenciais.
+- Abertura de cifra por `slug` ou música vinculada passou a consultar somente as variantes necessárias, sem baixar toda a coleção.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- Validação dos serviços de músicas e cifras
+- Serviços de notificações, permissões e backup

@@ -1,5 +1,5 @@
 
-import { getCifraBySlug, getCifra, listCifras, listCifrasBySlug, getInstrumentLabel, normalizeInstrument, updateCifraMetronome } from "../services/cifras-service.js";
+import { getCifra, listCifras, getInstrumentLabel, normalizeInstrument, updateCifraMetronome } from "../services/cifras-service.js";
 import { getMusica } from "../services/musicas-service.js";
 import { watchDocument } from "../db.js";
 import { getQueryParam } from "../utils.js";
@@ -7,6 +7,7 @@ import { initCifraControls, setOriginalMetaTom } from "../modules/cifra-controls
 import { watchAuth, getAdminProfileByEmail } from "../auth.js";
 import { bindChordInteractions } from "../modules/chord-interactive.js";
 import { createPersonalButtons, refreshPersonalActionButtons } from "../modules/personal-actions.js";
+import { sanitizeRichHtml } from "../lib/sanitize-html.js";
 
 const CHORD_TOKEN_REGEX = /^[A-G](?:#|b)?(?:(?:maj|min|m|sus|dim|aug|add|mmaj)?(?:2|4|5|6|7|7M|9|11|13)?(?:sus2|sus4|add2|add4|add9|maj7|maj9|maj11|maj13|m7|m9|m11|m13|dim7|aug7|7M)?(?:\([^)]+\))?)?(?:\/[A-G](?:#|b)?)?$/i;
 const INTRO_LINE_REGEX = /^\s*\[Intro\]\s*$/i;
@@ -55,7 +56,7 @@ function renderPersonalActionsForCifra(cifra) {
 
 function stripHtmlToPlainText(html = "") {
   const tmp = document.createElement("div");
-  tmp.innerHTML = String(html || "").replace(/\u00A0/g, " ");
+  tmp.innerHTML = sanitizeRichHtml(String(html || "").replace(/\u00A0/g, " "));
   return (tmp.innerText || tmp.textContent || "").replace(/\r\n?/g, "\n");
 }
 
@@ -231,10 +232,12 @@ function renderPrevNext(currentSlug = "", currentInstrument = "", items = []) {
   const previous = currentIndex > 0 ? items[currentIndex - 1] : null;
   const next = currentIndex < items.length - 1 ? items[currentIndex + 1] : null;
   const suffix = currentInstrument ? `&instrumento=${encodeURIComponent(currentInstrument)}` : "";
+  const previousSlug = previous ? encodeURIComponent(String(previous.slug || "")) : "";
+  const nextSlug = next ? encodeURIComponent(String(next.slug || "")) : "";
   nav.innerHTML = `
-    ${previous ? `<a href="./cifra.html?slug=${previous.slug}${suffix}" class="prev-link">← Anterior</a>` : `<span class="prev-link is-disabled">← Anterior</span>`}
+    ${previous ? `<a href="./cifra.html?slug=${previousSlug}${suffix}" class="prev-link">← Anterior</a>` : `<span class="prev-link is-disabled">← Anterior</span>`}
     <span class="nav-divider"> | </span>
-    ${next ? `<a href="./cifra.html?slug=${next.slug}${suffix}" class="next-link">Próxima →</a>` : `<span class="next-link is-disabled">Próxima →</span>`}
+    ${next ? `<a href="./cifra.html?slug=${nextSlug}${suffix}" class="next-link">Próxima →</a>` : `<span class="next-link is-disabled">Próxima →</span>`}
   `;
   nav.querySelectorAll('.is-disabled').forEach((el) => {
     el.style.opacity = '.45';
@@ -320,7 +323,7 @@ function initInteractiveChordViewer() {
 function renderCifraContent(cifra) {
   const contentEl = document.getElementById("cifra-content");
   if (!contentEl) return;
-  const richHtml = String(cifra.cifraHtml || "").replace(/\r\n?/g, "\n");
+  const richHtml = sanitizeRichHtml(String(cifra.cifraHtml || "")).replace(/\r\n?/g, "\n");
   const plainText = String(cifra.cifraText || stripHtmlToPlainText(richHtml) || "").replace(/\r\n?/g, "\n");
   if (richHtml) {
     contentEl.innerHTML = wrapChordLinesFromHtml(richHtml);
@@ -681,24 +684,6 @@ function initMiniMetronomeAdminEdit() {
   });
 }
 
-function buildDemoInstrumentOption(baseCifra) {
-  const demoText = String(baseCifra.cifraText || stripHtmlToPlainText(baseCifra.cifraHtml || "") || "")
-    .replace(/Bb/g, "C")
-    .replace(/Gm/g, "Am")
-    .replace(/Eb/g, "F")
-    .replace(/Fsus/g, "Gsus")
-    .replace(/F/g, "G");
-  return {
-    ...baseCifra,
-    id: `${baseCifra.id}-demo-teclado`,
-    instrumento: "teclado",
-    instrumentLabel: "Teclado",
-    cifraText: demoText,
-    cifraHtml: `<p><span style="background-color: #f1c40f; color: #000000;">[Exemplo temporário de Teclado]</span></p><p>${demoText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>")}</p>`
-  };
-}
-
-
 function buildPublicCifraSignature(cifra = {}) {
   return JSON.stringify({
     id: String(cifra.id || ""),
@@ -769,23 +754,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     const slug = getQueryParam("slug");
     const requestedInstrument = normalizeInstrument(getQueryParam("instrumento") || "violao");
-    const demoMode = getQueryParam("demoInstrumentos") === "1";
     const titleEl = document.getElementById("cifra-titulo");
     const subtitleEl = document.getElementById("cifra-subtitulo");
     const letraLink = document.getElementById("ver-letra-link");
-    let currentCifra = await getCifraBySlug(slug, requestedInstrument, true);
+    const allCifras = await listCifras(true, true);
+    const instrumentOptions = allCifras.filter((item) => String(item.slug || "") === String(slug || ""));
+    const currentCifra = instrumentOptions.find((item) => normalizeInstrument(item.instrumento) === requestedInstrument)
+      || instrumentOptions.find((item) => normalizeInstrument(item.instrumento) === "violao")
+      || instrumentOptions[0]
+      || null;
     if (!currentCifra) {
       if (titleEl) titleEl.textContent = "Cifra não encontrada";
       return;
     }
-    let instrumentOptions = await listCifrasBySlug(slug, true, true);
-    if (demoMode && instrumentOptions.length === 1) {
-      instrumentOptions = [...instrumentOptions, buildDemoInstrumentOption(instrumentOptions[0])];
-      if (requestedInstrument === "teclado") {
-        currentCifra = instrumentOptions.find((item) => item.instrumento === "teclado") || currentCifra;
-      }
-    }
     if (titleEl) titleEl.textContent = currentCifra.title || "Título da cifra";
+    document.title = `${currentCifra.title || "Cifra"} | Ministério Seven`;
     renderPersonalActionsForCifra(currentCifra);
     if (subtitleEl) { subtitleEl.textContent = currentCifra.subtitle || ""; subtitleEl.hidden = !currentCifra.subtitle; }
     const originalKey = currentCifra.originalKey || currentCifra.tonality || currentCifra.tom || "C";
@@ -801,10 +784,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         const musica = await getMusica(currentCifra.musicaId);
         if (musica?.slug) musicaSlug = musica.slug;
       }
-      if (musicaSlug) { letraLink.href = `./musica.html?slug=${musicaSlug}`; letraLink.textContent = "Ver letra"; }
+      if (musicaSlug) { letraLink.href = `./musica.html?slug=${encodeURIComponent(musicaSlug)}`; letraLink.textContent = "Ver letra"; }
       else { letraLink.removeAttribute('href'); letraLink.textContent = 'Letra indisponível'; }
     }
-    const allCifras = await listCifras(true);
     const uniqueBySlug = Array.from(new Map(allCifras.map((item) => [item.slug, item])).values());
     renderPrevNext(currentCifra.slug, currentCifra.instrumento || requestedInstrument, uniqueBySlug);
     startPublicCifraLiveWatch(currentCifra);

@@ -58,14 +58,6 @@
   color:var(--text-soft);
 }
 
-.hidden{
-  display:none !important;
-}
-
-
-
-
-/* Painel flutuante do auto-rolamento - versão limpa */
 .scroll-bubble{
   position: fixed;
   right: 8px;
@@ -465,7 +457,6 @@
 }
 
 
-/* ===== V2 item 17: barra lateral fixa / menu mobile ===== */
 .cifra-page .container{position:relative;}
 .cifra-top-controls{
   margin-top:14px;
@@ -547,7 +538,6 @@
 
 
 
-/* Ajuste fino desktop: barra lateral fora do card da cifra */
 @media (min-width: 901px){
   .cifra-top-controls{
     left: max(10px, calc(50% - 620px)) !important;
@@ -560,7 +550,6 @@
   }
 }
 
-/* ===== Responsividade automática da barra flutuante (mobile/tablet) ===== */
 @media (max-width: 1024px){
   .cifra-top-controls{
     width: min(94vw, 560px) !important;
@@ -617,7 +606,6 @@
   }
 }
 
-/* Celulares pequenos */
 @media (max-width: 480px){
   .cifra-top-controls{
     width: min(96vw, 420px) !important;
@@ -641,7 +629,6 @@
   }
 }
 
-/* Auto-hide da barra flutuante no mobile/tablet */
 @media (max-width: 1024px){
   .cifra-top-controls{
     transition: transform .22s ease, opacity .22s ease, visibility .22s ease !important;
@@ -657,7 +644,6 @@
 }
 
 
-/* ===== Auto-rolagem mobile/tablet: barra fixa inferior moderna ===== */
 .mobile-scroll-slider{
   display:none;
 }
@@ -728,7 +714,6 @@
   }
 }
 
-/* Auto-rolagem mobile/tablet mais baixa, alinhada aos botões */
 @media (max-width: 1024px){
   .mobile-scroll-bar,
   .scroll-bubble.mobile-scroll-bar,
@@ -887,7 +872,6 @@
 }
 
 
-/* ===== Ajustes de tema e navegação da cifra ===== */
 [data-theme="light"] .cifra-top-controls{
   background: rgba(255,255,255,.96) !important;
   border-color: rgba(15,23,42,.12) !important;
@@ -1009,7 +993,6 @@
 .musica-cifra-selector-option:hover{
   background: rgba(255,255,255,.08);
 }
-/* Infraestrutura base da visualização interativa de acordes — etapa 1 */
 .chord-tooltip{
   position:absolute;
   z-index:120;
@@ -1192,7 +1175,6 @@
   }
 }
 
-/* Etapa 2 da visualização interativa de acordes */
 .chord-tooltip{
   pointer-events:auto;
 }
@@ -1319,7 +1301,6 @@
 }
 
 
-/* Melhorias visuais — visualização interativa de acordes */
 .chord-tooltip{
   min-width: 290px;
   max-width: 340px;
@@ -1442,7 +1423,6 @@
 }
 
 
-/* ===== Ajuste mobile/tablet da janela de acordes ===== */
 @media (max-width: 1024px){
   .chord-sheet-overlay{
     padding: 10px;
@@ -1681,7 +1661,6 @@
 }
 
 
-/* Ajuste do aviso de atualização da cifra no celular */
 @media (max-width: 768px){
   .cifra-live-update-banner{
     position: fixed !important;
@@ -1710,7 +1689,6 @@
 }
 
 
-/* Redesign desktop da auto rolagem */
 @media (min-width: 1025px){
   .scroll-bubble.is-hidden,
   .scroll-bubble[hidden]{
@@ -1771,7 +1749,6 @@
 }
 
 
-/* Ajuste do redesign desktop da auto rolagem no modo claro da cifra */
 @media (min-width: 1025px){
   [data-theme="light"] .scroll-bubble{
     background: rgba(255,255,255,.96) !important;

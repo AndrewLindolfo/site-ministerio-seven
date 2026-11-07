@@ -19,6 +19,7 @@ const INSTRUMENT_LABELS = {
   baixo: "Baixo",
   teclado: "Teclado"
 };
+const VALID_INSTRUMENTS = new Set(Object.keys(INSTRUMENT_LABELS));
 
 const CHORD_COLOR_HEX = {
   padrao: "#FF5C00",
@@ -47,11 +48,7 @@ export function normalizeInstrument(value = "") {
     .trim()
     .toLowerCase();
 
-  if (["violao", "violao"].includes(raw)) return "violao";
-  if (raw === "guitarra") return "guitarra";
-  if (raw === "baixo") return "baixo";
-  if (raw === "teclado") return "teclado";
-  return raw || "violao";
+  return VALID_INSTRUMENTS.has(raw) ? raw : "violao";
 }
 
 export function getInstrumentLabel(value = "") {

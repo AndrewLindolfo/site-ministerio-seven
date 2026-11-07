@@ -26,6 +26,8 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 ## Em andamento
 
 - Auditoria dos arquivos HTML públicos da raiz.
+- Módulo `cifra.html`: conteúdo rico agora é sanitizado, instrumentos são normalizados por lista fechada, modo temporário de demonstração foi removido, carregamento da coleção foi reduzido a uma leitura e preferências locais não derrubam mais a página quando o armazenamento está bloqueado.
+- Pendente no módulo de cifras: consolidar o CSS sobreposto e revisar `cifra-controls.js`, `chord-interactive.js`, `personal-actions.js` e a exportação de PDF como conjunto integrado.
 
 ## Próximo arquivo
 

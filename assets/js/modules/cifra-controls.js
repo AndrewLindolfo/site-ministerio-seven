@@ -10,8 +10,25 @@ const SCROLL_PANEL_POS_KEY = "seven_scroll_panel_pos";
 
 const SPEED_STEPS = [0.08, 0.18, 0.35, 0.7, 1.2];
 
+function storageGet(key, fallback = null) {
+  try {
+    return localStorage.getItem(key) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function storageSet(key, value) {
+  try {
+    localStorage.setItem(key, String(value));
+  } catch {
+    return;
+  }
+}
+
 let scrollInterval = null;
-let scrollSpeed = Number(localStorage.getItem(SPEED_KEY) || "0.35");
+let scrollSpeed = Number(storageGet(SPEED_KEY, "0.35"));
+if (!SPEED_STEPS.includes(scrollSpeed)) scrollSpeed = 0.35;
 let scrollAccumulator = 0;
 
 function $(selector) {
@@ -37,27 +54,28 @@ function normalizeDisplayedTom(value = "") {
 }
 
 function getTransposeAmount() {
-  return Number(localStorage.getItem(TRANSPOSE_KEY) || "0");
+  const value = Number(storageGet(TRANSPOSE_KEY, "0"));
+  return Number.isFinite(value) ? clamp(value, -11, 11) : 0;
 }
 
 function setTransposeAmount(value) {
-  localStorage.setItem(TRANSPOSE_KEY, String(value));
+  storageSet(TRANSPOSE_KEY, clamp(Number(value) || 0, -11, 11));
 }
 
 function getStoredScrollPanelPos() {
   try {
-    return JSON.parse(localStorage.getItem(SCROLL_PANEL_POS_KEY) || "null");
+    return JSON.parse(storageGet(SCROLL_PANEL_POS_KEY, "null"));
   } catch {
     return null;
   }
 }
 
 function saveScrollPanelPos(pos) {
-  localStorage.setItem(SCROLL_PANEL_POS_KEY, JSON.stringify(pos));
+  storageSet(SCROLL_PANEL_POS_KEY, JSON.stringify(pos));
 }
 
 function isScrollPanelVisible() {
-  return localStorage.getItem(SCROLL_PANEL_VISIBLE_KEY) === "1";
+  return storageGet(SCROLL_PANEL_VISIBLE_KEY) === "1";
 }
 
 function nearestSpeedIndex(value) {
@@ -126,7 +144,7 @@ function setScrollPanelVisible(visible) {
   bubble.classList.toggle("is-hidden", !visible);
   bubble.classList.toggle("is-open", visible);
   bubble.setAttribute("aria-hidden", visible ? "false" : "true");
-  localStorage.setItem(SCROLL_PANEL_VISIBLE_KEY, visible ? "1" : "0");
+  storageSet(SCROLL_PANEL_VISIBLE_KEY, visible ? "1" : "0");
 
   if (toggleBtn) toggleBtn.classList.toggle("is-active", visible);
   if (visible) requestAnimationFrame(() => applyScrollPanelPos());
@@ -267,7 +285,7 @@ function ensureDesktopSpeedSlider() {
     else bubble.appendChild(slider);
     slider.addEventListener("input", () => {
       scrollSpeed = Number(slider.value || "0.35");
-      localStorage.setItem(SPEED_KEY, String(scrollSpeed));
+      storageSet(SPEED_KEY, scrollSpeed);
     });
   }
   return slider;
@@ -312,7 +330,7 @@ function initMobileScrollBar() {
 
     slider.addEventListener("input", () => {
       scrollSpeed = Number(slider.value || "0.35");
-      localStorage.setItem(SPEED_KEY, String(scrollSpeed));
+      storageSet(SPEED_KEY, scrollSpeed);
       updateSpeedIndicator();
     });
   }
@@ -547,36 +565,37 @@ export function rerenderPublicCifra() {
 export function increaseFont() {
   const content = $("#cifra-content");
   if (!content) return;
-  const next = Number(localStorage.getItem(FONT_KEY) || "18") + 1;
-  localStorage.setItem(FONT_KEY, String(next));
+  const next = clamp(Number(storageGet(FONT_KEY, "18")) + 1, 12, 40);
+  storageSet(FONT_KEY, next);
   content.style.fontSize = `${next}px`;
 }
 
 export function decreaseFont() {
   const content = $("#cifra-content");
   if (!content) return;
-  const next = Math.max(12, Number(localStorage.getItem(FONT_KEY) || "18") - 1);
-  localStorage.setItem(FONT_KEY, String(next));
+  const next = clamp(Number(storageGet(FONT_KEY, "18")) - 1, 12, 40);
+  storageSet(FONT_KEY, next);
   content.style.fontSize = `${next}px`;
 }
 
 function applySavedFont() {
   const content = $("#cifra-content");
   if (!content) return;
-  const current = Number(localStorage.getItem(FONT_KEY) || "18");
+  const stored = Number(storageGet(FONT_KEY, "18"));
+  const current = Number.isFinite(stored) ? clamp(stored, 12, 40) : 18;
   content.style.fontSize = `${current}px`;
 }
 
 export function toggleFocusMode() {
   document.body.classList.toggle("focus-mode");
   const active = document.body.classList.contains("focus-mode");
-  localStorage.setItem(FOCUS_KEY, active ? "1" : "0");
+  storageSet(FOCUS_KEY, active ? "1" : "0");
   document.querySelector(".site-header")?.classList.toggle("hidden", active);
   document.querySelector(".site-footer")?.classList.toggle("hidden", active);
 }
 
 function applySavedFocus() {
-  const active = localStorage.getItem(FOCUS_KEY) === "1";
+  const active = storageGet(FOCUS_KEY) === "1";
   if (active) {
     document.body.classList.add("focus-mode");
     document.querySelector(".site-header")?.classList.add("hidden");
@@ -602,7 +621,7 @@ export function changeSpeed(delta = 1) {
   const idx = nearestSpeedIndex(scrollSpeed);
   const nextIdx = Math.max(0, Math.min(SPEED_STEPS.length - 1, idx + delta));
   scrollSpeed = SPEED_STEPS[nextIdx];
-  localStorage.setItem(SPEED_KEY, String(scrollSpeed));
+  storageSet(SPEED_KEY, scrollSpeed);
   updateSpeedIndicator();
 }
 
@@ -640,8 +659,8 @@ export function toggleScroll() {
 }
 
 export function initCifraControls() {
-  if (localStorage.getItem(SCROLL_PANEL_VISIBLE_KEY) === null) {
-    localStorage.setItem(SCROLL_PANEL_VISIBLE_KEY, "0");
+  if (storageGet(SCROLL_PANEL_VISIBLE_KEY) === null) {
+    storageSet(SCROLL_PANEL_VISIBLE_KEY, "0");
   }
 
   initMobileScrollBar();

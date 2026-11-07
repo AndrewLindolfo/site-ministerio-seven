@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-DKM3MTBKQ6');
+    gtag("js", new Date());
+    gtag("config", "G-DKM3MTBKQ6");
   </script>
 
   <meta charset="UTF-8" />
@@ -52,9 +50,10 @@
     <p class="admin-intro">Cadastre e organize ensaios com título, descrição opcional e setlist de músicas já cadastradas.</p>
 
     <div class="admin-toolbar">
-      <a href="./editor-ensaio.html" class="button-primary" id="btn-novo-ensaio">Novo ensaio</a>
+      <a href="./editor-ensaio.html" class="button-primary hidden" id="btn-novo-ensaio">Novo ensaio</a>
     </div>
 
+    <p id="admin-ensaios-status" class="admin-status" role="status" aria-live="polite"></p>
     <div id="admin-ensaios-list"></div>
   </section>
 </main>

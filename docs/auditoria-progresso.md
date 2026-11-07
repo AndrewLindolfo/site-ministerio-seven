@@ -70,8 +70,10 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Editor administrativo de cifras revisado; músicas são carregadas uma vez e renderizadas por DOM, permissões são aplicadas também à persistência, campos protegidos preservam o valor existente, conteúdo inativo não é reativado e duplicidades são consultadas somente pela música vinculada.
 - Gestão de programações revisada; carregamento duplicado foi removido, ações são protegidas antes da execução, links internos são codificados e o estado ativo é preservado nas edições.
 - O campo `hideAfter` de programações voltou a funcionar: horários simples, datas e `Timestamp` são lidos corretamente, o formulário recebe apenas `HH:mm` e o valor agora é incluído no salvamento.
+- Gestão e editor de ensaios revisados; a falha `PLACEHOLDER` no tratamento de erros foi removida, leituras aguardam autenticação, permissões são verificadas na execução, renderização usa DOM seguro e operações passam a registrar atividades.
+- CSS antigo de modal e estilos duplicados de programações foram removidos do módulo de ensaios, mantendo apenas os seletores realmente usados.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- Páginas administrativas de ensaios e editor de ensaio
+- Página administrativa de fotos

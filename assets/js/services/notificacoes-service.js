@@ -81,8 +81,8 @@ function sortByDateDesc(items = []) {
 export function isNotificationActive(item = {}, now = new Date()) {
   if (!item || item.active === false) return false;
   const nowMs = now.getTime();
-  const startMs = item.startsAt ? Date.parse(item.startsAt) : 0;
-  const endMs = item.expiresAt ? Date.parse(item.expiresAt) : 0;
+  const startMs = toMillis(item.startsAt);
+  const endMs = toMillis(item.expiresAt);
   if (startMs && nowMs < startMs) return false;
   if (endMs && nowMs > endMs) return false;
   return true;
@@ -150,7 +150,7 @@ export async function listPublicNotificacoes() {
   return all.filter((item) => {
     if (!item.showPublic) return false;
     if (isNotificationActive(item, now)) return true;
-    const startMs = item.startsAt ? Date.parse(item.startsAt) : 0;
+    const startMs = toMillis(item.startsAt);
     if (item.showBeforeStart && startMs && now.getTime() < startMs) return true;
     return false;
   });

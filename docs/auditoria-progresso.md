@@ -25,7 +25,7 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 
 ## Em andamento
 
-- Auditoria dos arquivos HTML públicos da raiz.
+- Auditoria dos arquivos HTML públicos da raiz concluída.
 - Módulo `cifra.html`: conteúdo rico agora é sanitizado, instrumentos são normalizados por lista fechada, modo temporário de demonstração foi removido, carregamento da coleção foi reduzido a uma leitura e preferências locais não derrubam mais a página quando o armazenamento está bloqueado.
 - Módulo de cifras: controles, diagramas, ações pessoais e exportação de PDF revisados; acessibilidade por teclado adicionada, campos persistidos limitados, conteúdo de impressão sanitizado e editor do metrônomo ligado ao CSS existente.
 - Testes unitários de teoria musical adicionados e aprovados.
@@ -46,8 +46,9 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Incorporações do YouTube agora aceitam somente HTTPS, hosts oficiais e IDs válidos; preferências dos controles têm limites e não derrubam a página quando o armazenamento local está indisponível.
 - Testes automatizados de URLs do YouTube adicionados e aprovados.
 - `musicas.html` revisado; listagem passou a usar DOM seguro, slugs são codificados, itens incompletos são descartados e a busca ignora maiúsculas e acentos.
+- `notificacoes.html` revisado; a leitura duplicada em tempo real foi removida, cartões usam DOM seguro, links são validados e datas aceitam valores nativos e `Timestamp` do Firestore.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- `notificacoes.html`
+- `assets/js/search.js`

@@ -1,34 +1,11 @@
 import { addDocument, updateDocument, deleteDocument, getCollection, getDocument, serverTimestamp, normalizeText } from "../db.js";
 import { convertDriveLinksInPayload } from "../utils/google-drive-links.js";
 import { normalizeHttpsOrLocalUrl } from "../lib/url-safety.js";
+import { createCollectionListCache } from "../lib/collection-list-cache.js";
 const COLLECTION = "albuns";
 const CACHE_KEY = "seven_cache_albuns_v1";
 const CACHE_TTL_MS = 10 * 60 * 1000;
-
-function readCache() {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed?.items)) return null;
-    if (Date.now() - Number(parsed.savedAt || 0) > CACHE_TTL_MS) return null;
-    return parsed.items;
-  } catch {
-    return null;
-  }
-}
-
-function writeCache(items) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), items }));
-  } catch {}
-}
-
-function clearCache() {
-  try {
-    localStorage.removeItem(CACHE_KEY);
-  } catch {}
-}
+const listCache = createCollectionListCache(CACHE_KEY, CACHE_TTL_MS);
 
 function normalizeList(all = [], activeOnly = false) {
   return all
@@ -45,11 +22,10 @@ function normalizeList(all = [], activeOnly = false) {
 }
 
 export async function listAlbuns(activeOnly = false) {
-  const cached = readCache();
-  if (cached) return normalizeList(cached, activeOnly);
-
-  const all = await getCollection(COLLECTION);
-  writeCache(all);
+  const scope = activeOnly ? "active" : "all";
+  const all = await listCache.load(scope, () => getCollection(COLLECTION, activeOnly ? {
+    where: [["active", "==", true]]
+  } : {}));
   return normalizeList(all, activeOnly);
 }
 
@@ -73,7 +49,7 @@ export async function saveAlbum(payload, id = "") {
     updatedAt: serverTimestamp()
   };
 
-  clearCache();
+  listCache.clear();
 
   if (id) {
     await updateDocument(COLLECTION, id, docData);
@@ -84,6 +60,6 @@ export async function saveAlbum(payload, id = "") {
 }
 
 export async function removeAlbum(id) {
-  clearCache();
+  listCache.clear();
   await deleteDocument(COLLECTION, id);
 }

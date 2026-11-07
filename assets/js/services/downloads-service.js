@@ -1,10 +1,12 @@
 import { addDocument, updateDocument, deleteDocument, getCollection, getDocument, serverTimestamp, normalizeText } from "../db.js";
 import { convertGoogleDriveToDirectImage, convertDownloadUrlByType } from "../utils/google-drive-links.js";
 import { normalizeHttpsOrLocalUrl } from "../lib/url-safety.js";
+import { createCollectionListCache } from "../lib/collection-list-cache.js";
 const COLLECTION = "downloads";
 const CACHE_KEY = "seven_cache_downloads_v1";
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const LINK_TYPES = new Set(["direct-download", "drive-folder", "keep", "pdf", "powerpoint"]);
+const listCache = createCollectionListCache(CACHE_KEY, CACHE_TTL_MS);
 
 function normalizeDownload(item = {}) {
   return {
@@ -18,31 +20,6 @@ function normalizeDownload(item = {}) {
   };
 }
 
-function readCache() {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed?.items)) return null;
-    if (Date.now() - Number(parsed.savedAt || 0) > CACHE_TTL_MS) return null;
-    return parsed.items;
-  } catch {
-    return null;
-  }
-}
-
-function writeCache(items) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), items }));
-  } catch {}
-}
-
-function clearCache() {
-  try {
-    localStorage.removeItem(CACHE_KEY);
-  } catch {}
-}
-
 function normalizeList(all = [], activeOnly = false) {
   return all
     .map(normalizeDownload)
@@ -51,11 +28,10 @@ function normalizeList(all = [], activeOnly = false) {
 }
 
 export async function listDownloads(activeOnly = false) {
-  const cached = readCache();
-  if (cached) return normalizeList(cached, activeOnly);
-
-  const all = await getCollection(COLLECTION);
-  writeCache(all);
+  const scope = activeOnly ? "active" : "all";
+  const all = await listCache.load(scope, () => getCollection(COLLECTION, activeOnly ? {
+    where: [["active", "==", true]]
+  } : {}));
   return normalizeList(all, activeOnly);
 }
 
@@ -81,7 +57,7 @@ export async function saveDownload(payload, id = "") {
     updatedAt: serverTimestamp()
   };
 
-  clearCache();
+  listCache.clear();
 
   if (id) {
     await updateDocument(COLLECTION, id, docData);
@@ -92,6 +68,6 @@ export async function saveDownload(payload, id = "") {
 }
 
 export async function removeDownload(id) {
-  clearCache();
+  listCache.clear();
   await deleteDocument(COLLECTION, id);
 }

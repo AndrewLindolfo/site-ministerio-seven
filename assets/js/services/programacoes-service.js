@@ -55,7 +55,9 @@ function sortByDateTimeAsc(list = []) {
 }
 
 export async function listProgramacoes(activeOnly = false) {
-  const all = await getCollection(COLLECTION);
+  const all = await getCollection(COLLECTION, activeOnly ? {
+    where: [["active", "==", true]]
+  } : {});
   const filtered = all.filter((item) => activeOnly ? item.active !== false : true);
   return sortByDateTimeAsc(filtered);
 }

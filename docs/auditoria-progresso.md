@@ -54,6 +54,8 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Quinze módulos vazios, demonstrativos ou substituídos e quatro funções globais sem uso foram removidos após confirmação de ausência de referências.
 - Ações pessoais revisadas; alterações por usuário são serializadas, limites deixam de falhar silenciosamente, tipos e destinos são normalizados e o modal de playlists usa DOM seguro e restaura o foco.
 - Dois serviços desconectados do site, de preferências antigas de cifra e contador de visualizações, foram removidos após confirmação de ausência de referências.
+- Consultas públicas de músicas, cifras, álbuns, downloads, comunicados e programações agora exigem `active == true` no Firestore; conteúdo desativado deixou de ser baixado para filtragem no navegador.
+- Cache de listas públicas e administrativas foi separado e centralizado, com deduplicação de consultas concorrentes e testes automatizados; 20 testes estão aprovados.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo

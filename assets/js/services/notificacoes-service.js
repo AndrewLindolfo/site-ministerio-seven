@@ -1,54 +1,15 @@
 import { addDocument, updateDocument, deleteDocument, getCollection, getDocument, serverTimestamp, normalizeText } from "../db.js";
+import { createCollectionListCache } from "../lib/collection-list-cache.js";
 
 const COLLECTION = "notificacoes";
 const CACHE_KEY = "seven_cache_notificacoes_v2";
 const CACHE_TTL_MS = 5 * 60 * 1000;
-let pendingListRequest = null;
-
-function readCache() {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed?.items)) return null;
-    if (Date.now() - Number(parsed.savedAt || 0) > CACHE_TTL_MS) return null;
-    return parsed.items;
-  } catch {
-    return null;
-  }
-}
-
-function writeCache(items) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), items }));
-  } catch {}
-}
-
-function clearCache() {
-  try {
-    localStorage.removeItem(CACHE_KEY);
-  } catch {}
-}
-
-async function loadCollection() {
-  const cached = readCache();
-  if (cached) return cached;
-  if (!pendingListRequest) {
-    pendingListRequest = getCollection(COLLECTION)
-      .then((items) => {
-        writeCache(items);
-        return items;
-      })
-      .finally(() => {
-        pendingListRequest = null;
-      });
-  }
-  return pendingListRequest;
-}
+const listCache = createCollectionListCache(CACHE_KEY, CACHE_TTL_MS);
 
 function toMillis(value) {
   if (!value) return 0;
   if (typeof value?.toMillis === "function") return value.toMillis();
+  if (Number.isFinite(value?.seconds)) return value.seconds * 1000;
   const parsed = Date.parse(value);
   return Number.isNaN(parsed) ? 0 : parsed;
 }
@@ -89,7 +50,10 @@ export function isNotificationActive(item = {}, now = new Date()) {
 }
 
 export async function listNotificacoes(activeOnly = false) {
-  const all = await loadCollection();
+  const scope = activeOnly ? "active" : "all";
+  const all = await listCache.load(scope, () => getCollection(COLLECTION, activeOnly ? {
+    where: [["active", "==", true]]
+  } : {}));
   const normalized = all.map(normalizeItem);
   return sortByDateDesc(activeOnly ? normalized.filter((item) => isNotificationActive(item)) : normalized);
 }
@@ -121,7 +85,7 @@ export async function saveNotificacao(payload, id = "") {
     updatedAt: serverTimestamp()
   };
 
-  clearCache();
+  listCache.clear();
   if (id) {
     await updateDocument(COLLECTION, id, docData);
     return id;
@@ -131,7 +95,7 @@ export async function saveNotificacao(payload, id = "") {
 }
 
 export async function removeNotificacao(id) {
-  clearCache();
+  listCache.clear();
   await deleteDocument(COLLECTION, id);
 }
 
@@ -145,7 +109,7 @@ export async function listHomeNotificacoes(limitCount = null) {
 }
 
 export async function listPublicNotificacoes() {
-  const all = await listNotificacoes(false);
+  const all = await listNotificacoes(true);
   const now = new Date();
   return all.filter((item) => {
     if (!item.showPublic) return false;

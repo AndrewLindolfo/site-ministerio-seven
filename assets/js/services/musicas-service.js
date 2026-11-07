@@ -8,38 +8,12 @@ import {
   slugify,
   normalizeText
 } from "../db.js";
+import { createCollectionListCache } from "../lib/collection-list-cache.js";
 
 const COLLECTION = "musicas";
 const CACHE_KEY = "seven_cache_musicas_v1";
 const CACHE_TTL_MS = 10 * 60 * 1000;
-
-function readCache() {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed?.items || !Array.isArray(parsed.items)) return null;
-    if (Date.now() - Number(parsed.savedAt || 0) > CACHE_TTL_MS) return null;
-    return parsed.items;
-  } catch {
-    return null;
-  }
-}
-
-function writeCache(items) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({
-      savedAt: Date.now(),
-      items
-    }));
-  } catch {}
-}
-
-function clearCache() {
-  try {
-    localStorage.removeItem(CACHE_KEY);
-  } catch {}
-}
+const listCache = createCollectionListCache(CACHE_KEY, CACHE_TTL_MS);
 
 function getMusicaDisplayTitle(item = {}) {
   return String(item.title || item.titulo || item.nome || item.slug || "").trim();
@@ -52,13 +26,10 @@ function normalizeList(all = [], activeOnly = false) {
 }
 
 export async function listMusicas(activeOnly = false) {
-  const cached = readCache();
-  if (cached) {
-    return normalizeList(cached, activeOnly);
-  }
-
-  const all = await getCollection(COLLECTION);
-  writeCache(all);
+  const scope = activeOnly ? "active" : "all";
+  const all = await listCache.load(scope, () => getCollection(COLLECTION, activeOnly ? {
+    where: [["active", "==", true]]
+  } : {}));
   return normalizeList(all, activeOnly);
 }
 
@@ -100,7 +71,7 @@ export async function saveMusica(payload, id = "") {
     updatedAt: serverTimestamp()
   };
 
-  clearCache();
+  listCache.clear();
 
   if (id) {
     await updateDocument(COLLECTION, id, docData);
@@ -112,6 +83,6 @@ export async function saveMusica(payload, id = "") {
 }
 
 export async function removeMusica(id) {
-  clearCache();
+  listCache.clear();
   await deleteDocument(COLLECTION, id);
 }

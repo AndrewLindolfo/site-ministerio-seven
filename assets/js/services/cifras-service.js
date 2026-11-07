@@ -8,10 +8,12 @@ import {
   slugify,
   normalizeText
 } from "../db.js";
+import { createCollectionListCache } from "../lib/collection-list-cache.js";
 
 const COLLECTION = "cifras";
 const CACHE_KEY = "seven_cache_cifras_v2";
 const CACHE_TTL_MS = 10 * 60 * 1000;
+const listCache = createCollectionListCache(CACHE_KEY, CACHE_TTL_MS);
 
 const INSTRUMENT_LABELS = {
   violao: "Violão",
@@ -70,31 +72,6 @@ export function getInstrumentLabel(value = "") {
   return INSTRUMENT_LABELS[normalizeInstrument(value)] || String(value || "Violão");
 }
 
-function readCache() {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed?.items)) return null;
-    if (Date.now() - Number(parsed.savedAt || 0) > CACHE_TTL_MS) return null;
-    return parsed.items;
-  } catch {
-    return null;
-  }
-}
-
-function writeCache(items) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ savedAt: Date.now(), items }));
-  } catch {}
-}
-
-function clearCache() {
-  try {
-    localStorage.removeItem(CACHE_KEY);
-  } catch {}
-}
-
 function normalizeList(all = [], activeOnly = false) {
   return all
     .filter((item) => (activeOnly ? item.active !== false : true))
@@ -107,12 +84,10 @@ function normalizeList(all = [], activeOnly = false) {
 }
 
 export async function listCifras(activeOnly = false, bypassCache = false) {
-  if (!bypassCache) {
-    const cached = readCache();
-    if (cached) return normalizeList(cached, activeOnly);
-  }
-  const all = await getCollection(COLLECTION);
-  writeCache(all);
+  const scope = activeOnly ? "active" : "all";
+  const all = await listCache.load(scope, () => getCollection(COLLECTION, activeOnly ? {
+    where: [["active", "==", true]]
+  } : {}), bypassCache);
   return normalizeList(all, activeOnly);
 }
 
@@ -192,7 +167,7 @@ export async function saveCifra(payload, id = "") {
     updatedAt: serverTimestamp()
   };
 
-  clearCache();
+  listCache.clear();
 
   if (id) {
     await updateDocument(COLLECTION, id, docData);
@@ -204,7 +179,7 @@ export async function saveCifra(payload, id = "") {
 }
 
 export async function removeCifra(id) {
-  clearCache();
+  listCache.clear();
   await deleteDocument(COLLECTION, id);
 }
 
@@ -212,7 +187,7 @@ export async function updateCifraMetronome(id, bpm = "", compasso = "") {
   const bpmSafe = normalizeBpm(bpm);
   const compassoSafe = normalizeCompasso(compasso);
   if (!bpmSafe || !compassoSafe) throw new RangeError("BPM e compasso são obrigatórios.");
-  clearCache();
+  listCache.clear();
   await updateDocument(COLLECTION, id, {
     bpm: bpmSafe,
     compasso: compassoSafe,

@@ -104,7 +104,6 @@ body.tool-focus-active .tool-card:not(.is-focus){
 }
 
 
-/* ===== Ajustes de tema das Ferramentas ===== */
 [data-theme="light"] .tool-toggle-btn.is-stopped,
 [data-theme="light"] .tool-toggle-btn.is-running{
   color: #111827 !important;

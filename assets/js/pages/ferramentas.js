@@ -1,3 +1,4 @@
+import { autoCorrelate, centsOff, normalizeMetronomeBpm, normalizeTimeSignature, noteFromPitch, NOTE_NAMES } from "../lib/audio-tools.js";
 
 const TOOL_FOCUS_CLASS="tool-focus-active";
 const tunerEls={};
@@ -7,14 +8,16 @@ let tunerAnalyser=null;
 let tunerMediaStream=null;
 let tunerSource=null;
 let tunerAnimationFrame=null;
+let tunerBuffer=null;
+let tunerStarting=false;
+let lastTunerAnalysisAt=0;
+let tunerRequestId=0;
 
 let metronomeCtx=null;
 let metronomeTimer=null;
 let metronomeBeatIndex=0;
 let metronomeBpm=72;
 let metronomeSignature=4;
-
-const NOTE_NAMES=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 
 function $(s){return document.querySelector(s)}
 function $all(s){return Array.from(document.querySelectorAll(s))}
@@ -37,6 +40,8 @@ function setToolBodyVisible(target, visible){
     expandBtn.textContent=visible?"Fechar":"Abrir";
     expandBtn.setAttribute("aria-expanded", visible ? "true" : "false");
   }
+  if(!visible&&target==="afinador") stopTuner();
+  if(!visible&&target==="metronomo") stopMetronome();
 }
 function isToolBodyVisible(target){
   const body=document.getElementById(`tool-body-${target}`);
@@ -55,6 +60,8 @@ function setFocusMode(target=""){
     return;
   }
   body.classList.add(TOOL_FOCUS_CLASS);
+  if(target!=="afinador")stopTuner();
+  if(target!=="metronomo")stopMetronome();
   cards.forEach(card=>{
     const active=card.dataset.tool===target;
     card.classList.toggle("is-focus",active);
@@ -123,41 +130,6 @@ function updateTunerStatus(text, note="--", octave="--", hz="-- Hz"){
   tunerEls.octave.textContent=octave;
   tunerEls.hz.textContent=hz;
 }
-function noteFromPitch(frequency){
-  const noteNumber=12*(Math.log(frequency/440)/Math.log(2));
-  const midi=Math.round(noteNumber)+69;
-  const noteIndex=((midi%12)+12)%12;
-  const octave=Math.floor(midi/12)-1;
-  return {midi,noteIndex,octave};
-}
-function centsOff(frequency,midi){
-  const reference=440*Math.pow(2,(midi-69)/12);
-  return Math.floor(1200*Math.log2(frequency/reference));
-}
-function autoCorrelate(buffer,sampleRate){
-  let rms=0;
-  for(let i=0;i<buffer.length;i+=1)rms+=buffer[i]*buffer[i];
-  rms=Math.sqrt(rms/buffer.length);
-  if(rms<0.01)return -1;
-  let r1=0; let r2=buffer.length-1; const threshold=0.2;
-  for(let i=0;i<buffer.length/2;i+=1){if(Math.abs(buffer[i])<threshold){r1=i;break;}}
-  for(let i=1;i<buffer.length/2;i+=1){if(Math.abs(buffer[buffer.length-i])<threshold){r2=buffer.length-i;break;}}
-  const sliced=buffer.slice(r1,r2); const size=sliced.length; const correlations=new Array(size).fill(0);
-  for(let offset=0;offset<size;offset+=1){
-    for(let i=0;i<size-offset;i+=1){correlations[offset]+=sliced[i]*sliced[i+offset]}
-  }
-  let d=0; while(d+1<size&&correlations[d]>correlations[d+1])d+=1;
-  let maxval=-1; let maxpos=-1;
-  for(let i=d;i<size;i+=1){if(correlations[i]>maxval){maxval=correlations[i];maxpos=i}}
-  if(maxpos===-1)return -1;
-  let T0=maxpos;
-  if(T0>0&&T0<size-1){
-    const x1=correlations[T0-1], x2=correlations[T0], x3=correlations[T0+1];
-    const a=(x1+x3-2*x2)/2; const b=(x3-x1)/2;
-    if(a)T0-=b/(2*a);
-  }
-  return sampleRate/T0;
-}
 function updateTunerMeter(cents=0){
   const clamped=Math.max(-50,Math.min(50,cents));
   const left=50+clamped;
@@ -166,11 +138,15 @@ function updateTunerMeter(cents=0){
   else if(clamped<0) updateTunerStatus(clamped<-25?"Muito baixo":"Baixo",tunerEls.note.textContent,tunerEls.octave.textContent,tunerEls.hz.textContent);
   else updateTunerStatus(clamped>25?"Muito alto":"Alto",tunerEls.note.textContent,tunerEls.octave.textContent,tunerEls.hz.textContent);
 }
-function tunerLoop(){
+function tunerLoop(timestamp=0){
   if(!tunerAnalyser)return;
-  const buffer=new Float32Array(tunerAnalyser.fftSize);
-  tunerAnalyser.getFloatTimeDomainData(buffer);
-  const frequency=autoCorrelate(buffer,tunerAudioContext.sampleRate);
+  if(timestamp-lastTunerAnalysisAt<50){
+    tunerAnimationFrame=requestAnimationFrame(tunerLoop);
+    return;
+  }
+  lastTunerAnalysisAt=timestamp;
+  tunerAnalyser.getFloatTimeDomainData(tunerBuffer);
+  const frequency=autoCorrelate(tunerBuffer,tunerAudioContext.sampleRate);
   if(frequency!==-1){
     const {midi,noteIndex,octave}=noteFromPitch(frequency);
     const cents=centsOff(frequency,midi);
@@ -184,39 +160,61 @@ function tunerLoop(){
   tunerAnimationFrame=requestAnimationFrame(tunerLoop);
 }
 async function startTuner(){
-  setToggleButtonState($("#tuner-start-btn"), true, {start:"Iniciar afinador", stop:"Parar afinador"});
+  if(tunerStarting||tunerAnimationFrame)return;
+  const button=$("#tuner-start-btn");
+  if(!navigator.mediaDevices?.getUserMedia){
+    updateTunerStatus("Microfone indisponível");
+    return;
+  }
+  tunerStarting=true;
+  const requestId=++tunerRequestId;
+  if(button)button.disabled=true;
   try{
-    if(!navigator.mediaDevices?.getUserMedia){updateTunerStatus("Microfone indisponível");return;}
-    tunerMediaStream=await navigator.mediaDevices.getUserMedia({audio:true});
-    tunerAudioContext=new (window.AudioContext||window.webkitAudioContext)();
+    tunerMediaStream=await navigator.mediaDevices.getUserMedia({
+      audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}
+    });
+    if(requestId!==tunerRequestId){
+      tunerMediaStream.getTracks().forEach(track=>track.stop());
+      tunerMediaStream=null;
+      return;
+    }
+    const AudioCtx=window.AudioContext||window.webkitAudioContext;
+    if(!AudioCtx)throw new Error("Web Audio indisponível");
+    tunerAudioContext=new AudioCtx();
     tunerAnalyser=tunerAudioContext.createAnalyser();
-    tunerAnalyser.fftSize=2048;
+    tunerAnalyser.fftSize=1024;
+    tunerBuffer=new Float32Array(tunerAnalyser.fftSize);
     tunerSource=tunerAudioContext.createMediaStreamSource(tunerMediaStream);
     tunerSource.connect(tunerAnalyser);
     updateTunerStatus("Escutando...","--","--","-- Hz");
     if(tunerAnimationFrame) cancelAnimationFrame(tunerAnimationFrame);
+    lastTunerAnalysisAt=0;
+    setToggleButtonState(button, true, {start:"Iniciar afinador", stop:"Parar afinador"});
     tunerLoop();
   }catch(error){
     console.error("Erro ao iniciar afinador:",error);
-    updateTunerStatus("Permissão negada ou microfone indisponível");
-    setToggleButtonState($("#tuner-start-btn"), false, {start:"Iniciar afinador", stop:"Parar afinador"});
+    stopTuner("Permissão negada ou microfone indisponível");
+  }finally{
+    tunerStarting=false;
+    if(button)button.disabled=false;
   }
 }
-function stopTuner(){
+function stopTuner(status="Afinador parado"){
+  tunerRequestId+=1;
   if(tunerAnimationFrame) cancelAnimationFrame(tunerAnimationFrame);
   tunerAnimationFrame=null;
   if(tunerSource){try{tunerSource.disconnect()}catch{}}
   if(tunerAnalyser){try{tunerAnalyser.disconnect()}catch{}}
   if(tunerAudioContext){try{tunerAudioContext.close()}catch{}}
   if(tunerMediaStream){tunerMediaStream.getTracks().forEach(track=>track.stop())}
-  tunerAudioContext=null; tunerAnalyser=null; tunerMediaStream=null; tunerSource=null;
-  tunerEls.needle.style.left="50%";
-  updateTunerStatus("Afinador parado");
+  tunerAudioContext=null; tunerAnalyser=null; tunerMediaStream=null; tunerSource=null; tunerBuffer=null;
+  if(tunerEls.needle)tunerEls.needle.style.left="50%";
+  if(tunerEls.status)updateTunerStatus(status);
   setToggleButtonState($("#tuner-start-btn"), false, {start:"Iniciar afinador", stop:"Parar afinador"});
 }
 
 function buildBeats(count=4){
-  metroEls.beats.innerHTML="";
+  metroEls.beats.replaceChildren();
   for(let i=0;i<count;i+=1){
     const dot=document.createElement("span");
     dot.className="metronome-beat";
@@ -229,11 +227,14 @@ function highlightBeat(index){
   beats.forEach((beat,i)=>beat.classList.toggle("is-active",i===index));
 }
 function ensureMetronomeCtx(){
-  if(!metronomeCtx) metronomeCtx=new (window.AudioContext||window.webkitAudioContext)();
+  const AudioCtx=window.AudioContext||window.webkitAudioContext;
+  if(!AudioCtx)return null;
+  if(!metronomeCtx) metronomeCtx=new AudioCtx();
   return metronomeCtx;
 }
 function clickTone(primary=false){
   const ctx=ensureMetronomeCtx();
+  if(!ctx)return;
   const now=ctx.currentTime;
   const osc=ctx.createOscillator();
   const gain=ctx.createGain();
@@ -285,7 +286,7 @@ function initMetronome(){
   buildBeats(metronomeSignature);
   setToggleButtonState(metroEls.toggle, false, {start:"Iniciar", stop:"Parar"});
   const syncBpm=(value)=>{
-    metronomeBpm=Number(value||72);
+    metronomeBpm=normalizeMetronomeBpm(value);
     metroEls.bpmValue.textContent=String(metronomeBpm);
     metroEls.slider.value=String(metronomeBpm);
     if(metronomeTimer) startMetronome();
@@ -294,7 +295,7 @@ function initMetronome(){
   $("#metronome-plus")?.addEventListener("click",()=>syncBpm(Math.min(240,metronomeBpm+1)));
   metroEls.slider?.addEventListener("input",(event)=>syncBpm(event.target.value));
   metroEls.signature?.addEventListener("change",(event)=>{
-    metronomeSignature=Number(event.target.value||4);
+    metronomeSignature=normalizeTimeSignature(event.target.value);
     buildBeats(metronomeSignature);
     if(metronomeTimer) startMetronome();
   });
@@ -309,4 +310,8 @@ document.addEventListener("DOMContentLoaded",()=>{
 window.addEventListener("beforeunload",()=>{
   stopTuner();
   stopMetronome();
+  metronomeCtx?.close().catch(()=>{});
+});
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden)stopTuner();
 });

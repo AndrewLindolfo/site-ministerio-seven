@@ -79,8 +79,10 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Marcação de leitura recebeu timestamp e tratamento de erro, e o CSS vazio exclusivo de contatos foi removido.
 - Gestão de notificações revisada; permissões de criar e editar são verificadas conforme o estado do formulário, datas aceitam `Timestamp`, leituras repetidas foram removidas e operações possuem estados de erro e bloqueio.
 - Administradores com permissões parciais não apagam mais configurações protegidas de popup, faixa do topo, botão ou exibição antecipada ao editar um comunicado.
+- Configuração de links revisada e limitada ao administrador principal; campos possuem limites, erros são exibidos sem travar o formulário e a gravação continua parcial para não apagar outras configurações do site.
+- `admin/config.html`, `admin-config.js` e os CSS vazios de configuração foram removidos por duplicarem integralmente a página `admin/links.html`.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- Páginas administrativas de links e configuração
+- Páginas administrativas de backup e logs

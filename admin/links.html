@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-DKM3MTBKQ6');
+    gtag("js", new Date());
+    gtag("config", "G-DKM3MTBKQ6");
   </script>
 
   <meta charset="UTF-8" />
@@ -20,7 +18,6 @@
   <link rel="stylesheet" href="../assets/css/animations.css" />
   <link rel="stylesheet" href="../assets/css/responsive.css" />
   <link rel="stylesheet" href="../assets/css/admin.css" />
-  <link rel="stylesheet" href="../assets/css/pages/admin-links.css" />
 </head>
 <body>
 
@@ -50,13 +47,14 @@
     <a href="./index.html" class="admin-back-link">← Voltar ao painel</a>
     <h1>Links</h1>
     
-<form id="admin-links-form" class="admin-form">
-  <input type="url" id="link-instagram" placeholder="Link do Instagram" />
-  <input type="text" id="arroba-instagram" placeholder="Arroba do Instagram" />
-  <input type="email" id="email-oficial" placeholder="E-mail oficial" />
-  <textarea id="agenda-embed" placeholder="Embed / link da agenda"></textarea>
-  <button type="submit" class="button-primary">Salvar links</button>
-</form>
+    <form id="admin-links-form" class="admin-form">
+      <input type="url" id="link-instagram" maxlength="2000" placeholder="Link do Instagram" aria-label="Link do Instagram" />
+      <input type="text" id="arroba-instagram" maxlength="100" placeholder="Arroba do Instagram" aria-label="Arroba do Instagram" />
+      <input type="email" id="email-oficial" maxlength="254" placeholder="E-mail oficial" aria-label="E-mail oficial" />
+      <textarea id="agenda-embed" maxlength="5000" placeholder="Embed / link da agenda" aria-label="Embed ou link da agenda"></textarea>
+      <p id="admin-links-status" class="admin-status" role="status" aria-live="polite"></p>
+      <button type="submit" class="button-primary hidden">Salvar links</button>
+    </form>
 
   </section>
 </main>

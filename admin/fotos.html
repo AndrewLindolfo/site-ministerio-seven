@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="dark">
 <head>
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DKM3MTBKQ6"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-DKM3MTBKQ6');
+    gtag("js", new Date());
+    gtag("config", "G-DKM3MTBKQ6");
   </script>
 
   <meta charset="UTF-8" />
@@ -51,8 +49,9 @@
     <h1>Fotos</h1>
 
     <div class="admin-toolbar">
-      <button type="button" id="new-album-button" class="button-primary">Novo álbum</button>
+      <button type="button" id="new-album-button" class="button-primary hidden">Novo álbum</button>
     </div>
+    <p id="admin-fotos-status" class="admin-status" role="status" aria-live="polite"></p>
     <div id="admin-fotos-list"></div>
 
   </section>

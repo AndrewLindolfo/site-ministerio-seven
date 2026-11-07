@@ -4,7 +4,8 @@ import { getMusica } from "../services/musicas-service.js";
 import { watchDocument } from "../db.js";
 import { getQueryParam } from "../utils.js";
 import { initCifraControls, setOriginalMetaTom } from "../modules/cifra-controls.js";
-import { watchAuth, getAdminProfileByEmail } from "../auth.js";
+import { watchAuth, getAdminProfileForUser } from "../auth.js";
+import { hasPermission } from "../services/admin-permissions-service.js";
 import { bindChordInteractions } from "../modules/chord-interactive.js";
 import { createPersonalButtons, refreshPersonalActionButtons } from "../modules/personal-actions.js";
 import { sanitizeRichHtml } from "../lib/sanitize-html.js";
@@ -677,9 +678,13 @@ function initMiniMetronomeAdminEdit() {
 
   watchAuth(async (user) => {
     try {
-      const email = String(user?.email || "").trim().toLowerCase();
-      const admin = email ? await getAdminProfileByEmail(email) : null;
-      currentAdminCanEditMiniMetronome = !!admin;
+      const admin = user?.uid && user?.email ? await getAdminProfileForUser(user) : null;
+      currentAdminCanEditMiniMetronome = Boolean(
+        admin &&
+        hasPermission(admin, "cifras", "edit") &&
+        hasPermission(admin, "cifras", "bpm") &&
+        hasPermission(admin, "cifras", "compasso")
+      );
       setMiniMetronomeEditVisibility();
     } catch (error) {
       console.error("Erro ao validar admin do mini metrônomo:", error);

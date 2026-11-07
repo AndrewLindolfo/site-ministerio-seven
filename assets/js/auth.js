@@ -1,5 +1,5 @@
 import { auth, provider } from "./firebase.js";
-import { getDocument, getOneByField, setDocument, updateDocument, serverTimestamp } from "./db.js";
+import { getDocument, setDocument, updateDocument, serverTimestamp } from "./db.js";
 import { buildAdminDocIdFromEmail, buildLegacyAdminDocIdFromEmail } from "./services/admin-permissions-service.js";
 import {
   signInWithPopup,
@@ -53,13 +53,6 @@ function persistAdminIdentity(admin = null, user = null) {
   }
 }
 
-async function getPrimaryAdminProfile() {
-  const admin = await getDocument(ADMIN_COLLECTION, PRIMARY_ADMIN_DOC_ID);
-  if (!admin) return null;
-  if (admin.ativo === false || admin.active === false) return null;
-  return admin;
-}
-
 async function getAccessibleAdminDocument(id = "") {
   try {
     return await getDocument(ADMIN_COLLECTION, id);
@@ -93,21 +86,6 @@ export async function getAdminProfileForUser(user = null) {
   if (!primary || primary.active === false || primary.ativo === false) return null;
   if (String(primary.uid || "").trim() !== uid || normalize(primary.email) !== email) return null;
   return primary;
-}
-
-export async function getAdminProfileByEmail(email = "") {
-  const normalizedEmail = normalize(email);
-  if (!normalizedEmail) return null;
-
-  const primary = await getPrimaryAdminProfile();
-  if (primary && normalize(primary.email) === normalizedEmail) {
-    return primary;
-  }
-
-  const admin = await getOneByField(ADMIN_COLLECTION, "email", normalizedEmail);
-  if (!admin) return null;
-  if (admin.ativo === false || admin.active === false) return null;
-  return admin;
 }
 
 export async function bindAdminUid(adminId = "", uid = "") {

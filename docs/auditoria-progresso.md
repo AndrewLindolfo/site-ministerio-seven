@@ -83,8 +83,11 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - `admin/config.html`, `admin-config.js` e os CSS vazios de configuração foram removidos por duplicarem integralmente a página `admin/links.html`.
 - Backup agora permanece bloqueado até validar o administrador principal, apresenta progresso e erros no próprio painel e descreve corretamente todas as coleções incluídas.
 - Logs administrativos só são consultados após confirmar `logs.view`, não listam mais todos os administradores, escapam todos os campos persistidos e calculam usuários a partir do próprio histórico limitado.
+- SDK Firebase consolidado em `10.12.2`; o helper `11.7.1` foi removido por não possuir consumidores, e a auditoria estática deixou de acusar versões divergentes.
+- Consulta administrativa por e-mail foi eliminada do código; a edição pública de metrônomo agora usa UID e exige permissões de editar cifra, BPM e compasso.
+- Módulos desconectados `admin-shell.js`, `router.js`, `stats.js`, JSON demonstrativo, CSS vazio do dashboard e pasta local vazia de uploads foram removidos.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próximo arquivo
 
-- Consolidação do SDK Firebase, arquivos residuais e auditoria estática final
+- Regras, índices, configuração e testes locais do Firebase de destino

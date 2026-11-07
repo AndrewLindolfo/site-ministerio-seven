@@ -99,6 +99,9 @@ Ao retomar o trabalho, revalidar o último item concluído e continuar a partir 
 - Os 142 documentos públicos foram copiados para o Firebase novo: 75 músicas, 37 cifras, 10 álbuns, 2 downloads gerais, 15 downloads por música, 2 notificações e `config/site`.
 - A migração removeu campos históricos redundantes das cifras e descartou 25 documentos de log gravados indevidamente em `config`; uma segunda execução confirmou 142 documentos existentes e nenhuma sobrescrita.
 - Consultas anônimas no Firebase novo confirmaram todos os 141 conteúdos ativos e a leitura pública exclusiva de `config/site`.
+- Canal temporário `auditoria` publicado no Firebase Hosting com validade de 7 dias, sem alterar o domínio principal ou o canal de produção.
+- Smoke test remoto aprovou páginas públicas, scripts, cabeçalhos de segurança, página 404 e bloqueio de `firebase.json`, regras, pacote e documentação no Hosting.
+- Páginas HTML com URLs limpas foram configuradas explicitamente sem cache; JavaScript e CSS usam revalidação curta e imagens e fontes usam cache semanal.
 - Pendente no módulo de cifras: validação visual responsiva e consolidação final do CSS após inspeção no navegador.
 
 ## Próxima etapa

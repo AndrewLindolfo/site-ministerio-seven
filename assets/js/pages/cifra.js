@@ -4,6 +4,7 @@ import { getMusica } from "../services/musicas-service.js";
 import { watchDocument } from "../db.js";
 import { getQueryParam } from "../utils.js";
 import { initCifraControls, setOriginalMetaTom } from "../modules/cifra-controls.js";
+import { prepareResponsiveCifra } from "../modules/responsive-cifra.js";
 import { watchAuth, getAdminProfileForUser } from "../auth.js";
 import { hasPermission } from "../services/admin-permissions-service.js";
 import { bindChordInteractions } from "../modules/chord-interactive.js";
@@ -345,6 +346,7 @@ function renderCifraContent(cifra) {
     contentEl.dataset.originalHtml = "";
   }
   contentEl.dataset.originalText = plainText;
+  prepareResponsiveCifra(contentEl);
   annotateInteractiveChordTokens();
   applyChordColor(cifra);
 }

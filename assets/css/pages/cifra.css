@@ -34,13 +34,39 @@
   padding:24px;
   box-shadow:var(--shadow);
   font-family:"Courier New", Courier, monospace;
-  white-space:pre-wrap;
+  white-space:normal;
   line-height:1.45;
   min-height:280px;
-  overflow:auto;
+  overflow-x:hidden;
+  overflow-y:visible;
   tab-size:4;
   -moz-tab-size:4;
   font-variant-ligatures:none;
+}
+
+.cifra-standalone-line{
+  min-height:1.45em;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+
+.cifra-aligned-pair,
+.cifra-pair-segment{
+  display:block;
+}
+
+.cifra-pair-line{
+  min-height:1.45em;
+  white-space:pre;
+}
+
+.cifra-width-probe{
+  position:absolute;
+  display:inline-block;
+  width:max-content;
+  visibility:hidden;
+  white-space:pre;
+  pointer-events:none;
 }
 
 .scroll-toggle-wrap{

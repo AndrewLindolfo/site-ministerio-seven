@@ -1,5 +1,6 @@
 import { transposeText, transposeKeyLabel } from "./cifra-formatter.js";
 import { exportCifraPdf } from "../pdf.js";
+import { prepareResponsiveCifra, reflowResponsiveCifra } from "./responsive-cifra.js";
 
 const FONT_KEY = "seven_cifra_font";
 const SPEED_KEY = "seven_scroll_speed";
@@ -536,6 +537,7 @@ export function rerenderPublicCifra() {
   } else {
     content.textContent = transposeText(originalText, steps);
   }
+  prepareResponsiveCifra(content);
   applyChordStylesAfterRender(content);
 
   meta.dataset.currentTom = currentTom;
@@ -549,6 +551,7 @@ export function increaseFont() {
   const next = clamp(Number(storageGet(FONT_KEY, "18")) + 1, 12, 40);
   storageSet(FONT_KEY, next);
   content.style.fontSize = `${next}px`;
+  reflowResponsiveCifra(content);
 }
 
 export function decreaseFont() {
@@ -557,6 +560,7 @@ export function decreaseFont() {
   const next = clamp(Number(storageGet(FONT_KEY, "18")) - 1, 12, 40);
   storageSet(FONT_KEY, next);
   content.style.fontSize = `${next}px`;
+  reflowResponsiveCifra(content);
 }
 
 function applySavedFont() {
@@ -650,6 +654,12 @@ export function initCifraControls() {
   applySavedFont();
   applySavedFocus();
   rerenderPublicCifra();
+
+  let resizeFrame = 0;
+  window.addEventListener("resize", () => {
+    window.cancelAnimationFrame(resizeFrame);
+    resizeFrame = window.requestAnimationFrame(() => reflowResponsiveCifra($("#cifra-content")));
+  }, { passive: true });
 
   $("#transpose-up")?.addEventListener("click", () => transposeSemitone(1));
   $("#transpose-down")?.addEventListener("click", () => transposeSemitone(-1));

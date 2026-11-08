@@ -109,12 +109,22 @@ async function recognizePage(page, worker, onProgress, pageNumber, pageCount) {
 
 export async function importChordPdfLocally(file, { onProgress } = {}) {
   if (!(file instanceof File)) throw new Error("Escolha um arquivo PDF válido.");
+  if (!file.size) throw new Error("O arquivo PDF está vazio.");
   const pdfjs = await import("../../vendor/pdfjs/pdf.min.mjs");
   pdfjs.GlobalWorkerOptions.workerSrc = new URL("../../vendor/pdfjs/pdf.worker.min.mjs", import.meta.url).href;
   onProgress?.("Abrindo PDF…");
   const bytes = new Uint8Array(await file.arrayBuffer());
   const documentTask = pdfjs.getDocument({ data: bytes, useWorkerFetch: false });
-  const pdf = await documentTask.promise;
+  let pdf;
+  try {
+    pdf = await documentTask.promise;
+  } catch {
+    throw new Error("O PDF não pôde ser aberto. Ele pode estar corrompido ou protegido por senha.");
+  }
+  if (!pdf.numPages) {
+    await pdf.destroy();
+    throw new Error("O PDF não possui páginas para processar.");
+  }
   if (pdf.numPages > PDF_MAX_PAGES) {
     await pdf.destroy();
     throw new Error(`O PDF tem ${pdf.numPages} páginas. O limite para importação é ${PDF_MAX_PAGES}.`);

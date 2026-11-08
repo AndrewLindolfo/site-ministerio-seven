@@ -20,7 +20,7 @@ function setStatus(dialog, message = "", error = false) {
 function setView(dialog, name) {
   dialog.querySelectorAll("[data-chord-view]").forEach((view) => view.hidden = view.dataset.chordView !== name);
   dialog.querySelector("[data-action='back']").hidden = name === "methods";
-  const titles = { methods: "Como deseja adicionar a cifra?", search: "Pesquisar cifra", pdf: "Importar cifra de PDF", preview: "Revisar cifra" };
+  const titles = { methods: "Como deseja adicionar a cifra?", search: "Pesquisar cifra", pdf: "Importar cifra de PDF", preview: "Revisar importação de cifra" };
   dialog.querySelector("[data-dialog-title]").textContent = titles[name] || titles.methods;
 }
 
@@ -101,6 +101,7 @@ async function runSearch(dialog, getSelectedMusic) {
 function validatePdf(file) {
   if (!file) throw new Error("Escolha um arquivo PDF.");
   if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) throw new Error("O arquivo escolhido não é um PDF válido.");
+  if (!file.size) throw new Error("O arquivo PDF está vazio.");
   if (file.size > 15 * 1024 * 1024) throw new Error("O PDF deve ter no máximo 15 MB.");
   return file;
 }
@@ -183,7 +184,7 @@ function ensureDialog(getSelectedMusic) {
           <label class="chord-file-picker" data-pdf-drop>Arraste o PDF aqui ou escolha o arquivo<input type="file" accept="application/pdf,.pdf" data-pdf-input></label>
           <p data-pdf-file>Nenhum PDF selecionado.</p>
           <ul><li>Limite de 15 MB.</li><li>PDF com texto é extraído diretamente.</li><li>PDF digitalizado exige OCR e sempre deve ser revisado.</li></ul>
-          <button type="button" class="button-primary" data-action="process-pdf" disabled>Extrair cifra do PDF</button>
+          <button type="button" class="button-primary" data-action="process-pdf" disabled>Processar PDF</button>
         </section>
         <section data-chord-view="preview" hidden class="chord-preview-view">
           <h3 data-chord-preview-title>Prévia da cifra</h3><p data-chord-preview-meta></p>
@@ -192,7 +193,7 @@ function ensureDialog(getSelectedMusic) {
             <section data-preview-pane="original"><strong>PDF original</strong><iframe data-pdf-preview title="PDF original"></iframe></section>
             <section data-preview-pane="converted"><label for="chord-assistant-draft">Cifra convertida - revise e corrija</label><textarea id="chord-assistant-draft" data-chord-draft spellcheck="false"></textarea></section>
           </div>
-          <div class="research-result-actions"><button type="button" class="button-outline" data-action="process-again" hidden>Processar novamente</button><button type="button" class="button-primary" data-action="apply-chord">Usar esta cifra no editor</button></div>
+          <div class="research-result-actions"><button type="button" class="button-outline" data-action="process-again" hidden>Processar novamente</button><button type="button" class="button-primary" data-action="apply-chord">Usar cifra convertida</button></div>
         </section>
       </main>
       <footer><button type="button" data-action="back" hidden>← Voltar</button><p data-chord-status role="status" aria-live="polite"></p><button type="button" data-action="cancel">Cancelar</button></footer>

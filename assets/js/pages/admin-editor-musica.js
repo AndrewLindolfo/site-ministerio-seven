@@ -5,6 +5,8 @@ import { getMusica, saveMusica, findDuplicateMusicaTitle, removeMusica } from ".
 import { explainFirebaseError } from "../db.js";
 import { recordAdminActivity } from "../services/admin-activity-service.js";
 import { initAdminMusicResearch } from "../modules/admin-music-research.js";
+import { sanitizeRichHtml } from "../lib/sanitize-html.js";
+import { normalizeYoutubeEmbedUrl } from "../lib/youtube-url.js";
 
 const params = new URLSearchParams(window.location.search);
 const musicaId = params.get("id") || "";
@@ -64,6 +66,41 @@ function setLyricHtml(html = "") {
   }, 200);
 }
 
+function openMusicPreview() {
+  const title = document.getElementById("musica-titulo")?.value?.trim() || "";
+  if (!title) {
+    setStatus("Preencha o título antes de abrir a prévia.", true);
+    document.getElementById("musica-titulo")?.focus();
+    return;
+  }
+
+  const dialog = document.getElementById("preview-musica-dialog");
+  const subtitle = document.getElementById("musica-subtitulo")?.value?.trim() || "";
+  const author = document.getElementById("musica-autor")?.value?.trim() || "";
+  const key = document.getElementById("musica-tom")?.value?.trim() || "";
+  const category = document.getElementById("musica-categoria")?.value?.trim() || "";
+  const youtubeUrl = document.getElementById("musica-youtube")?.value?.trim() || "";
+  const embedUrl = normalizeYoutubeEmbedUrl(youtubeUrl);
+  if (youtubeUrl && !embedUrl) {
+    setStatus("O link do YouTube não é válido. Use um endereço HTTPS do YouTube.", true);
+    document.getElementById("musica-youtube")?.focus();
+    return;
+  }
+
+  dialog.querySelector("[data-preview-title]").textContent = title;
+  const subtitleNode = dialog.querySelector("[data-preview-subtitle]");
+  subtitleNode.textContent = subtitle;
+  subtitleNode.hidden = !subtitle;
+  dialog.querySelector("[data-preview-meta]").textContent = [author, key && `Tom ${key}`, category].filter(Boolean).join(" • ");
+  const lyric = dialog.querySelector("[data-preview-lyric]");
+  lyric.innerHTML = sanitizeRichHtml(getLyricHtml()) || "<p>Letra ainda não informada.</p>";
+  const video = dialog.querySelector("[data-preview-video]");
+  video.hidden = !embedUrl;
+  video.src = embedUrl || "about:blank";
+  setStatus("");
+  dialog.showModal();
+}
+
 async function loadMusicaIfEditing() {
   if (!musicaId) return;
   const musica = await getMusica(musicaId);
@@ -83,6 +120,12 @@ async function loadMusicaIfEditing() {
 
 document.addEventListener("DOMContentLoaded", async () => {
   initAdminMusicResearch();
+  document.getElementById("preview-musica-button")?.addEventListener("click", openMusicPreview);
+  const previewDialog = document.getElementById("preview-musica-dialog");
+  previewDialog?.querySelectorAll("[data-action='close-preview']").forEach((button) => button.addEventListener("click", () => {
+    previewDialog.querySelector("[data-preview-video]").src = "about:blank";
+    previewDialog.close();
+  }));
   document.getElementById("admin-editor-musica-form")?.addEventListener("submit", async (event) => {
     event.preventDefault();
 

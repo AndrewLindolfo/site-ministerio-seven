@@ -141,6 +141,13 @@
 .chord-preview-view.without-original .chord-compare{grid-template-columns:1fr}.chord-preview-view.without-original [data-preview-pane="original"],.chord-preview-view.without-original .chord-preview-tabs{display:none}
 [data-chord-status]{margin:0;min-height:1.2em;color:var(--text-soft)}[data-chord-status].error{color:#ff6b6b}
 
+.music-final-preview{width:min(760px,100%);margin:0 auto;display:grid;gap:22px}
+.music-final-preview>header{text-align:center;display:grid;gap:7px}.music-final-preview h2,.music-final-preview p{margin:0}
+.music-final-preview [data-preview-meta],.music-final-preview [data-preview-subtitle]{color:var(--text-soft)}
+.music-final-preview iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:16px;background:#000}
+.music-final-preview [data-preview-lyric]{font-size:1.05rem;line-height:1.75;padding:22px;border:1px solid var(--border);border-radius:16px;background:var(--surface)}
+.music-final-preview [data-preview-lyric] p{margin:0 0 1em}.music-final-preview [data-preview-lyric] p:last-child{margin-bottom:0}
+
 @media(max-width:720px){
   .admin-assistant-entry,.admin-research-shell>footer{align-items:stretch;flex-direction:column}
   .admin-assistant-entry button{width:100%}

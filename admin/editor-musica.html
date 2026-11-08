@@ -73,12 +73,27 @@
       <p id="admin-editor-musica-status" class="admin-status" role="status" aria-live="polite"></p>
 
       <div class="admin-form-actions">
+        <button type="button" id="preview-musica-button" class="button-outline">Prévia antes de salvar</button>
         <button type="submit" class="button-primary hidden">Salvar</button>
         <button type="button" id="delete-musica-button" class="button-danger hidden">Excluir</button>
       </div>
     </form>
   </section>
 </main>
+
+<dialog id="preview-musica-dialog" class="admin-research-dialog music-final-preview-dialog">
+  <div class="admin-research-shell">
+    <header><div><strong>Prévia pública da música</strong><small>Esta prévia não salva nem publica nada.</small></div><button type="button" data-action="close-preview" aria-label="Fechar">×</button></header>
+    <main>
+      <article class="music-final-preview">
+        <header><h2 data-preview-title></h2><p data-preview-subtitle></p><p data-preview-meta></p></header>
+        <iframe data-preview-video title="Vídeo da música" hidden allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        <section data-preview-lyric></section>
+      </article>
+    </main>
+    <footer><span>Revise o título, a formatação e o vídeo.</span><button type="button" class="button-primary" data-action="close-preview">Voltar ao editor</button></footer>
+  </div>
+</dialog>
 
 <div id="global-loading" class="global-loading hidden" aria-hidden="true">
   <div class="spinner"></div>

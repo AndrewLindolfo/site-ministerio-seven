@@ -101,7 +101,10 @@ async function recognizePage(page, worker, onProgress, pageNumber, pageCount) {
   const result = await worker.recognize(canvas);
   canvas.width = 1;
   canvas.height = 1;
-  return cleanExtractedText(result.data?.text || "");
+  return {
+    text: cleanExtractedText(result.data?.text || ""),
+    confidence: Number.isFinite(result.data?.confidence) ? result.data.confidence : null
+  };
 }
 
 export async function importChordPdfLocally(file, { onProgress } = {}) {
@@ -118,6 +121,7 @@ export async function importChordPdfLocally(file, { onProgress } = {}) {
   }
 
   const pages = [];
+  const ocrConfidences = [];
   let worker = null;
   let usedOcr = false;
   try {
@@ -128,7 +132,9 @@ export async function importChordPdfLocally(file, { onProgress } = {}) {
       let pageText = cleanExtractedText(joinTextItems(content.items));
       if (pageText.replace(/\s/g, "").length < 20) {
         worker ||= await createOcrWorker(onProgress);
-        pageText = await recognizePage(page, worker, onProgress, pageNumber, pdf.numPages);
+        const recognized = await recognizePage(page, worker, onProgress, pageNumber, pdf.numPages);
+        pageText = recognized.text;
+        if (recognized.confidence !== null) ocrConfidences.push(recognized.confidence);
         usedOcr = true;
       }
       pages.push(pageText);
@@ -142,7 +148,16 @@ export async function importChordPdfLocally(file, { onProgress } = {}) {
   const contentText = cleanExtractedText(pages.filter(Boolean).join("\n\n"));
   if (!contentText) throw new Error("Nenhum texto ou cifra reconhecível foi encontrado no PDF.");
   onProgress?.("PDF processado. Revise o resultado.");
-  return { contentText, usedOcr, pageCount: pages.length };
+  const ocrConfidence = ocrConfidences.length
+    ? Math.round(ocrConfidences.reduce((total, value) => total + value, 0) / ocrConfidences.length)
+    : null;
+  return {
+    contentText,
+    usedOcr,
+    pageCount: pages.length,
+    ocrConfidence,
+    lowConfidence: ocrConfidence !== null && ocrConfidence < 70
+  };
 }
 
 export { cleanExtractedText, joinTextItems };

@@ -20,6 +20,8 @@ function setStatus(dialog, message = "", error = false) {
 function setView(dialog, name) {
   dialog.querySelectorAll("[data-chord-view]").forEach((view) => view.hidden = view.dataset.chordView !== name);
   dialog.querySelector("[data-action='back']").hidden = name === "methods";
+  const titles = { methods: "Como deseja adicionar a cifra?", search: "Pesquisar cifra", pdf: "Importar cifra de PDF", preview: "Revisar cifra" };
+  dialog.querySelector("[data-dialog-title]").textContent = titles[name] || titles.methods;
 }
 
 function selectedMusic(getSelectedMusic) {
@@ -34,6 +36,7 @@ function resultMeta(item) {
 
 function setOriginalPreviewVisible(dialog, visible) {
   dialog.querySelector(".chord-preview-view").classList.toggle("without-original", !visible);
+  dialog.querySelector("[data-action='process-again']").hidden = !visible;
   if (visible) {
     dialog.querySelectorAll("[data-preview-pane]").forEach((pane) => pane.classList.toggle("is-mobile-active", pane.dataset.previewPane === "original"));
   }
@@ -87,7 +90,7 @@ async function runSearch(dialog, getSelectedMusic) {
     const data = await searchChords({ musicId: music.id, title: music.title, artist: music.subtitle || music.artist || "" });
     state.results = Array.isArray(data.results) ? data.results : (Array.isArray(data.chords) ? data.chords : []);
     renderResults(dialog, getSelectedMusic);
-    setStatus(dialog, state.results.length ? "Resultados encontrados. Abra uma cifra para revisar." : "Nenhuma cifra encontrada.");
+    setStatus(dialog, state.results.length ? "Resultados encontrados. Abra uma cifra para revisar." : (data.notice || "Nenhuma cifra encontrada."));
   } catch (error) {
     setStatus(dialog, error.message || "Não foi possível pesquisar cifras.", true);
   } finally {
@@ -124,7 +127,11 @@ async function runPdfImport(dialog, getSelectedMusic) {
     state.selected = { ...data, ...prepared };
     dialog.querySelector("[data-chord-draft]").value = text;
     dialog.querySelector("[data-chord-preview-title]").textContent = data.title || `Cifra extraída de ${file.name}`;
-    dialog.querySelector("[data-chord-preview-meta]").textContent = data.usedOcr ? "Texto reconhecido por OCR • revisão obrigatória" : "Texto extraído do PDF • revisão obrigatória";
+    const confidence = Number.isFinite(data.ocrConfidence) ? ` • confiança ${data.ocrConfidence}%` : "";
+    const warning = data.lowConfidence ? " • baixa confiança: confira cada linha" : "";
+    dialog.querySelector("[data-chord-preview-meta]").textContent = data.usedOcr
+      ? `Texto reconhecido por OCR${confidence}${warning} • revisão obrigatória`
+      : "Texto extraído do PDF • revisão obrigatória";
     setOriginalPreviewVisible(dialog, true);
     setView(dialog, "preview");
     setStatus(dialog, "Extração concluída. Corrija qualquer alinhamento antes de aplicar.");
@@ -161,7 +168,7 @@ function ensureDialog(getSelectedMusic) {
   dialog.className = "admin-research-dialog";
   dialog.innerHTML = `
     <div class="admin-research-shell">
-      <header><div><strong>Adicionar cifra</strong><small data-selected-music></small></div><button type="button" data-action="close" aria-label="Fechar">×</button></header>
+      <header><div><strong data-dialog-title>Como deseja adicionar a cifra?</strong><small data-selected-music></small></div><button type="button" data-action="close" aria-label="Fechar">×</button></header>
       <main>
         <section data-chord-view="methods" class="chord-methods">
           <button type="button" data-method="search"><strong>Pesquisar cifra</strong><small>Encontre versões, visualize e escolha antes de usar.</small></button>
@@ -185,13 +192,14 @@ function ensureDialog(getSelectedMusic) {
             <section data-preview-pane="original"><strong>PDF original</strong><iframe data-pdf-preview title="PDF original"></iframe></section>
             <section data-preview-pane="converted"><label for="chord-assistant-draft">Cifra convertida - revise e corrija</label><textarea id="chord-assistant-draft" data-chord-draft spellcheck="false"></textarea></section>
           </div>
-          <button type="button" class="button-primary" data-action="apply-chord">Usar esta cifra no editor</button>
+          <div class="research-result-actions"><button type="button" class="button-outline" data-action="process-again" hidden>Processar novamente</button><button type="button" class="button-primary" data-action="apply-chord">Usar esta cifra no editor</button></div>
         </section>
       </main>
-      <footer><button type="button" data-action="back" hidden>← Voltar</button><p data-chord-status role="status" aria-live="polite"></p></footer>
+      <footer><button type="button" data-action="back" hidden>← Voltar</button><p data-chord-status role="status" aria-live="polite"></p><button type="button" data-action="cancel">Cancelar</button></footer>
     </div>`;
   document.body.append(dialog);
   dialog.querySelector("[data-action='close']").addEventListener("click", () => dialog.close());
+  dialog.querySelector("[data-action='cancel']").addEventListener("click", () => dialog.close());
   dialog.querySelector("[data-action='back']").addEventListener("click", () => { setView(dialog, "methods"); setStatus(dialog, ""); });
   dialog.querySelector("[data-method='manual']").addEventListener("click", () => dialog.close());
   dialog.querySelector("[data-method='search']").addEventListener("click", () => { setView(dialog, "search"); runSearch(dialog, getSelectedMusic); });
@@ -229,6 +237,10 @@ function ensureDialog(getSelectedMusic) {
     dialog.querySelectorAll("[data-preview-pane-button]").forEach((item) => item.classList.toggle("is-active", item === button));
   }));
   dialog.querySelector("[data-action='process-pdf']").addEventListener("click", () => runPdfImport(dialog, getSelectedMusic));
+  dialog.querySelector("[data-action='process-again']").addEventListener("click", () => {
+    setView(dialog, "pdf");
+    setStatus(dialog, "Você pode processar o mesmo arquivo novamente ou escolher outro.");
+  });
   dialog.querySelector("[data-action='apply-chord']").addEventListener("click", () => applyDraft(dialog));
   return dialog;
 }

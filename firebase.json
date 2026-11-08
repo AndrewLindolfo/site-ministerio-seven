@@ -6,6 +6,9 @@
   "storage": {
     "rules": "storage.rules"
   },
+  "functions": {
+    "source": "functions"
+  },
   "hosting": [
     {
     "target": "public",
@@ -23,6 +26,7 @@
       "docs/**",
       "scripts/**",
       "tests/**",
+      "functions/**",
       ".github/**",
       ".vscode/**",
       "**/.*",
@@ -30,6 +34,15 @@
     ],
     "cleanUrls": true,
     "trailingSlash": false,
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "function": {
+          "functionId": "integrationApi",
+          "region": "southamerica-east1"
+        }
+      }
+    ],
     "headers": [
       {
         "source": "**/*.@(js|css)",
@@ -129,6 +142,7 @@
         "docs/**",
         "scripts/**",
         "tests/**",
+        "functions/**",
         ".github/**",
         ".vscode/**",
         "**/.*",
@@ -136,6 +150,15 @@
       ],
       "cleanUrls": true,
       "trailingSlash": false,
+      "rewrites": [
+        {
+          "source": "/api/**",
+          "function": {
+            "functionId": "integrationApi",
+            "region": "southamerica-east1"
+          }
+        }
+      ],
       "redirects": [
         {
           "source": "/",

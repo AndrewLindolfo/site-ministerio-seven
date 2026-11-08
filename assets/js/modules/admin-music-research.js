@@ -175,7 +175,8 @@ async function runSearch(dialog) {
     state.selectedLyric = null;
     state.selectedVideo = null;
     renderResults(dialog);
-    setStatus(dialog, state.lyrics.length || state.videos.length ? "Resultados encontrados. Confira antes de selecionar." : "Nenhum resultado encontrado.");
+    const warning = Array.isArray(data.warnings) && data.warnings.length ? ` ${data.warnings.join(" ")}` : "";
+    setStatus(dialog, `${state.lyrics.length || state.videos.length ? "Resultados encontrados. Confira antes de selecionar." : "Nenhum resultado encontrado."}${warning}`);
   } catch (error) {
     setStatus(dialog, error.message || "Não foi possível realizar a pesquisa.", true);
   } finally {

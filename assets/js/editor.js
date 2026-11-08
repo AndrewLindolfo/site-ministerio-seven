@@ -257,6 +257,22 @@ export function setCifraEditorPlainText(text = "") {
   }
 }
 
+export function setMusicaEditorHtml(html = "") {
+  const value = String(html || "");
+  const textarea = document.getElementById("musica-letra");
+  if (textarea) {
+    textarea.value = value;
+    textarea.dataset.initialValue = value;
+  }
+  const editor = window.tinymce?.get("musica-letra");
+  if (editor) editor.setContent(value);
+}
+
+export function getMusicaEditorHtml() {
+  const editor = window.tinymce?.get("musica-letra");
+  return editor ? editor.getContent() : (document.getElementById("musica-letra")?.value || "");
+}
+
 export function setCifraEditorHtml(html = "") {
   const normalized = preserveCifraSpacingHtml(html);
   const textarea = document.getElementById("cifra-conteudo");

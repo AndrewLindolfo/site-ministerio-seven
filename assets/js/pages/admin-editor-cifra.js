@@ -5,9 +5,11 @@ import { listMusicas, getMusica } from "../services/musicas-service.js";
 import { getCifra, saveCifra, findDuplicateCifraInstrument, removeCifra, normalizeChordColor, normalizeInstrument, getInstrumentLabel } from "../services/cifras-service.js";
 import { normalizeText, explainFirebaseError } from "../db.js";
 import { recordAdminActivity } from "../services/admin-activity-service.js";
+import { initAdminChordAssistant } from "../modules/admin-chord-assistant.js";
 
 const cifraId = new URLSearchParams(window.location.search).get("id") || "";
 let selectedMusicaId = "";
+let selectedMusica = null;
 let currentAdmin = null;
 let currentCifra = null;
 let allMusicas = [];
@@ -31,6 +33,7 @@ function canDeleteCifra() {
 
 function setSelectedMusic(item) {
   selectedMusicaId = item?.id || "";
+  selectedMusica = item || null;
   const input = document.getElementById("cifra-musica-search");
   const box = document.getElementById("cifra-musica-resultados");
   if (input) input.value = item?.title || "";
@@ -138,8 +141,10 @@ async function initializeEditor() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  initAdminChordAssistant({ getSelectedMusic: () => selectedMusica });
   document.getElementById("cifra-musica-search")?.addEventListener("input", (event) => {
     selectedMusicaId = "";
+    selectedMusica = null;
     renderMusicSearch(event.target.value);
   });
 

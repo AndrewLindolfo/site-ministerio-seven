@@ -4,6 +4,7 @@ import "../editor.js";
 import { getMusica, saveMusica, findDuplicateMusicaTitle, removeMusica } from "../services/musicas-service.js";
 import { explainFirebaseError } from "../db.js";
 import { recordAdminActivity } from "../services/admin-activity-service.js";
+import { initAdminMusicResearch } from "../modules/admin-music-research.js";
 
 const params = new URLSearchParams(window.location.search);
 const musicaId = params.get("id") || "";
@@ -81,6 +82,7 @@ async function loadMusicaIfEditing() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  initAdminMusicResearch();
   document.getElementById("admin-editor-musica-form")?.addEventListener("submit", async (event) => {
     event.preventDefault();
 

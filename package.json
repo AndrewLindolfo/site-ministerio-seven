@@ -21,6 +21,9 @@
     "@grpc/grpc-js": "1.13.6"
   },
   "dependencies": {
-    "jspdf": "^4.2.1"
+    "@tesseract.js-data/por": "^1.0.0",
+    "jspdf": "^4.2.1",
+    "pdfjs-dist": "^4.10.38",
+    "tesseract.js": "^7.0.0"
   }
 }

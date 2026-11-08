@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Prévia do cadastro assistido de cifra</title>
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/theme.css">
+  <link rel="stylesheet" href="../../assets/css/admin.css">
+</head>
+<body>
+  <main class="container admin-section-page">
+    <h1>Editor de Cifra - ambiente de teste</h1>
+    <input id="cifra-musica-search" value="Grande é o Senhor" aria-label="Música selecionada">
+    <p>Música vinculada: <strong>Grande é o Senhor</strong></p>
+    <section class="admin-assistant-entry"><div><strong>Cadastro assistido de cifra</strong><span>Pesquisa, PDF ou cadastro manual.</span></div><button id="chord-assistant-open" class="button-outline">Adicionar cifra</button></section>
+    <select id="cifra-tom"><option value="">Tom</option><option value="A">A</option><option value="G">G</option></select>
+    <input id="cifra-capo" aria-label="Capotraste">
+    <input id="cifra-bpm" aria-label="BPM">
+    <textarea id="cifra-conteudo" aria-label="Conteúdo da cifra"></textarea>
+    <p id="admin-editor-cifra-status" class="admin-status"></p>
+  </main>
+  <script>
+    window.__SEVEN_TEST_CONTENT_PROVIDER__ = {
+      async request(path) {
+        if (path === "/chords/search") return { results: [{ id: "chord-1", title: "Grande é o Senhor", artist: "Adhemar de Campos", key: "A", source: "Fonte autorizada de teste" }] };
+        if (path === "/chords/chord-1") return { title: "Grande é o Senhor", artist: "Adhemar de Campos", key: "A", contentText: "A          E/G#\nGrande é o Senhor\nD/F#       E\nE mui digno de louvor" };
+        return {};
+      }
+    };
+  </script>
+  <script type="module">
+    import { initAdminChordAssistant } from "../../assets/js/modules/admin-chord-assistant.js";
+    initAdminChordAssistant({ getSelectedMusic: () => ({ id: "music-1", title: "Grande é o Senhor", subtitle: "Adhemar de Campos" }) });
+  </script>
+</body>
+</html>

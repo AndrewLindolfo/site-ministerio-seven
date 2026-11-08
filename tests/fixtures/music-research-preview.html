@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Prévia da pesquisa musical</title>
+  <link rel="stylesheet" href="../../assets/css/main.css" />
+  <link rel="stylesheet" href="../../assets/css/theme.css" />
+  <link rel="stylesheet" href="../../assets/css/admin.css" />
+</head>
+<body>
+  <main class="admin-section-page"><section class="container">
+    <h1>Editor de Música - Teste</h1>
+    <div class="admin-assistant-entry"><div><strong>Cadastro assistido</strong><span>Pesquise letras e vídeos antes de aplicar ao formulário.</span></div><button id="music-research-open" class="button-primary">Pesquisar música automaticamente</button></div>
+    <form class="admin-form">
+      <input id="musica-titulo" placeholder="Título" />
+      <input id="musica-autor" placeholder="Autor" />
+      <input id="musica-youtube" placeholder="YouTube" />
+      <textarea id="musica-letra"></textarea>
+      <p id="admin-editor-musica-status" class="admin-status"></p>
+    </form>
+  </section></main>
+  <script>
+    window.__SEVEN_TEST_CONTENT_PROVIDER__ = {
+      async request(path) {
+        if (path === "/music/search") return {
+          lyrics: [{ id:"lyric-1", title:"Porque Ele Vive", artist:"Harpa Cristã", version:"Versão congregacional", source:"Fonte licenciada de teste" }],
+          videos: [{ id:"video-1", title:"Porque Ele Vive - versão congregacional", channel:"Canal de teste", platform:"YouTube", url:"https://www.youtube.com/watch?v=dQw4w9WgXcQ", thumbnail:"https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg" }]
+        };
+        if (path.startsWith("/music/lyrics/")) return { contentHtml:"<p>Deus enviou seu Filho amado,</p><p>Pra perdoar e me salvar.</p>" };
+        throw new Error("Rota de teste desconhecida.");
+      }
+    };
+  </script>
+  <script type="module" src="../../assets/js/editor.js"></script>
+  <script type="module">
+    import { initAdminMusicResearch } from "../../assets/js/modules/admin-music-research.js";
+    initAdminMusicResearch();
+  </script>
+</body>
+</html>

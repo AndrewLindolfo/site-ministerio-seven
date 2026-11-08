@@ -132,6 +132,59 @@
   color:var(--text-soft);
 }
 
+.admin-editor-heading{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+  margin-top:8px;
+  padding:14px 16px;
+  border:1px solid var(--border);
+  border-bottom:0;
+  border-radius:16px 16px 0 0;
+  background:var(--surface);
+}
+
+.admin-editor-heading label{
+  display:block;
+  margin:0 0 4px;
+  color:var(--text);
+  font-weight:700;
+}
+
+.admin-editor-heading small{
+  display:block;
+  color:var(--text-soft);
+  line-height:1.45;
+}
+
+.admin-editor-state{
+  flex:0 0 auto;
+  color:var(--text-soft);
+  font-size:12px;
+  text-align:right;
+}
+
+.admin-editor-state.is-dirty{
+  color:var(--accent);
+}
+
+.admin-editor-heading + .tox-tinymce,
+.admin-editor-heading + textarea + .tox-tinymce{
+  border-radius:0 0 16px 16px !important;
+}
+
+@media (max-width: 720px){
+  .admin-editor-heading{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .admin-editor-state{
+    text-align:left;
+  }
+}
+
 .hidden{display:none !important;}
 
 body.admin-dashboard-permissions-pending .admin-cards-grid{

@@ -1,4 +1,4 @@
-import { autoCorrelate, centsOff, normalizeMetronomeBpm, normalizeTimeSignature, noteFromPitch, NOTE_NAMES } from "../lib/audio-tools.js";
+import { autoCorrelate, centsOff, medianFrequency, normalizeMetronomeBpm, normalizeTimeSignature, noteFromPitch, NOTE_NAMES, secondsPerBeat } from "../lib/audio-tools.js";
 
 const TOOL_FOCUS_CLASS="tool-focus-active";
 const tunerEls={};
@@ -12,12 +12,17 @@ let tunerBuffer=null;
 let tunerStarting=false;
 let lastTunerAnalysisAt=0;
 let tunerRequestId=0;
+let tunerFrequencyWindow=[];
 
 let metronomeCtx=null;
 let metronomeTimer=null;
 let metronomeBeatIndex=0;
 let metronomeBpm=72;
 let metronomeSignature=4;
+let metronomeNextBeatAt=0;
+const metronomeVisualTimers=new Set();
+const METRONOME_LOOKAHEAD_MS=25;
+const METRONOME_SCHEDULE_AHEAD_SECONDS=0.12;
 
 function $(s){return document.querySelector(s)}
 function $all(s){return Array.from(document.querySelectorAll(s))}
@@ -148,13 +153,17 @@ function tunerLoop(timestamp=0){
   tunerAnalyser.getFloatTimeDomainData(tunerBuffer);
   const frequency=autoCorrelate(tunerBuffer,tunerAudioContext.sampleRate);
   if(frequency!==-1){
-    const {midi,noteIndex,octave}=noteFromPitch(frequency);
-    const cents=centsOff(frequency,midi);
+    tunerFrequencyWindow.push(frequency);
+    if(tunerFrequencyWindow.length>5)tunerFrequencyWindow.shift();
+    const stableFrequency=medianFrequency(tunerFrequencyWindow);
+    const {midi,noteIndex,octave}=noteFromPitch(stableFrequency);
+    const cents=centsOff(stableFrequency,midi);
     tunerEls.note.textContent=NOTE_NAMES[noteIndex];
     tunerEls.octave.textContent=`Oitava ${octave}`;
-    tunerEls.hz.textContent=`${frequency.toFixed(1)} Hz`;
+    tunerEls.hz.textContent=`${stableFrequency.toFixed(1)} Hz`;
     updateTunerMeter(cents);
   }else{
+    tunerFrequencyWindow=[];
     updateTunerStatus("Escutando...","--","--","-- Hz");
   }
   tunerAnimationFrame=requestAnimationFrame(tunerLoop);
@@ -201,6 +210,7 @@ async function startTuner(){
 }
 function stopTuner(status="Afinador parado"){
   tunerRequestId+=1;
+  tunerFrequencyWindow=[];
   if(tunerAnimationFrame) cancelAnimationFrame(tunerAnimationFrame);
   tunerAnimationFrame=null;
   if(tunerSource){try{tunerSource.disconnect()}catch{}}
@@ -232,10 +242,10 @@ function ensureMetronomeCtx(){
   if(!metronomeCtx) metronomeCtx=new AudioCtx();
   return metronomeCtx;
 }
-function clickTone(primary=false){
+function clickTone(primary=false,when=null){
   const ctx=ensureMetronomeCtx();
   if(!ctx)return;
-  const now=ctx.currentTime;
+  const now=Number.isFinite(when)?Math.max(ctx.currentTime,when):ctx.currentTime;
   const osc=ctx.createOscillator();
   const gain=ctx.createGain();
   osc.type="sine";
@@ -245,24 +255,45 @@ function clickTone(primary=false){
   gain.gain.exponentialRampToValueAtTime(0.0001,now+0.08);
   osc.connect(gain); gain.connect(ctx.destination); osc.start(now); osc.stop(now+0.09);
 }
-function metronomeTick(){
-  const primary=metronomeBeatIndex===0;
-  clickTone(primary);
-  highlightBeat(metronomeBeatIndex);
-  metronomeBeatIndex=(metronomeBeatIndex+1)%metronomeSignature;
+function scheduleVisualBeat(index,when){
+  const ctx=metronomeCtx;
+  if(!ctx)return;
+  const delay=Math.max(0,Math.round((when-ctx.currentTime)*1000));
+  const timer=setTimeout(()=>{
+    metronomeVisualTimers.delete(timer);
+    if(metronomeTimer)highlightBeat(index);
+  },delay);
+  metronomeVisualTimers.add(timer);
+}
+function scheduleMetronome(){
+  const ctx=ensureMetronomeCtx();
+  if(!ctx||!metronomeTimer)return;
+  while(metronomeNextBeatAt<ctx.currentTime+METRONOME_SCHEDULE_AHEAD_SECONDS){
+    const index=metronomeBeatIndex;
+    clickTone(index===0,metronomeNextBeatAt);
+    scheduleVisualBeat(index,metronomeNextBeatAt);
+    metronomeBeatIndex=(index+1)%metronomeSignature;
+    metronomeNextBeatAt+=secondsPerBeat(metronomeBpm);
+  }
 }
 function stopMetronome(){
   if(metronomeTimer) clearInterval(metronomeTimer);
   metronomeTimer=null; metronomeBeatIndex=0;
+  metronomeNextBeatAt=0;
+  metronomeVisualTimers.forEach(timer=>clearTimeout(timer));
+  metronomeVisualTimers.clear();
   setToggleButtonState(metroEls.toggle, false, {start:"Iniciar", stop:"Parar"});
   highlightBeat(-1);
 }
 function startMetronome(){
   stopMetronome();
-  const interval=Math.max(40,Math.round(60000/metronomeBpm));
+  const ctx=ensureMetronomeCtx();
+  if(!ctx)return;
+  if(ctx.state==="suspended")ctx.resume().catch(()=>{});
+  metronomeNextBeatAt=ctx.currentTime+0.05;
   setToggleButtonState(metroEls.toggle, true, {start:"Iniciar", stop:"Parar"});
-  metronomeTick();
-  metronomeTimer=setInterval(metronomeTick,interval);
+  metronomeTimer=setInterval(scheduleMetronome,METRONOME_LOOKAHEAD_MS);
+  scheduleMetronome();
 }
 function toggleMetronome(){
   if(metronomeTimer) stopMetronome(); else startMetronome();

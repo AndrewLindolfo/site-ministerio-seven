@@ -19,56 +19,65 @@ export function centsOff(frequency, midi) {
 
 export function autoCorrelate(buffer, sampleRate) {
   if (!buffer?.length || !Number.isFinite(sampleRate) || sampleRate <= 0) return -1;
+  const size = buffer.length;
   let rms = 0;
-  for (let index = 0; index < buffer.length; index += 1) rms += buffer[index] * buffer[index];
-  rms = Math.sqrt(rms / buffer.length);
+  let mean = 0;
+  for (let index = 0; index < size; index += 1) mean += buffer[index];
+  mean /= size;
+  for (let index = 0; index < size; index += 1) {
+    const centered = buffer[index] - mean;
+    rms += centered * centered;
+  }
+  rms = Math.sqrt(rms / size);
   if (rms < 0.01) return -1;
 
-  let start = 0;
-  let end = buffer.length - 1;
-  const threshold = 0.2;
-  for (let index = 0; index < buffer.length / 2; index += 1) {
-    if (Math.abs(buffer[index]) < threshold) {
-      start = index;
+  const minFrequency = 55;
+  const maxFrequency = 1400;
+  const minLag = Math.max(2, Math.floor(sampleRate / maxFrequency));
+  const maxLag = Math.min(Math.floor(size / 2), Math.ceil(sampleRate / minFrequency));
+  const difference = new Float64Array(maxLag + 1);
+  const normalized = new Float64Array(maxLag + 1);
+
+  for (let lag = 1; lag <= maxLag; lag += 1) {
+    let sum = 0;
+    for (let index = 0; index < size - lag; index += 1) {
+      const delta = (buffer[index] - mean) - (buffer[index + lag] - mean);
+      sum += delta * delta;
+    }
+    difference[lag] = sum;
+  }
+
+  normalized[0] = 1;
+  let runningSum = 0;
+  for (let lag = 1; lag <= maxLag; lag += 1) {
+    runningSum += difference[lag];
+    normalized[lag] = runningSum ? (difference[lag] * lag) / runningSum : 1;
+  }
+
+  let bestLag = -1;
+  let bestScore = 1;
+  for (let lag = minLag; lag < maxLag; lag += 1) {
+    const score = normalized[lag];
+    const localMinimum = score <= normalized[lag - 1] && score < normalized[lag + 1];
+    if (localMinimum && score < 0.15) {
+      bestScore = score;
+      bestLag = lag;
       break;
     }
-  }
-  for (let index = 1; index < buffer.length / 2; index += 1) {
-    if (Math.abs(buffer[buffer.length - index]) < threshold) {
-      end = buffer.length - index;
-      break;
+    if (localMinimum && score < bestScore) {
+      bestScore = score;
+      bestLag = lag;
     }
   }
+  if (bestLag < 0 || bestScore > 0.35) return -1;
 
-  const sliced = buffer.slice(start, end);
-  const size = sliced.length;
-  const correlations = new Array(size).fill(0);
-  for (let offset = 0; offset < size; offset += 1) {
-    for (let index = 0; index < size - offset; index += 1) {
-      correlations[offset] += sliced[index] * sliced[index + offset];
-    }
-  }
-
-  let searchStart = 0;
-  while (searchStart + 1 < size && correlations[searchStart] > correlations[searchStart + 1]) searchStart += 1;
-  let maxValue = -1;
-  let maxPosition = -1;
-  for (let index = searchStart; index < size; index += 1) {
-    if (correlations[index] > maxValue) {
-      maxValue = correlations[index];
-      maxPosition = index;
-    }
-  }
-  if (maxPosition <= 0) return -1;
-
-  let period = maxPosition;
-  if (period < size - 1) {
-    const left = correlations[period - 1];
-    const center = correlations[period];
-    const right = correlations[period + 1];
-    const curve = (left + right - (2 * center)) / 2;
-    const slope = (right - left) / 2;
-    if (curve) period -= slope / (2 * curve);
+  let period = bestLag;
+  const left = normalized[bestLag - 1];
+  const center = normalized[bestLag];
+  const right = normalized[bestLag + 1];
+  const denominator = left - (2 * center) + right;
+  if (denominator) {
+    period += 0.5 * (left - right) / denominator;
   }
   return sampleRate / period;
 }
@@ -81,4 +90,15 @@ export function normalizeMetronomeBpm(value) {
 export function normalizeTimeSignature(value) {
   const signature = Number(value);
   return [2, 3, 4, 5, 6, 7, 9, 12].includes(signature) ? signature : 4;
+}
+
+export function secondsPerBeat(bpm) {
+  return 60 / normalizeMetronomeBpm(bpm);
+}
+
+export function medianFrequency(values = []) {
+  const sorted = values.filter((value) => Number.isFinite(value) && value > 0).sort((a, b) => a - b);
+  if (!sorted.length) return -1;
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
 }

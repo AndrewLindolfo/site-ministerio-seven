@@ -39,7 +39,7 @@ function escapeHtml(text = "") {
     .replace(/>/g, "&gt;");
 }
 
-function normalizeCifraPlainText(raw = "") {
+export function normalizeCifraPlainText(raw = "") {
   return String(raw || "")
     .replace(/\u00A0/g, " ")
     .replace(/\r\n/g, "\n")
@@ -47,7 +47,7 @@ function normalizeCifraPlainText(raw = "") {
     .replace(/\t/g, "    ");
 }
 
-function plainToCifraHtml(text = "") {
+export function plainToCifraHtml(text = "") {
   return normalizeCifraPlainText(text)
     .split("\n")
     .map((line) => escapeHtml(line).replace(/ /g, "&nbsp;"))
@@ -57,13 +57,11 @@ function plainToCifraHtml(text = "") {
 function htmlToPlainCifra(editor) {
   const body = editor?.getBody?.();
   if (!body) return "";
-  return normalizeCifraPlainText(body.innerText || body.textContent || "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trimEnd();
+  return normalizeCifraPlainText(body.innerText || body.textContent || "");
 }
 
-function normalizeRichCifraHtml(html = "") {
-  return String(html || "").replace(/\r\n?/g, "\n").trim();
+export function normalizeRichCifraHtml(html = "") {
+  return String(html || "").replace(/\r\n?/g, "\n");
 }
 
 function preserveCifraSpacingHtml(rawHtml = "") {
@@ -88,11 +86,12 @@ function preserveCifraSpacingHtml(rawHtml = "") {
 }
 
 function getCommonTinyOptions() {
+  const darkMode = document.documentElement.dataset.theme === "dark";
   return {
     license_key: "gpl",
     base_url: TINYMCE_BASE_URL,
     suffix: ".min",
-    skin: "oxide",
+    skin: darkMode ? "oxide-dark" : "oxide",
     icons: "default",
     icons_url: TINYMCE_ICONS_URL,
     promotion: false,
@@ -100,7 +99,39 @@ function getCommonTinyOptions() {
     browser_spellcheck: true,
     contextmenu: false,
     convert_urls: false,
+    resize: true,
+    statusbar: true,
+    elementpath: false,
+    autosave_interval: "20s",
+    autosave_retention: "12h",
+    autosave_restore_when_empty: false,
+    autosave_ask_before_unload: true,
+    font_size_formats: "10px 12px 14px 16px 18px 20px 24px 28px 32px 36px 48px",
+    line_height_formats: "1 1.15 1.3 1.5 1.7 2 2.5",
   };
+}
+
+function updateEditorState(editorId, message = "Alterações preservadas no editor.", dirty = false) {
+  const state = document.querySelector(`[data-editor-state="${editorId}"]`);
+  if (!state) return;
+  state.textContent = message;
+  state.classList.toggle("is-dirty", dirty);
+}
+
+function bindEditorState(editor, textarea, editorId) {
+  let timer = null;
+  const sync = () => {
+    updateEditorState(editorId, "Alterações não salvas — rascunho local automático ativo.", true);
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      editor.plugins?.autosave?.storeDraft?.();
+      updateEditorState(editorId, "Rascunho local atualizado.", true);
+    }, 900);
+  };
+
+  editor.on("change input undo redo paste", sync);
+  editor.on("init", () => updateEditorState(editorId, "Editor pronto. Rascunho local automático ativo."));
+  textarea?.form?.addEventListener("submit", () => updateEditorState(editorId, "Salvando conteúdo…", true));
 }
 
 async function initMusicaEditor() {
@@ -115,21 +146,30 @@ async function initMusicaEditor() {
   await window.tinymce.init({
     ...getCommonTinyOptions(),
     selector: "#musica-letra",
-    height: 340,
+    min_height: 420,
     menubar: true,
-    plugins: "lists link code table fullscreen preview searchreplace visualblocks",
+    plugins: "advlist autolink autosave lists link code table fullscreen preview searchreplace visualblocks visualchars wordcount nonbreaking",
     toolbar:
-      "undo redo | blocks fontsize | bold italic underline forecolor backcolor | " +
-      "alignleft aligncenter alignright alignjustify | bullist numlist | link table | code fullscreen preview",
+      "undo redo restoredraft | blocks fontsize lineheight | bold italic underline strikethrough | " +
+      "forecolor backcolor | alignleft aligncenter alignright alignjustify | outdent indent | " +
+      "bullist numlist | link table | removeformat searchreplace | fullscreen preview code",
+    toolbar_mode: "sliding",
+    forced_root_block: "p",
+    remove_trailing_brs: false,
     content_style: `
       body {
         font-family: Arial, sans-serif;
         font-size: 16px;
         line-height: 1.7;
-        padding: 12px;
+        padding: 16px;
+        overflow-wrap: anywhere;
       }
-      p, div {
-        margin: 0 !important;
+      p {
+        margin: 0 0 1em;
+        min-height: 1.7em;
+      }
+      p:last-child {
+        margin-bottom: 0;
       }
     `,
     setup(editor) {
@@ -139,6 +179,7 @@ async function initMusicaEditor() {
       editor.on("change input undo redo", () => {
         textarea.value = editor.getContent();
       });
+      bindEditorState(editor, textarea, "musica-letra");
     }
   });
 }
@@ -155,27 +196,33 @@ async function initCifraEditor() {
   await window.tinymce.init({
     ...getCommonTinyOptions(),
     selector: "#cifra-conteudo",
-    height: 340,
+    min_height: 480,
     menubar: true,
     newline_behavior: "linebreak",
     paste_as_text: false,
     entity_encoding: "named",
     verify_html: false,
-    plugins: "code fullscreen preview searchreplace visualblocks nonbreaking",
-    toolbar: "undo redo | bold italic underline forecolor backcolor | code fullscreen preview",
+    plugins: "autosave code fullscreen preview searchreplace visualblocks visualchars nonbreaking wordcount",
+    toolbar:
+      "undo redo restoredraft | bold italic underline strikethrough | forecolor backcolor | " +
+      "removeformat searchreplace | visualchars | fullscreen preview code",
+    toolbar_mode: "sliding",
+    remove_trailing_brs: false,
     content_style: `
       body {
         font-family: "Courier New", Courier, monospace;
         font-size: 16px;
         line-height: 1.45;
-        white-space: pre-wrap;
+        white-space: break-spaces;
+        overflow-wrap: normal;
+        word-break: normal;
         tab-size: 4;
         -moz-tab-size: 4;
-        padding: 12px;
+        padding: 16px;
       }
       pre, p, div, span {
         font-family: "Courier New", Courier, monospace !important;
-        white-space: pre-wrap !important;
+        white-space: break-spaces !important;
         margin: 0 !important;
       }
     `,
@@ -190,6 +237,7 @@ async function initCifraEditor() {
 
       editor.on("change input undo redo keyup paste SetContent", syncTextarea);
       editor.on("init", syncTextarea);
+      bindEditorState(editor, textarea, "cifra-conteudo");
     }
   });
 }
@@ -250,11 +298,13 @@ export async function initSevenEditors() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    await initSevenEditors();
-  } catch (error) {
-    console.error("Falha ao iniciar o TinyMCE:", error);
-    alert(`Erro ao carregar o editor TinyMCE local.\n\nDetalhe: ${error?.message || error}`);
-  }
-});
+if (typeof document !== "undefined") {
+  document.addEventListener("DOMContentLoaded", async () => {
+    try {
+      await initSevenEditors();
+    } catch (error) {
+      console.error("Falha ao iniciar o TinyMCE:", error);
+      alert(`Erro ao carregar o editor TinyMCE local.\n\nDetalhe: ${error?.message || error}`);
+    }
+  });
+}

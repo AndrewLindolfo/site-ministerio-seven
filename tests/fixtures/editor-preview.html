@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prévia local dos editores Seven</title>
+  <link rel="stylesheet" href="../../assets/css/main.css" />
+  <link rel="stylesheet" href="../../assets/css/theme.css" />
+  <link rel="stylesheet" href="../../assets/css/admin.css" />
+</head>
+<body>
+  <main class="admin-section-page">
+    <section class="container">
+      <h1>Prévia local dos editores</h1>
+      <form class="admin-form">
+        <div class="admin-editor-heading">
+          <div>
+            <label for="musica-letra">Letra da música</label>
+            <small>Formate versos, refrões e destaques sem perder parágrafos ou pontuação.</small>
+          </div>
+          <span class="admin-editor-state" data-editor-state="musica-letra" role="status">Preparando editor…</span>
+        </div>
+        <textarea id="musica-letra">&lt;p&gt;Primeiro verso, com pontuação.&lt;/p&gt;&lt;p&gt;Segundo verso com acentuação: coração.&lt;/p&gt;</textarea>
+
+        <div class="admin-editor-heading">
+          <div>
+            <label for="cifra-conteudo">Conteúdo da cifra</label>
+            <small>Os espaços, as linhas vazias e o alinhamento horizontal dos acordes serão preservados.</small>
+          </div>
+          <span class="admin-editor-state" data-editor-state="cifra-conteudo" role="status">Preparando editor…</span>
+        </div>
+        <textarea id="cifra-conteudo">&amp;nbsp;&amp;nbsp;C#m7&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;A&lt;br&gt;Não há outro igual!&lt;br&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;D/F#&amp;nbsp;&amp;nbsp;G</textarea>
+      </form>
+      <section style="margin-top:32px">
+        <h2 id="cifra-titulo">Grande é o Senhor</h2>
+        <p id="cifra-subtitulo">Prévia de exportação</p>
+        <p id="cifra-meta">Tom: A | Original: G | Capotraste: 2</p>
+        <pre id="cifra-content" style="white-space:pre-wrap">  A          E/G#
+Grande é o Senhor
+
+    D/F#     E
+E mui digno de louvor</pre>
+        <button type="button" id="test-pdf">Gerar prévia de PDF</button>
+      </section>
+    </section>
+  </main>
+  <script type="module" src="../../assets/js/editor.js"></script>
+  <script type="module">
+    import { exportCifraPdf } from "../../assets/js/pdf.js";
+    document.getElementById("test-pdf").addEventListener("click", exportCifraPdf);
+  </script>
+</body>
+</html>

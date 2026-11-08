@@ -56,7 +56,14 @@
       <input type="url" id="musica-youtube" placeholder="Link do YouTube (opcional)" aria-label="Link do YouTube" maxlength="500" />
       <textarea id="musica-observacao" placeholder="Observação interna (opcional)" aria-label="Observação interna" maxlength="5000"></textarea>
 
-      <textarea id="musica-letra" placeholder="Letra da música" aria-label="Letra da música"></textarea>
+      <div class="admin-editor-heading">
+        <div>
+          <label for="musica-letra">Letra da música</label>
+          <small>Formate versos, refrões e destaques sem perder parágrafos ou pontuação.</small>
+        </div>
+        <span class="admin-editor-state" data-editor-state="musica-letra" role="status" aria-live="polite">Preparando editor…</span>
+      </div>
+      <textarea id="musica-letra" placeholder="Digite ou cole a letra da música" aria-label="Letra da música"></textarea>
 
       <p id="admin-editor-musica-status" class="admin-status" role="status" aria-live="polite"></p>
 

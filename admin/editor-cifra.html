@@ -126,7 +126,14 @@
         <option value="#a855f7">Cor dos acordes: Roxo</option>
       </select>
 
-      <textarea id="cifra-conteudo" placeholder="Conteúdo da cifra" aria-label="Conteúdo da cifra"></textarea>
+      <div class="admin-editor-heading">
+        <div>
+          <label for="cifra-conteudo">Conteúdo da cifra</label>
+          <small>Os espaços, as linhas vazias e o alinhamento horizontal dos acordes serão preservados.</small>
+        </div>
+        <span class="admin-editor-state" data-editor-state="cifra-conteudo" role="status" aria-live="polite">Preparando editor…</span>
+      </div>
+      <textarea id="cifra-conteudo" placeholder="Digite ou cole a cifra mantendo os acordes alinhados" aria-label="Conteúdo da cifra"></textarea>
 
       <p id="admin-editor-cifra-status" class="admin-status" role="status" aria-live="polite"></p>
 

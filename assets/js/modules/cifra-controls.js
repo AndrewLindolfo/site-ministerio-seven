@@ -282,7 +282,7 @@ function ensureDesktopSpeedSlider() {
     slider.max = "1.20";
     slider.step = "0.01";
     slider.id = "scroll-speed-slider";
-    slider.className = "desktop-scroll-slider";
+    slider.className = "desktop-scroll-slider mobile-scroll-slider";
     slider.setAttribute("aria-label", "Velocidade da rolagem");
     const toggleBtn = $("#scroll-toggle");
     if (toggleBtn) bubble.insertBefore(slider, toggleBtn.nextSibling);
@@ -296,11 +296,8 @@ function ensureDesktopSpeedSlider() {
 }
 
 function updateSpeedIndicator() {
-  const desktopSlider = ensureDesktopSpeedSlider();
-  if (desktopSlider) desktopSlider.value = String(scrollSpeed);
-
-  const mobileSlider = $("#scroll-bubble .mobile-scroll-slider");
-  if (mobileSlider) mobileSlider.value = String(scrollSpeed);
+  const slider = ensureDesktopSpeedSlider();
+  if (slider) slider.value = String(scrollSpeed);
 }
 
 function updateScrollButton(isRunning) {
@@ -319,28 +316,8 @@ function initMobileScrollBar() {
   const isMobileOrTablet = window.innerWidth <= 1024;
   bubble.classList.toggle("is-mobile-scroll-bar", isMobileOrTablet);
 
-  let slider = bubble.querySelector(".mobile-scroll-slider");
-  if (!slider) {
-    slider = document.createElement("input");
-    slider.type = "range";
-    slider.min = "0.08";
-    slider.max = "1.20";
-    slider.step = "0.01";
-    slider.className = "mobile-scroll-slider";
-    slider.setAttribute("aria-label", "Velocidade da rolagem");
-    const toggleBtn = $("#scroll-toggle");
-    if (toggleBtn) bubble.insertBefore(slider, toggleBtn);
-    else bubble.appendChild(slider);
-
-    slider.addEventListener("input", () => {
-      scrollSpeed = Number(slider.value || "0.35");
-      storageSet(SPEED_KEY, scrollSpeed);
-      updateSpeedIndicator();
-    });
-  }
-
-  slider.value = String(scrollSpeed);
-  ensureDesktopSpeedSlider();
+  const slider = ensureDesktopSpeedSlider();
+  if (slider) slider.value = String(scrollSpeed);
 }
 
 function initResponsiveControlsAutoHide() {

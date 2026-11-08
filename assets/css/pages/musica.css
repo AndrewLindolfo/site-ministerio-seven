@@ -355,7 +355,7 @@
     left:50% !important;
     right:auto !important;
     top:auto !important;
-    bottom:max(10px, env(safe-area-inset-bottom)) !important;
+    bottom:calc(max(10px, env(safe-area-inset-bottom)) + 84px) !important;
     transform:translateX(-50%);
     width:min(92vw,520px);
     max-width:calc(100vw - 16px);
@@ -377,5 +377,12 @@
     height:28px;
     min-width:28px;
     min-height:28px;
+  }
+
+  .musica-scroll-bubble.is-hidden,
+  .musica-scroll-bubble[hidden]{
+    display:none !important;
+    visibility:hidden !important;
+    pointer-events:none !important;
   }
 }

@@ -653,7 +653,7 @@
     left: 50% !important;
     right: auto !important;
     top: auto !important;
-    bottom: max(10px, env(safe-area-inset-bottom)) !important;
+    bottom: calc(max(10px, env(safe-area-inset-bottom)) + 58px) !important;
     transform: translateX(-50%);
     width: min(92vw, 520px) !important;
     min-width: 0 !important;
@@ -667,6 +667,13 @@
     cursor: default !important;
     touch-action: auto !important;
     z-index: 80 !important;
+  }
+
+  .scroll-bubble.is-hidden,
+  .scroll-bubble[hidden]{
+    display:none !important;
+    visibility:hidden !important;
+    pointer-events:none !important;
   }
 
   .scroll-bubble.is-mobile-scroll-bar{

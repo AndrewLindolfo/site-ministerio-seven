@@ -9,14 +9,15 @@ import { initDownloadsSplitMenu } from "./modules/downloads-menu.js";
 import { initPublicAuth } from "./public-auth.js";
 import { initPersonalActions } from "./modules/personal-actions.js";
 import { SITE_CONFIG } from "./config.js";
+import { getPageName } from "./lib/page-route.js";
 
 const PERSONAL_ACTION_PAGES = new Set([
-  "cifra.html",
-  "cifras.html",
-  "favoritos.html",
-  "musica.html",
-  "musicas.html",
-  "playlists.html"
+  "cifra",
+  "cifras",
+  "favoritos",
+  "musica",
+  "musicas",
+  "playlists"
 ]);
 
 function injectAdminSiteShortcut() {
@@ -53,8 +54,7 @@ function injectHomeLinks() {
 }
 
 function isPersonalActionPage() {
-  const name = window.location.pathname.split("/").pop() || "index.html";
-  return PERSONAL_ACTION_PAGES.has(name.toLowerCase());
+  return PERSONAL_ACTION_PAGES.has(getPageName(window.location.pathname));
 }
 
 document.addEventListener("DOMContentLoaded", () => {

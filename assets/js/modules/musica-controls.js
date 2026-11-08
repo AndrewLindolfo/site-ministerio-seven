@@ -223,15 +223,19 @@ function setScrollPanelVisible(visible) {
   const toggleBtn = $("#musica-scroll-panel-toggle");
   if (!bubble) return;
 
-  bubble.hidden = !visible;
-  bubble.classList.toggle("is-hidden", !visible);
-  bubble.classList.toggle("is-open", visible);
-  bubble.setAttribute("aria-hidden", visible ? "false" : "true");
-  writeStorage(MUSIC_SCROLL_VISIBLE_KEY, visible ? "1" : "0");
+  const isVisible = Boolean(visible);
+  bubble.hidden = !isVisible;
+  bubble.classList.toggle("is-hidden", !isVisible);
+  bubble.classList.toggle("is-open", isVisible);
+  bubble.setAttribute("aria-hidden", isVisible ? "false" : "true");
+  writeStorage(MUSIC_SCROLL_VISIBLE_KEY, isVisible ? "1" : "0");
 
-  if (toggleBtn) toggleBtn.classList.toggle("is-active", visible);
-  if (visible) requestAnimationFrame(() => applyScrollPanelPos());
-  if (!visible) stopScroll();
+  if (toggleBtn) {
+    toggleBtn.classList.toggle("is-active", isVisible);
+    toggleBtn.setAttribute("aria-expanded", isVisible ? "true" : "false");
+  }
+  if (isVisible) requestAnimationFrame(() => applyScrollPanelPos());
+  if (!isVisible) stopScroll();
 }
 
 function toggleScrollPanel() {

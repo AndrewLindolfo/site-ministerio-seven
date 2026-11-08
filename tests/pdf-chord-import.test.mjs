@@ -18,10 +18,21 @@ test("normaliza texto reconhecido sem destruir linhas vazias", () => {
   assert.equal(cleanExtractedText("  Intro  \r\n\r\nG   D  \r\n\r\n\r\n\r\nVerso  "), "Intro\n\nG   D\n\n\nVerso");
 });
 
+test("remove sublinhados decorativos inseridos dentro de palavras", () => {
+  assert.equal(cleanExtractedText("Am__ém, amém\nF#m7"), "Amém, amém\nF#m7");
+});
+
 test("remove título e paginação do PDF, preservando metadados úteis", () => {
   const result = prepareChordImport("Grande é o Senhor\nTom: A • Capotraste: 2 • BPM: 72\nA      E/G#\nGrande é o Senhor\nMinistério Seven • 1/1", { title: "Grande é o Senhor" });
   assert.equal(result.originalKey, "A");
   assert.equal(result.capo, "2");
   assert.equal(result.bpm, "72");
   assert.equal(result.contentText, "A      E/G#\nGrande é o Senhor");
+});
+
+test("remove o título selecionado mesmo com diferença de acentuação", () => {
+  const result = prepareChordImport("A BENÇÃO\nTom: Bb • BPM: 150\nBb   Eb/G\nQue o Senhor te abençoe", { title: "A Bênção" });
+  assert.equal(result.originalKey, "Bb");
+  assert.equal(result.bpm, "150");
+  assert.equal(result.contentText, "Bb   Eb/G\nQue o Senhor te abençoe");
 });

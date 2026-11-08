@@ -44,19 +44,25 @@ function cleanExtractedText(value = "") {
   return String(value || "")
     .replace(/\u00a0/g, " ")
     .replace(/\r\n?/g, "\n")
+    .replace(/([\p{L}])_+(?=\p{L})/gu, "$1")
     .replace(/[ \t]+$/gm, "")
     .replace(/\n{4,}/g, "\n\n\n")
     .trim();
 }
 
-function escapeRegExp(value = "") {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function comparable(value = "") {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
 }
 
 export function prepareChordImport(contentText = "", { title = "", subtitle = "" } = {}) {
   const metadata = { originalKey: "", capo: "", bpm: "" };
-  const titlePattern = title ? new RegExp(`^${escapeRegExp(title.trim())}$`, "i") : null;
-  const subtitlePattern = subtitle ? new RegExp(`^${escapeRegExp(subtitle.trim())}$`, "i") : null;
+  const comparableTitle = comparable(title);
+  const comparableSubtitle = comparable(subtitle);
   const kept = [];
   cleanExtractedText(contentText).split("\n").forEach((line, index) => {
     const trimmed = line.trim();
@@ -67,7 +73,11 @@ export function prepareChordImport(contentText = "", { title = "", subtitle = ""
     if (capoMatch && !metadata.capo) metadata.capo = capoMatch[1].trim();
     if (bpmMatch && !metadata.bpm) metadata.bpm = bpmMatch[1];
     const isMetadata = keyMatch || capoMatch || bpmMatch;
-    const isSelectedTitle = index < 2 && (titlePattern?.test(trimmed) || subtitlePattern?.test(trimmed));
+    const comparableLine = comparable(trimmed);
+    const isSelectedTitle = index < 2 && (
+      (comparableTitle && comparableLine === comparableTitle)
+      || (comparableSubtitle && comparableLine === comparableSubtitle)
+    );
     const isGeneratedFooter = /^Minist[eé]rio Seven\s*[•|-]\s*\d+\s*\/\s*\d+$/i.test(trimmed);
     const isPageNumber = /^(?:p[aá]gina\s+)?\d+\s*(?:\/|de)\s*\d+$/i.test(trimmed);
     if (!isMetadata && !isSelectedTitle && !isGeneratedFooter && !isPageNumber) kept.push(line);

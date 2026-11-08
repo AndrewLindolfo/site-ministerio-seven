@@ -1,5 +1,17 @@
 {
   "projects": {
     "default": "ministerio-seven-site"
+  },
+  "targets": {
+    "ministerio-seven-site": {
+      "hosting": {
+        "public": [
+          "ministerio-seven-site"
+        ],
+        "admin": [
+          "ministerio-seven-admin"
+        ]
+      }
+    }
   }
 }

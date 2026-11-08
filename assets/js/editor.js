@@ -1,5 +1,6 @@
 const TINYMCE_BASE_URL = new URL("../vendor/tinymce/js/tinymce", import.meta.url).href;
 const TINYMCE_SRC = new URL("../vendor/tinymce/js/tinymce/tinymce.min.js", import.meta.url).href;
+const TINYMCE_ICONS_URL = new URL("../vendor/tinymce/js/tinymce/icons/default/icons.min.js", import.meta.url).href;
 
 function loadTinyMCE() {
   return new Promise((resolve, reject) => {
@@ -93,6 +94,7 @@ function getCommonTinyOptions() {
     suffix: ".min",
     skin: "oxide",
     icons: "default",
+    icons_url: TINYMCE_ICONS_URL,
     promotion: false,
     branding: false,
     browser_spellcheck: true,
@@ -155,7 +157,7 @@ async function initCifraEditor() {
     selector: "#cifra-conteudo",
     height: 340,
     menubar: true,
-    forced_root_block: false,
+    newline_behavior: "linebreak",
     paste_as_text: false,
     entity_encoding: "named",
     verify_html: false,

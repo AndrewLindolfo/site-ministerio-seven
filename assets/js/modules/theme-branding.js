@@ -1,7 +1,17 @@
-function getAssetPrefix() {
-  const path = window.location.pathname || "";
-  const isAdmin = /\/admin\//.test(path) || /\/admin-[^/]+\.html$/i.test(path);
+export function getAssetPrefix(pathname = window.location.pathname || "") {
+  const path = pathname;
+  const isAdmin = /(^|\/)admin(?:\/|$)/i.test(path) || /\/admin-[^/]+\.html$/i.test(path);
   return isAdmin ? "../assets" : "assets";
+}
+
+export function getThemeBrandingAssets(theme = "dark", assetPrefix = "assets") {
+  const isDark = theme === "dark";
+  return {
+    headerLogo: `${assetPrefix}/img/v7/${isDark ? "icon_dark.png" : "icon_light.png"}`,
+    footerLogo: `${assetPrefix}/img/logo/${isDark ? "logo_dark.png" : "logo_light.png"}`,
+    heroBanner: `${assetPrefix}/img/banner/${isDark ? "banner_dark.png" : "banner_light.png"}`,
+    favicon: `${assetPrefix}/img/favicon/${isDark ? "favicon-white-32.png" : "favicon_32.png"}`
+  };
 }
 
 function ensureFavicon() {
@@ -33,32 +43,27 @@ export function applyThemeBranding() {
   const theme = document.documentElement.getAttribute("data-theme") || "dark";
   const isDark = theme === "dark";
   const assets = getAssetPrefix();
+  const branding = getThemeBrandingAssets(theme, assets);
 
-  const headerLogo = document.getElementById("header-v7-logo");
+  const headerLogos = document.querySelectorAll("#header-v7-logo, .admin-v7");
   const footerLogo = document.getElementById("footer-logo");
   const heroBanner = document.getElementById("hero-banner");
   const favicon = ensureFavicon();
 
-  if (headerLogo) {
-    headerLogo.src = isDark
-      ? `${assets}/img/v7/icon_dark.png`
-      : `${assets}/img/v7/icon_light.png`;
-  }
+  headerLogos.forEach((headerLogo) => {
+    headerLogo.src = branding.headerLogo;
+  });
 
   if (footerLogo) {
-    footerLogo.src = isDark
-      ? `${assets}/img/logo/logo_dark.png`
-      : `${assets}/img/logo/logo_light.png`;
+    footerLogo.src = branding.footerLogo;
   }
 
   if (heroBanner) {
-    heroBanner.style.backgroundImage = isDark
-      ? `url("${assets}/img/banner/banner_dark.png")`
-      : `url("${assets}/img/banner/banner_light.png")`;
+    heroBanner.style.backgroundImage = `url("${branding.heroBanner}")`;
   }
 
   if (favicon) {
-    favicon.href = `${assets}/img/favicon/favicon-white-32.png`;
+    favicon.href = branding.favicon;
     favicon.type = "image/png";
   }
 

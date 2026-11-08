@@ -8,6 +8,7 @@ import { initNotificacoesPopup } from "./modules/notificacoes-popup.js";
 import { initDownloadsSplitMenu } from "./modules/downloads-menu.js";
 import { initPublicAuth } from "./public-auth.js";
 import { initPersonalActions } from "./modules/personal-actions.js";
+import { SITE_CONFIG } from "./config.js";
 
 const PERSONAL_ACTION_PAGES = new Set([
   "cifra.html",
@@ -27,7 +28,7 @@ function injectAdminSiteShortcut() {
   const link = document.createElement("a");
   link.id = "admin-view-site-link";
   link.className = "admin-view-site-link";
-  link.href = "../index.html";
+  link.href = SITE_CONFIG.publicSiteUrl;
   link.textContent = "Ver site";
 
   if (headerActions) {

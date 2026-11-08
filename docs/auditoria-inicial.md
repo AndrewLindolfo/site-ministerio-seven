@@ -51,7 +51,7 @@ A maior parte do projeto importa Firebase Web SDK `10.12.2`, enquanto `assets/js
 
 ### Configuração desatualizada
 
-`assets/js/config.js` ainda registra `ministerioseven.online`, embora o domínio oficial seja `ministerioseven.site`.
+`assets/js/config.js` registra o domínio oficial `ministerioseven.site` e o subdomínio administrativo `adm.ministerioseven.site`.
 
 ### Referências quebradas
 

@@ -1,6 +1,8 @@
 export const SITE_CONFIG = {
   siteName: "Ministério Seven",
-  domain: "ministerioseven.online",
+  domain: "ministerioseven.site",
+  publicSiteUrl: "https://ministerioseven.site/",
+  adminSiteUrl: "https://adm.ministerioseven.site/",
   instagramUrl: "https://www.instagram.com/ministeriosev7en/",
   instagramHandle: "@ministeriosev7en",
   contatoEmail: "ministeriosev7enlouvor@gmail.com",

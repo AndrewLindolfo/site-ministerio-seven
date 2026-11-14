@@ -1,4 +1,5 @@
 import { addDocument, updateDocument, deleteDocument, getCollection, getDocument, serverTimestamp } from "../db.js";
+import { isProgramacaoVisibleAt, parseHideAfterMinutes, toProgramacaoStart } from "../modules/programacao-schedule.js";
 
 const COLLECTION = "programacoes";
 const MAX_SONGS = 100;
@@ -32,51 +33,10 @@ function normalizeSong(song = {}) {
   };
 }
 
-function toLocalDateTime(dateStr = "", timeStr = "") {
-  if (!dateStr) return null;
-
-  const date = normalizeDate(dateStr);
-  const time = normalizeTime(timeStr || "00:00");
-  if (!date || !time) return null;
-
-  const parts = date.split("-");
-  const year = Number(parts[0]);
-  const month = Number(parts[1]) - 1;
-  const day = Number(parts[2]);
-
-  const timeParts = time.split(":");
-  const hours = Number(timeParts[0] || 0);
-  const minutes = Number(timeParts[1] || 0);
-
-  return new Date(year, month, day, hours, minutes, 0, 0);
-}
-
-function getHideAfterDate(item) {
-  const value = String(item?.hideAfter || "").trim();
-  if (!value) return null;
-
-  if (/^\d{2}:\d{2}$/.test(value)) {
-    return toLocalDateTime(item?.date, value);
-  }
-
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
-function isProgramacaoVisible(item) {
-  const now = Date.now();
-  const hideAfter = getHideAfterDate(item);
-  if (hideAfter) return hideAfter.getTime() >= now;
-
-  const dt = toLocalDateTime(item?.date, item?.time);
-  if (!dt) return false;
-  return dt.getTime() >= now;
-}
-
 function sortByDateTimeAsc(list = []) {
   return [...list].sort((a, b) => {
-    const ad = toLocalDateTime(a.date, a.time);
-    const bd = toLocalDateTime(b.date, b.time);
+    const ad = toProgramacaoStart(a.date, a.time);
+    const bd = toProgramacaoStart(b.date, b.time);
 
     if (!ad && !bd) return 0;
     if (!ad) return 1;
@@ -96,7 +56,7 @@ export async function listProgramacoes(activeOnly = false) {
 
 export async function listUpcomingProgramacoes() {
   const all = await listProgramacoes(true);
-  const visible = all.filter((item) => isProgramacaoVisible(item));
+  const visible = all.filter((item) => isProgramacaoVisibleAt(item));
   return sortByDateTimeAsc(visible);
 }
 
@@ -110,8 +70,8 @@ export async function saveProgramacao(payload, id = "") {
   const time = normalizeTime(payload.time);
   if (!title || !date || !time) throw new Error("Informe título, data e horário válidos.");
   const hideAfterRaw = normalizeString(payload.hideAfter, 40);
-  if (hideAfterRaw && !normalizeTime(hideAfterRaw) && Number.isNaN(new Date(hideAfterRaw).getTime())) {
-    throw new Error("Horário de ocultação inválido.");
+  if (hideAfterRaw && parseHideAfterMinutes(hideAfterRaw) === null && Number.isNaN(new Date(hideAfterRaw).getTime())) {
+    throw new Error("Duração de ocultação inválida.");
   }
   const hideAfter = hideAfterRaw;
   const docData = {

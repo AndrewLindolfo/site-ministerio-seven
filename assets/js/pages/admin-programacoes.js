@@ -1,6 +1,7 @@
 import { watchAuth, getAdminProfileForUser } from "../auth.js";
 import { hasPermission } from "../services/admin-permissions-service.js";
 import { listProgramacoes, getProgramacao, saveProgramacao, removeProgramacao } from "../services/programacoes-service.js";
+import { formatHideAfterDuration, serializeHideAfterDuration, splitHideAfterDuration } from "../modules/programacao-schedule.js";
 import { listMusicas } from "../services/musicas-service.js";
 import { listCifras } from "../services/cifras-service.js";
 import { recordAdminActivity } from "../services/admin-activity-service.js";
@@ -162,19 +163,10 @@ function renderAvailableSongs(term = "") {
 }
 
 
-function toTimeValue(value) {
-  if (!value) return "";
-  if (/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(value))) return String(value);
-  const d = coerceDate(value);
-  if (!(d instanceof Date) || Number.isNaN(d.getTime())) return "";
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mi = String(d.getMinutes()).padStart(2, "0");
-  return `${hh}:${mi}`;
-}
-
 function fmtHideAfter(value) {
   if (!value) return "";
-  if (/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(value))) return String(value);
+  const duration = formatHideAfterDuration(value);
+  if (duration) return duration;
   const d = coerceDate(value);
   if (!(d instanceof Date) || Number.isNaN(d.getTime())) return String(value);
   return new Intl.DateTimeFormat("pt-BR", {
@@ -226,13 +218,17 @@ function ensureModal() {
           <textarea id="programacao-description" rows="3" placeholder="Observações da programação" maxlength="2000"></textarea>
         </label>
 
-        <div class="programacao-grid">
+        <div class="programacao-grid" aria-describedby="programacao-hide-after-help">
           <label>
-            <span>Ocultar após</span>
-            <input type="time" id="programacao-hide-after" />
-            <small class="field-help">Deixe em branco para ocultar automaticamente quando a data/hora da programação passar.</small>
+            <span>Ocultar após — horas</span>
+            <input type="number" id="programacao-hide-after-hours" min="0" max="720" step="1" inputmode="numeric" placeholder="0" />
+          </label>
+          <label>
+            <span>Minutos</span>
+            <input type="number" id="programacao-hide-after-minutes" min="0" max="59" step="1" inputmode="numeric" placeholder="0" />
           </label>
         </div>
+        <small class="field-help" id="programacao-hide-after-help">Duração contada a partir do início. Ex.: começa às 10:00 e oculta após 2 horas = sai da Home às 12:00. Deixe em branco ou 0 para ocultar quando começar.</small>
 
         <div class="programacao-song-picker">
           <div class="programacao-song-picker-header">
@@ -290,7 +286,9 @@ function openModal(data = null) {
   $("#programacao-time").value = data?.time || "";
   $("#programacao-location").value = data?.location || "";
   $("#programacao-description").value = data?.description || "";
-  $("#programacao-hide-after").value = toTimeValue(data?.hideAfter || "");
+  const hideAfterDuration = splitHideAfterDuration(data?.hideAfter || "");
+  $("#programacao-hide-after-hours").value = hideAfterDuration ? String(hideAfterDuration.hours) : "";
+  $("#programacao-hide-after-minutes").value = hideAfterDuration ? String(hideAfterDuration.minutes) : "";
   $("#programacao-modal-title").textContent = data?.id ? "Editar programação" : "Nova programação";
   $("#programacao-song-search").value = "";
 
@@ -335,7 +333,10 @@ async function onSubmitForm(event) {
     time: $("#programacao-time").value,
     location: $("#programacao-location").value.trim(),
     description: $("#programacao-description").value.trim(),
-    hideAfter: $("#programacao-hide-after").value,
+    hideAfter: serializeHideAfterDuration(
+      $("#programacao-hide-after-hours").value,
+      $("#programacao-hide-after-minutes").value
+    ),
     songs: selectedSongs,
     active: id ? currentEditing?.active !== false : true
   };

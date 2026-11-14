@@ -63,7 +63,7 @@ test("cadastra uma música ausente e vincula a cifra extraída do PDF real", { s
     assert.match(imported.contentText, /^\[Intro\] Gm7\s+Eb7M\s+Bb\s+F4\s+F/m);
     assert.match(imported.contentText, /^Bb\s+Eb\/G\n\s{3}Que o Senhor te\s+abençoe$/m);
     assert.match(imported.contentText, /E te dê a paz\s+\(2x\)\n\n\[Refrão\]/);
-    assert.match(imported.contentText, /Amém, amém/);
+  assert.match(imported.contentText, /Am__ém, amém/);
     assert.doesNotMatch(imported.contentText, /^A BENÇÃO$/m);
   }
 

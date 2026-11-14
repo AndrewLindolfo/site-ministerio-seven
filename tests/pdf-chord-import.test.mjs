@@ -41,8 +41,8 @@ test("preserva o recuo do primeiro acorde de uma nova página", () => {
   assert.equal(cleanExtractedText("      F  \nE os filhos dos teus filhos\n", { preserveFirstLineIndent: true }), "      F\nE os filhos dos teus filhos");
 });
 
-test("remove sublinhados decorativos inseridos dentro de palavras", () => {
-  assert.equal(cleanExtractedText("Am__ém, amém\nF#m7"), "Amém, amém\nF#m7");
+test("preserva underscores musicais exatamente como aparecem no PDF", () => {
+  assert.equal(cleanExtractedText("Am__ém, amém\nF#m7"), "Am__ém, amém\nF#m7");
 });
 
 test("remove título e paginação do PDF, preservando metadados úteis", () => {

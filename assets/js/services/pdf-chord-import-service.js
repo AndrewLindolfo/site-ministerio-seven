@@ -125,7 +125,6 @@ function cleanExtractedText(value = "", { preserveFirstLineIndent = false } = {}
   const normalized = String(value || "")
     .replace(/\u00a0/g, " ")
     .replace(/\r\n?/g, "\n")
-    .replace(/([\p{L}])_+(?=\p{L})/gu, "$1")
     .replace(/[ \t]+$/gm, "")
     .replace(/\n{4,}/g, "\n\n\n");
   return preserveFirstLineIndent

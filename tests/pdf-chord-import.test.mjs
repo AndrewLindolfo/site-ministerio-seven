@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { cleanExtractedText, joinTextItems, prepareChordImport } from "../assets/js/services/pdf-chord-import-service.js";
+import { analyzeChordContent, cleanExtractedText, joinTextItems, prepareChordImport } from "../assets/js/services/pdf-chord-import-service.js";
 
 test("reconstrói linhas e espaços horizontais extraídos do PDF", () => {
   const text = joinTextItems([
@@ -28,6 +28,15 @@ test("remove título e paginação do PDF, preservando metadados úteis", () => 
   assert.equal(result.capo, "2");
   assert.equal(result.bpm, "72");
   assert.equal(result.contentText, "A      E/G#\nGrande é o Senhor");
+});
+
+test("distingue uma cifra de um documento comum com texto", () => {
+  const chord = analyzeChordContent("[Intro] Gm7  Eb7M  Bb  F4\nBb/F  F  F#º  Gm7\nQue o Senhor te abençoe");
+  const document = analyzeChordContent("CERTIFICADO DE CAPELÃO\nDeclaramos para os devidos fins que esta pessoa concluiu o curso.");
+
+  assert.equal(chord.isLikelyChordSheet, true);
+  assert.ok(chord.chordTokens >= 2);
+  assert.equal(document.isLikelyChordSheet, false);
 });
 
 test("remove o título selecionado mesmo com diferença de acentuação", () => {

@@ -1,4 +1,42 @@
 const PDF_MAX_PAGES = 24;
+const CHORD_TOKEN_REGEX = /^[A-G](?:#|b)?(?:(?:maj|min|m|sus|dim|aug|add|mmaj)?(?:2|4|5|6|7|7M|9|11|13)?(?:sus2|sus4|add2|add4|add9|maj7|maj9|maj11|maj13|m7|m9|m11|m13|dim7|aug7|7M|º|°|\+)?(?:\([^)]+\))?)?(?:\/[A-G](?:#|b)?)?$/i;
+
+function cleanChordToken(value = "") {
+  return String(value || "")
+    .trim()
+    .replace(/^[\[\({|'"`]+/, "")
+    .replace(/[\]\)}|'"`.,;:!?]+$/, "");
+}
+
+function isChordToken(value = "") {
+  return CHORD_TOKEN_REGEX.test(cleanChordToken(value));
+}
+
+export function analyzeChordContent(value = "") {
+  const lines = cleanExtractedText(value).split("\n").map((line) => line.trim()).filter(Boolean);
+  let chordLines = 0;
+  let chordTokens = 0;
+  let bracketedChords = 0;
+
+  lines.forEach((line) => {
+    const withoutSection = line.replace(/^\[[^\]]{1,50}\]\s*/, "");
+    const tokens = withoutSection.split(/\s+/).map(cleanChordToken).filter(Boolean);
+    if (tokens.length && tokens.every(isChordToken)) {
+      chordLines += 1;
+      chordTokens += tokens.length;
+    }
+    bracketedChords += [...line.matchAll(/\[([^\]\r\n]+)\]/g)]
+      .filter((match) => isChordToken(match[1])).length;
+  });
+
+  return {
+    lineCount: lines.length,
+    chordLines,
+    chordTokens,
+    bracketedChords,
+    isLikelyChordSheet: chordTokens >= 2 || bracketedChords >= 2
+  };
+}
 
 function joinTextItems(items = []) {
   const lines = [];
@@ -167,6 +205,9 @@ export async function importChordPdfLocally(file, { onProgress } = {}) {
 
   const contentText = cleanExtractedText(pages.filter(Boolean).join("\n\n"));
   if (!contentText) throw new Error("Nenhum texto ou cifra reconhecível foi encontrado no PDF.");
+  if (!analyzeChordContent(contentText).isLikelyChordSheet) {
+    throw new Error("O PDF contém texto, mas não parece ser uma cifra. Escolha um documento com acordes ou continue manualmente.");
+  }
   onProgress?.("PDF processado. Revise o resultado.");
   const ocrConfidence = ocrConfidences.length
     ? Math.round(ocrConfidences.reduce((total, value) => total + value, 0) / ocrConfidences.length)

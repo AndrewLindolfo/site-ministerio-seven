@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import * as pdfjs from "../assets/vendor/pdfjs/pdf.min.mjs";
-import { joinTextItems, prepareChordImport } from "../assets/js/services/pdf-chord-import-service.js";
+import { analyzeChordContent, joinTextItems, prepareChordImport } from "../assets/js/services/pdf-chord-import-service.js";
 
 const library = process.env.SEVEN_PDF_LIBRARY || "";
 if (!library) throw new Error("Defina SEVEN_PDF_LIBRARY com a pasta que contém os PDFs.");
@@ -33,11 +33,15 @@ async function inspectPdf(filePath) {
     }
     const title = path.basename(filePath, path.extname(filePath)).replace(/^\d+[.)]\s*/, "").trim();
     const prepared = prepareChordImport(pages.join("\n\n"), { title });
+    const musical = analyzeChordContent(prepared.contentText);
     return {
       file: path.relative(library, filePath),
       pages: pdf.numPages,
       pagesNeedingOcr,
       contentLength: prepared.contentText.length,
+      chordLines: musical.chordLines,
+      chordTokens: musical.chordTokens,
+      likelyChordSheet: musical.isLikelyChordSheet,
       key: prepared.originalKey,
       bpm: prepared.bpm
     };
@@ -59,16 +63,19 @@ for (const [index, filePath] of files.entries()) {
 }
 
 const ocrCandidates = results.filter((item) => item.pagesNeedingOcr > 0 || item.contentLength < 40);
+const nonChordCandidates = results.filter((item) => !item.likelyChordSheet);
 const summary = {
   total: files.length,
   readable: results.length,
   directText: results.filter((item) => item.pagesNeedingOcr === 0 && item.contentLength >= 40).length,
   ocrCandidates: ocrCandidates.length,
+  likelyChordSheets: results.filter((item) => item.likelyChordSheet).length,
+  nonChordCandidates: nonChordCandidates.length,
   failures: failures.length,
   totalPages: results.reduce((total, item) => total + item.pages, 0),
   keysDetected: results.filter((item) => item.key).length,
   bpmDetected: results.filter((item) => item.bpm).length
 };
 
-console.log(JSON.stringify({ summary, ocrCandidates, failures }, null, 2));
+console.log(JSON.stringify({ summary, ocrCandidates, nonChordCandidates, failures }, null, 2));
 if (failures.length) process.exitCode = 1;

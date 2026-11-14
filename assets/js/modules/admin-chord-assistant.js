@@ -1,6 +1,6 @@
 import { getChordResult, processChordPdf, searchChords } from "../services/content-research-service.js";
 import { getCifraEditorPlainText, setCifraEditorPlainText } from "../editor.js";
-import { prepareChordImport } from "../services/pdf-chord-import-service.js";
+import { inferCompassoFromBpm, prepareChordImport } from "../services/pdf-chord-import-service.js";
 
 const state = { results: [], selected: null, importedFile: null, pdfUrl: "" };
 
@@ -156,6 +156,10 @@ function applyDraft(dialog) {
   if (capoField && !capoField.disabled && state.selected?.capo && !capoField.value.trim()) capoField.value = state.selected.capo;
   const bpmField = document.getElementById("cifra-bpm");
   if (bpmField && !bpmField.disabled && state.selected?.bpm && !bpmField.value.trim()) bpmField.value = state.selected.bpm;
+  const compassoField = document.getElementById("cifra-compasso");
+  if (compassoField && !compassoField.disabled && !compassoField.value.trim()) {
+    compassoField.value = inferCompassoFromBpm(state.selected?.bpm, state.selected?.compasso);
+  }
   dialog.close();
   const status = document.getElementById("admin-editor-cifra-status");
   if (status) status.textContent = "Cifra aplicada ao editor. Revise o alinhamento e salve somente quando estiver correta.";

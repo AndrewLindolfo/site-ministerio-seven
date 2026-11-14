@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { analyzeChordContent, cleanExtractedText, joinTextItems, prepareChordImport } from "../assets/js/services/pdf-chord-import-service.js";
+import { analyzeChordContent, cleanExtractedText, inferCompassoFromBpm, joinTextItems, prepareChordImport } from "../assets/js/services/pdf-chord-import-service.js";
 
 test("reconstrói linhas e espaços horizontais extraídos do PDF", () => {
   const text = joinTextItems([
@@ -72,4 +72,17 @@ test("remove o título selecionado mesmo com diferença de acentuação", () => 
 test("remove o título do documento quando o nome do arquivo também inclui o artista", () => {
   const result = prepareChordImport("A BENÇÃO\nTom: Bb\nBb   Eb/G\nQue o Senhor te abençoe", { title: "A BENÇÃO Gabriel Guedes" });
   assert.equal(result.contentText, "Bb   Eb/G\nQue o Senhor te abençoe");
+});
+
+test("assume 4/4 somente quando o PDF informa BPM sem compasso", () => {
+  assert.equal(inferCompassoFromBpm("150", ""), "4/4");
+  assert.equal(inferCompassoFromBpm("150", "6/8"), "6/8");
+  assert.equal(inferCompassoFromBpm("", ""), "");
+});
+
+test("extrai o compasso quando ele existe nos metadados do PDF", () => {
+  const result = prepareChordImport("Tom: Bb • BPM: 150 • Compasso: 6/8\nBb   Eb/G", { title: "A Bênção" });
+  assert.equal(result.bpm, "150");
+  assert.equal(result.compasso, "6/8");
+  assert.equal(result.contentText, "Bb   Eb/G");
 });

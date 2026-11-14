@@ -170,8 +170,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const canBpm = hasPermission(currentAdmin, "cifras", "bpm");
       const canCompasso = hasPermission(currentAdmin, "cifras", "compasso");
       const bpm = canBpm ? document.getElementById("cifra-bpm").value.trim() : (currentCifra?.bpm || "");
-      const compasso = canCompasso ? document.getElementById("cifra-compasso").value.trim() : (currentCifra?.compasso || "");
-      if ((bpm && !compasso) || (!bpm && compasso)) throw new Error("BPM e compasso devem ser preenchidos juntos.");
+      let compasso = canCompasso ? document.getElementById("cifra-compasso").value.trim() : (currentCifra?.compasso || "");
+      if (bpm && !compasso) compasso = "4/4";
+      if (!bpm && compasso) throw new Error("Informe o BPM para usar o compasso.");
       const payload = {
         musicaId: selectedMusicaId,
         title: music.title,

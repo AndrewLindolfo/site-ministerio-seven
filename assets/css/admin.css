@@ -136,7 +136,7 @@
 .chord-file-picker.is-dragging{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
 .chord-compare{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}.chord-compare>section{display:grid;grid-template-rows:auto 1fr;gap:8px;min-width:0}
 .chord-compare iframe,.chord-preview-view textarea{width:100%;height:min(52vh,560px);min-height:360px;border:1px solid var(--border);border-radius:12px;background:#fff}
-.chord-preview-view textarea{padding:16px;resize:vertical;tab-size:4;white-space:pre;overflow:auto;color:var(--text);background:var(--surface);font:500 .95rem/1.55 "Courier New",monospace}
+.chord-preview-view textarea{padding:16px;resize:vertical;tab-size:4;white-space:pre;overflow:auto;color:var(--text);background:var(--surface);font:400 16px/1.35 "Courier New",Courier,monospace;letter-spacing:0;font-variant-ligatures:none}
 .chord-preview-tabs{display:none}
 .chord-preview-view.without-original .chord-compare{grid-template-columns:1fr}.chord-preview-view.without-original [data-preview-pane="original"],.chord-preview-view.without-original .chord-preview-tabs{display:none}
 [data-chord-status]{margin:0;min-height:1.2em;color:var(--text-soft)}[data-chord-status].error{color:#ff6b6b}

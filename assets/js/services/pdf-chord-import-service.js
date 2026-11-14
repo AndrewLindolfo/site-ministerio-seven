@@ -142,8 +142,14 @@ function comparable(value = "") {
     .toLowerCase();
 }
 
+export function inferCompassoFromBpm(bpm = "", compasso = "") {
+  const informedCompasso = String(compasso || "").trim();
+  if (informedCompasso) return informedCompasso;
+  return String(bpm || "").trim() ? "4/4" : "";
+}
+
 export function prepareChordImport(contentText = "", { title = "", subtitle = "" } = {}) {
-  const metadata = { originalKey: "", capo: "", bpm: "" };
+  const metadata = { originalKey: "", capo: "", bpm: "", compasso: "" };
   const comparableTitle = comparable(title);
   const comparableSubtitle = comparable(subtitle);
   const kept = [];
@@ -152,10 +158,12 @@ export function prepareChordImport(contentText = "", { title = "", subtitle = ""
     const keyMatch = trimmed.match(/(?:^|[•|])\s*(?:tom(?:\s+original)?|original)\s*:\s*([A-G](?:#|b)?m?)(?=\s|$|[•|])/i);
     const capoMatch = trimmed.match(/capo(?:traste)?\s*:\s*([^•|]+)/i);
     const bpmMatch = trimmed.match(/bpm\s*:\s*(\d{2,3})/i);
+    const compassoMatch = trimmed.match(/compasso\s*:\s*(\d+\s*\/\s*\d+)/i);
     if (keyMatch && !metadata.originalKey) metadata.originalKey = keyMatch[1];
     if (capoMatch && !metadata.capo) metadata.capo = capoMatch[1].trim();
     if (bpmMatch && !metadata.bpm) metadata.bpm = bpmMatch[1];
-    const isMetadata = keyMatch || capoMatch || bpmMatch;
+    if (compassoMatch && !metadata.compasso) metadata.compasso = compassoMatch[1].replace(/\s+/g, "");
+    const isMetadata = keyMatch || capoMatch || bpmMatch || compassoMatch;
     const comparableLine = comparable(trimmed);
     const isSelectedTitle = index < 2 && (
       (comparableTitle && comparableLine === comparableTitle)

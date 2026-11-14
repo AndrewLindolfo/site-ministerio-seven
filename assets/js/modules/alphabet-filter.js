@@ -13,7 +13,7 @@ export function normalizeSearchText(value = "") {
 
 export function normalizeInternalHref(value = "") {
   try {
-    const url = new URL(String(value || ""), window.location.origin);
+    const url = new URL(String(value || ""), window.location.href);
     if (url.origin !== window.location.origin) return "#";
     return `${url.pathname}${url.search}${url.hash}`;
   } catch {

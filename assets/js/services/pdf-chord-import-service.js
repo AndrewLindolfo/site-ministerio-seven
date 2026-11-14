@@ -60,32 +60,77 @@ function joinTextItems(items = []) {
     line.items.push(item);
   });
 
-  return lines
-    .sort((a, b) => b.y - a.y)
-    .map((line) => {
-      const row = line.items.sort((a, b) => a.x - b.x);
-      let output = "";
-      let right = 0;
-      row.forEach((item, index) => {
-        const charWidth = item.width / Math.max(item.text.length, 1);
-        const gap = index ? item.x - right : 0;
-        if (index && gap > charWidth * .45) output += " ".repeat(Math.min(40, Math.max(1, Math.round(gap / Math.max(charWidth, 3)))));
-        output += item.text;
-        right = item.x + item.width;
-      });
-      return output.replace(/\s+$/, "");
-    })
-    .join("\n");
+  const orderedLines = lines.sort((a, b) => b.y - a.y);
+  if (!orderedLines.length) return "";
+
+  const median = (values = []) => {
+    const ordered = values.filter(Number.isFinite).sort((a, b) => a - b);
+    if (!ordered.length) return 0;
+    const middle = Math.floor(ordered.length / 2);
+    return ordered.length % 2 ? ordered[middle] : (ordered[middle - 1] + ordered[middle]) / 2;
+  };
+
+  // Chord sheets are normally laid out on a character grid. A single page-wide
+  // grid is essential: rebuilding every line from column zero moves chords away
+  // from the syllables they belong to.
+  const allItems = orderedLines.flatMap((line) => line.items);
+  const originX = Math.min(...allItems.map((item) => item.x));
+  const characterWidths = allItems
+    .filter((item) => item.text.trim())
+    .map((item) => item.width / Math.max([...item.text].length, 1))
+    .filter((width) => width > 1 && width < 30);
+  const gridWidth = Math.max(3, median(characterWidths) || 7);
+
+  const verticalGaps = orderedLines
+    .slice(0, -1)
+    .map((line, index) => line.y - orderedLines[index + 1].y)
+    .filter((gap) => gap > 1);
+  const lowerGaps = verticalGaps
+    .slice()
+    .sort((a, b) => a - b)
+    .slice(0, Math.max(1, Math.ceil(verticalGaps.length * .5)));
+  const regularLineStep = Math.max(6, median(lowerGaps) || median(orderedLines.map((line) => line.height)) || 12);
+
+  const output = [];
+  orderedLines.forEach((line, lineIndex) => {
+    const row = line.items.sort((a, b) => a.x - b.x);
+    let rendered = "";
+    let right = originX;
+
+    row.forEach((item, itemIndex) => {
+      const targetColumn = Math.max(0, Math.round((item.x - originX) / gridWidth));
+      const geometricGap = item.x - right;
+      const minimumGap = itemIndex && geometricGap > gridWidth * .35 ? 1 : 0;
+      const spaces = Math.max(minimumGap, targetColumn - [...rendered].length);
+      if (spaces > 0) rendered += " ".repeat(Math.min(120, spaces));
+      rendered += item.text;
+      right = Math.max(right, item.x + item.width);
+    });
+
+    output.push(rendered.replace(/\s+$/, ""));
+
+    const nextLine = orderedLines[lineIndex + 1];
+    if (!nextLine) return;
+    const verticalGap = line.y - nextLine.y;
+    if (verticalGap > regularLineStep * 1.55) {
+      const blankLines = Math.min(2, Math.max(1, Math.round(verticalGap / regularLineStep) - 1));
+      output.push(...Array(blankLines).fill(""));
+    }
+  });
+
+  return output.join("\n");
 }
 
-function cleanExtractedText(value = "") {
-  return String(value || "")
+function cleanExtractedText(value = "", { preserveFirstLineIndent = false } = {}) {
+  const normalized = String(value || "")
     .replace(/\u00a0/g, " ")
     .replace(/\r\n?/g, "\n")
     .replace(/([\p{L}])_+(?=\p{L})/gu, "$1")
     .replace(/[ \t]+$/gm, "")
-    .replace(/\n{4,}/g, "\n\n\n")
-    .trim();
+    .replace(/\n{4,}/g, "\n\n\n");
+  return preserveFirstLineIndent
+    ? normalized.replace(/^\n+|\n+$/g, "")
+    : normalized.trim();
 }
 
 function comparable(value = "") {
@@ -114,6 +159,8 @@ export function prepareChordImport(contentText = "", { title = "", subtitle = ""
     const comparableLine = comparable(trimmed);
     const isSelectedTitle = index < 2 && (
       (comparableTitle && comparableLine === comparableTitle)
+      || (comparableTitle && comparableLine && comparableTitle.startsWith(`${comparableLine} `))
+      || (comparableTitle && comparableLine && comparableLine.startsWith(`${comparableTitle} `))
       || (comparableSubtitle && comparableLine === comparableSubtitle)
     );
     const isGeneratedFooter = /^Minist[eé]rio Seven\s*[•|-]\s*\d+\s*\/\s*\d+$/i.test(trimmed);
@@ -187,7 +234,7 @@ export async function importChordPdfLocally(file, { onProgress } = {}) {
       onProgress?.(`Lendo página ${pageNumber} de ${pdf.numPages}…`);
       const page = await pdf.getPage(pageNumber);
       const content = await page.getTextContent({ includeMarkedContent: false });
-      let pageText = cleanExtractedText(joinTextItems(content.items));
+      let pageText = cleanExtractedText(joinTextItems(content.items), { preserveFirstLineIndent: true });
       if (pageText.replace(/\s/g, "").length < 20) {
         worker ||= await createOcrWorker(onProgress);
         const recognized = await recognizePage(page, worker, onProgress, pageNumber, pdf.numPages);

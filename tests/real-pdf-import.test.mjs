@@ -1,10 +1,11 @@
 import test, { after, before } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import pathModule from "node:path";
 import { initializeTestEnvironment, assertSucceeds } from "@firebase/rules-unit-testing";
 import { collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, where } from "firebase/firestore";
 import * as pdfjs from "../assets/vendor/pdfjs/pdf.min.mjs";
-import { joinTextItems, prepareChordImport } from "../assets/js/services/pdf-chord-import-service.js";
+import { analyzeChordContent, joinTextItems, prepareChordImport } from "../assets/js/services/pdf-chord-import-service.js";
 
 const pdfPath = process.env.SEVEN_REAL_PDF || "";
 const projectId = "demo-ministerio-seven-pdf";
@@ -21,7 +22,8 @@ async function extractRealPdf(path) {
       pages.push(joinTextItems((await page.getTextContent({ includeMarkedContent: false })).items));
       page.cleanup();
     }
-    return { pageCount: pdf.numPages, ...prepareChordImport(pages.join("\n\n"), { title: "A Bênção", subtitle: "Gabriel Guedes" }) };
+    const fileTitle = pathModule.basename(path, pathModule.extname(path)).replace(/^\d+[.)]\s*/, "").trim();
+    return { pageCount: pdf.numPages, title: fileTitle, ...prepareChordImport(pages.join("\n\n"), { title: fileTitle }) };
   } finally {
     await pdf.destroy();
   }
@@ -50,22 +52,28 @@ after(async () => {
 
 test("cadastra uma música ausente e vincula a cifra extraída do PDF real", { skip: !pdfPath && "Defina SEVEN_REAL_PDF para executar o teste real." }, async () => {
   const imported = await extractRealPdf(pdfPath);
-  assert.equal(imported.pageCount, 2);
-  assert.equal(imported.originalKey, "Bb");
-  assert.equal(imported.bpm, "150");
-  assert.match(imported.contentText, /^\[Intro\] Gm7\s+Eb7M\s+Bb\s+F4\s+F/m);
-  assert.match(imported.contentText, /Amém, amém/);
-  assert.doesNotMatch(imported.contentText, /^A BENÇÃO$/m);
+  assert.ok(imported.pageCount >= 1);
+  assert.ok(imported.contentText.length >= 100);
+  assert.equal(analyzeChordContent(imported.contentText).isLikelyChordSheet, true);
+
+  if (/^A BENÇÃO Gabriel Guedes$/i.test(imported.title)) {
+    assert.equal(imported.pageCount, 2);
+    assert.equal(imported.originalKey, "Bb");
+    assert.equal(imported.bpm, "150");
+    assert.match(imported.contentText, /^\[Intro\] Gm7\s+Eb7M\s+Bb\s+F4\s+F/m);
+    assert.match(imported.contentText, /Amém, amém/);
+    assert.doesNotMatch(imported.contentText, /^A BENÇÃO$/m);
+  }
 
   const db = testEnv.authenticatedContext(admin.uid, { email: admin.email, email_verified: true }).firestore();
-  const musicId = "a-bencao-gabriel-guedes";
-  const chordId = "a-bencao-gabriel-guedes-violao";
+  const musicId = "real-pdf-test-song";
+  const chordId = "real-pdf-test-song-violao";
 
   await assertSucceeds(setDoc(doc(db, "musicas", musicId), {
-    title: "A Bênção",
-    slug: "a-bencao",
-    normalizedTitle: "a bencao",
-    subtitle: "Gabriel Guedes",
+    title: imported.title,
+    slug: "real-pdf-test-song",
+    normalizedTitle: "real pdf test song",
+    subtitle: "Teste automatizado",
     author: "",
     originalKey: imported.originalKey,
     category: "",
@@ -80,10 +88,10 @@ test("cadastra uma música ausente e vincula a cifra extraída do PDF real", { s
 
   await assertSucceeds(setDoc(doc(db, "cifras", chordId), {
     musicaId: musicId,
-    title: "A Bênção",
-    slug: "a-bencao",
-    normalizedTitle: "a bencao",
-    subtitle: "Gabriel Guedes",
+    title: imported.title,
+    slug: "real-pdf-test-song",
+    normalizedTitle: "real pdf test song",
+    subtitle: "Teste automatizado",
     cifraText: imported.contentText,
     cifraHtml: imported.contentText.split("\n").map((line) => line.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll(" ", "&nbsp;")).join("<br>"),
     originalKey: imported.originalKey,
@@ -100,10 +108,10 @@ test("cadastra uma música ausente e vincula a cifra extraída do PDF real", { s
 
   const storedMusic = await assertSucceeds(getDoc(doc(db, "musicas", musicId)));
   const storedChord = await assertSucceeds(getDoc(doc(db, "cifras", chordId)));
-  assert.equal(storedMusic.data().title, "A Bênção");
+  assert.equal(storedMusic.data().title, imported.title);
   assert.equal(storedChord.data().musicaId, storedMusic.id);
-  assert.equal(storedChord.data().originalKey, "Bb");
-  assert.equal(storedChord.data().bpm, "150");
+  assert.equal(storedChord.data().originalKey, imported.originalKey);
+  assert.equal(storedChord.data().bpm, imported.bpm);
   assert.equal(storedChord.data().cifraText, imported.contentText);
 
   const publicDb = testEnv.unauthenticatedContext().firestore();

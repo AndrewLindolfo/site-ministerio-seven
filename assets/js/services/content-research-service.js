@@ -14,7 +14,7 @@ async function request(path, options = {}) {
   if (provider?.request) return provider.request(path, options);
   const baseUrl = String(SITE_CONFIG.integrationApiUrl || "").replace(/\/$/, "");
   if (!baseUrl) {
-    throw new Error("A integração de pesquisa ainda não foi conectada ao ambiente de testes.");
+    throw new Error("A integração de pesquisa ainda não foi ativada neste ambiente.");
   }
   const token = await auth.currentUser?.getIdToken?.();
   if (!token) throw new Error("Entre novamente como administrador para realizar a pesquisa.");

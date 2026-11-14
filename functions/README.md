@@ -1,9 +1,9 @@
-# Integrações do ambiente de teste
+# Integrações protegidas do Ministério Seven
 
-Esta função atende `/api` e exige um token Firebase de um administrador ativo. Ela não é publicada automaticamente.
+Esta função atende `/api` e exige um token Firebase de um administrador ativo. O Firebase Hosting encaminha as requisições para a função `integrationApi`.
 
 - Letras: LRCLIB, identificada pelo cabeçalho do projeto e com tratamento de limite de uso.
-- Vídeos: YouTube Data API v3, usando `YOUTUBE_API_KEY` somente no servidor.
+- Vídeos: YouTube Data API v3, usando `YOUTUBE_API_KEY` somente no Secret Manager e no servidor.
 - Cifras: coleção interna `authorizedChordSources` ou um provedor autorizado configurado por `CHORD_PROVIDER_URL` e `CHORD_PROVIDER_TOKEN`.
 
 Nenhum conector raspa páginas de letras ou cifras. Resultados ausentes não são inventados e o cadastro manual permanece disponível.
@@ -12,10 +12,12 @@ Nenhum conector raspa páginas de letras ou cifras. Resultados ausentes não sã
 
 Enquanto não houver um provedor externo contratado, `authorizedChordSources` pode armazenar cifras cuja reutilização foi autorizada. Cada documento aceita `title`, `normalizedTitle`, `artist`, `version`, `source`, `key`, `contentText` e `active`. O conteúdo é lido somente pela função autenticada.
 
+O script `scripts/sync-authorized-chord-sources.mjs` copia apenas cifras ativas do acervo interno para essa coleção protegida. Ele executa em modo de conferência por padrão e só grava quando chamado com `--apply`.
+
 ## Teste local
 
 1. Copie `.env.example` para `.env` dentro desta pasta e preencha apenas as integrações disponíveis.
 2. Inicie os emuladores de Auth, Firestore, Functions e Hosting.
 3. Use um administrador cadastrado no banco de testes.
 
-O arquivo `.env` é ignorado pelo Git. A configuração atual do projeto continua apontando para um Firebase de teste ainda não provisionado e, por segurança, nenhum deploy é executado por estes arquivos.
+O arquivo `.env` é ignorado pelo Git. Segredos de produção devem ser configurados com `firebase functions:secrets:set` e nunca adicionados ao repositório.

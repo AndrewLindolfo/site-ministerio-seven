@@ -1,4 +1,5 @@
 const { onRequest } = require("firebase-functions/v2/https");
+const { defineSecret } = require("firebase-functions/params");
 const { initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 const { getFirestore } = require("firebase-admin/firestore");
@@ -6,6 +7,7 @@ const { clean, normalize, mapLrclibRecord, mapYoutubeItem } = require("./lib/con
 
 initializeApp();
 const db = getFirestore();
+const youtubeApiKey = defineSecret("YOUTUBE_API_KEY");
 
 function json(res, status, payload) {
   res.status(status).set("Cache-Control", "private, no-store").json(payload);
@@ -58,7 +60,7 @@ async function searchLyrics(title, artist) {
 }
 
 async function searchVideos(title, artist, details) {
-  const key = clean(process.env.YOUTUBE_API_KEY, 200);
+  const key = clean(youtubeApiKey.value(), 200);
   if (!key) return [];
   const params = new URLSearchParams({ part: "snippet", type: "video", videoEmbeddable: "true", maxResults: "8", regionCode: "BR", relevanceLanguage: "pt", q: [title, artist, details].filter(Boolean).join(" "), key });
   const data = await fetchJson(`https://www.googleapis.com/youtube/v3/search?${params}`);
@@ -106,7 +108,13 @@ async function chordDetail(id, res) {
   return json(res, 200, { id, title: clean(data.title, 150), artist: clean(data.artist, 150), version: clean(data.version, 150), source: clean(data.source, 150), key: clean(data.key, 10), contentText: String(data.contentText || "").slice(0, 300000) });
 }
 
-exports.integrationApi = onRequest({ region: "southamerica-east1", timeoutSeconds: 30, memory: "256MiB", maxInstances: 5 }, async (req, res) => {
+exports.integrationApi = onRequest({
+  region: "southamerica-east1",
+  timeoutSeconds: 30,
+  memory: "256MiB",
+  maxInstances: 5,
+  secrets: [youtubeApiKey]
+}, async (req, res) => {
   const origin = allowedOrigin(req.headers.origin);
   if (origin) res.set("Access-Control-Allow-Origin", origin).set("Vary", "Origin");
   if (req.method === "OPTIONS") {

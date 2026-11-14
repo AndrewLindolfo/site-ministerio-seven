@@ -34,6 +34,15 @@
     ],
     "cleanUrls": true,
     "trailingSlash": false,
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "function": {
+          "functionId": "integrationApi",
+          "region": "southamerica-east1"
+        }
+      }
+    ],
     "headers": [
       {
         "source": "**/*.@(js|css)",
@@ -141,6 +150,15 @@
       ],
       "cleanUrls": true,
       "trailingSlash": false,
+      "rewrites": [
+        {
+          "source": "/api/**",
+          "function": {
+            "functionId": "integrationApi",
+            "region": "southamerica-east1"
+          }
+        }
+      ],
       "redirects": [
         {
           "source": "/",

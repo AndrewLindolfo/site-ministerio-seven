@@ -22,3 +22,7 @@ test("preserva marcadores que não são acordes", () => {
   assert.equal(transposeText("[Intro]\n[G] Aleluia", 2), "[Intro]\n[A] Aleluia");
   assert.equal(transposeText("Aleluia", 2), "Aleluia");
 });
+
+test("transpõe acordes diminutos sem perder o símbolo", () => {
+  assert.equal(transposeText("D#° Em F#º", 1), "E° Fm Gº");
+});

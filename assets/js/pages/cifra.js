@@ -11,7 +11,7 @@ import { bindChordInteractions } from "../modules/chord-interactive.js";
 import { createPersonalButtons, refreshPersonalActionButtons } from "../modules/personal-actions.js";
 import { sanitizeRichHtml } from "../lib/sanitize-html.js";
 
-const CHORD_TOKEN_REGEX = /^[A-G](?:#|b)?(?:(?:maj|min|m|sus|dim|aug|add|mmaj)?(?:2|4|5|6|7|7M|9|11|13)?(?:sus2|sus4|add2|add4|add9|maj7|maj9|maj11|maj13|m7|m9|m11|m13|dim7|aug7|7M)?(?:\([^)]+\))?)?(?:\/[A-G](?:#|b)?)?$/i;
+const CHORD_TOKEN_REGEX = /^[A-G](?:#|b)?(?:(?:maj|min|m|sus|dim|aug|add|mmaj)?(?:2|4|5|6|7|7M|9|11|13)?(?:sus2|sus4|add2|add4|add9|maj7|maj9|maj11|maj13|m7|m9|m11|m13|dim7|aug7|7M|º|°|\+)?(?:\([^)]+\))?)?(?:\/[A-G](?:#|b)?)?$/i;
 const INTRO_LINE_REGEX = /^\s*\[Intro\]\s*$/i;
 const INTRO_WITH_CHORDS_REGEX = /^\s*\[Intro\]\s+/i;
 const CHORD_COLOR_MAP = {

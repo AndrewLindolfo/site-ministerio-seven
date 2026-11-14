@@ -21,3 +21,8 @@ test("mantém linha curta em um único bloco", () => {
     { chords: "C     G", lyrics: "Linha curta" }
   ]);
 });
+
+test("preserva alinhamento com acordes diminutos", () => {
+  const result = splitAlignedPair("D#°      Em", "Quero, ó Deus", 40);
+  assert.deepEqual(result, [{ chords: "D#°      Em", lyrics: "Quero, ó Deus" }]);
+});

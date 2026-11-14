@@ -5,11 +5,11 @@ const ENHARMONIC = {
   Db: "C#", Eb: "D#", Gb: "F#", Ab: "G#", Bb: "A#"
 };
 
-const CHORD_REGEX = /\b([A-G](?:#|b)?(?:[A-Za-z0-9º+\-]*(?:\([^)]+\))?)?(?:\/[A-G](?:#|b)?)?)\b/g;
+const CHORD_REGEX = /([A-G](?:#|b)?(?:[A-Za-z0-9º°+\-]*(?:\([^)]+\))?)?(?:\/[A-G](?:#|b)?)?)/g;
 
 const INTRO_LINE_REGEX = /^\s*\[Intro\]\s*$/i;
 const INTRO_WITH_CHORDS_REGEX = /^\s*\[Intro\]\s+/i;
-const STRICT_CHORD_TOKEN_REGEX = /^[A-G](?:#|b)?(?:(?:maj|min|m|sus|dim|aug|add|mmaj)?(?:2|4|5|6|7|7M|9|11|13)?(?:sus2|sus4|add2|add4|add9|maj7|maj9|maj11|maj13|m7|m9|m11|m13|dim7|aug7|7M)?(?:\([^)]+\))?)?(?:\/[A-G](?:#|b)?)?$/;
+const STRICT_CHORD_TOKEN_REGEX = /^[A-G](?:#|b)?(?:(?:maj|min|m|sus|dim|aug|add|mmaj)?(?:2|4|5|6|7|7M|9|11|13)?(?:sus2|sus4|add2|add4|add9|maj7|maj9|maj11|maj13|m7|m9|m11|m13|dim7|aug7|7M|º|°|\+)?(?:\([^)]+\))?)?(?:\/[A-G](?:#|b)?)?$/;
 
 export function normalizeNote(note = "") {
   const n = String(note || "").trim();
@@ -51,7 +51,7 @@ function transposeChordToken(token = "", steps = 0) {
   const normalizedToken = normalizeChordTokenCase(token);
 
   return String(normalizedToken).replace(
-    /\b([A-G](?:#|b)?)([^/\s]*)(?:\/([A-G](?:#|b)?))?\b/g,
+    /^([A-G](?:#|b)?)([^/\s]*)(?:\/([A-G](?:#|b)?))?$/,
     (_, root, suffix = "", bass = "") => {
       const useFlats = /b/.test(root) || /b/.test(bass || "");
       const newRoot = transposeNote(root, steps, useFlats);

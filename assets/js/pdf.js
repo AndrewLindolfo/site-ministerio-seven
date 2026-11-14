@@ -101,7 +101,7 @@ function splitLongMonospaceLine(line, maxChars) {
 function looksLikeChordLine(line = "") {
   const tokens = String(line).trim().split(/\s+/).filter(Boolean);
   if (!tokens.length) return false;
-  const chord = /^[A-G](?:#|b)?(?:m|maj|min|dim|aug|sus|add)?(?:2|4|5|6|7|9|11|13)?(?:\([^)]*\))?(?:\/[A-G](?:#|b)?)?[,;|:]*$/i;
+  const chord = /^[A-G](?:#|b)?(?:m|maj|min|dim|aug|sus|add)?(?:2|4|5|6|7|9|11|13)?(?:º|°|\+)?(?:\([^)]*\))?(?:\/[A-G](?:#|b)?)?[,;|:]*$/i;
   return tokens.every((token) => chord.test(token));
 }
 

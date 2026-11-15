@@ -62,22 +62,6 @@ export function getLyricResult(id = "") {
   return request(`/music/lyrics/${safeId}`, { method: "GET" });
 }
 
-export async function searchChords({ musicId = "", title = "", artist = "" } = {}) {
-  const payload = {
-    musicId: cleanQuery(musicId, 160),
-    title: cleanQuery(title, 150),
-    artist: cleanQuery(artist, 150)
-  };
-  if (!payload.musicId || !payload.title) throw new Error("Selecione uma música cadastrada antes de pesquisar a cifra.");
-  return request("/chords/search", { method: "POST", body: JSON.stringify(payload) });
-}
-
-export function getChordResult(id = "") {
-  const safeId = encodeURIComponent(cleanQuery(id, 300));
-  if (!safeId) throw new Error("Resultado de cifra inválido.");
-  return request(`/chords/${safeId}`, { method: "GET" });
-}
-
 export function processChordPdf(file, musicId = "", options = {}) {
   if (!(file instanceof File) || (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf"))) throw new Error("Escolha um arquivo PDF válido.");
   if (!cleanQuery(musicId, 160)) throw new Error("Selecione uma música cadastrada antes de importar o PDF.");

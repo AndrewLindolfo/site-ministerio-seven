@@ -27,6 +27,13 @@ function selectedSummary(dialog) {
   dialog.querySelector("[data-action='apply']").disabled = !parts.length;
 }
 
+function updateTabLabels(dialog) {
+  const lyricsTab = dialog.querySelector("[data-tab='lyrics']");
+  const videosTab = dialog.querySelector("[data-tab='videos']");
+  if (lyricsTab) lyricsTab.textContent = `Letras (${state.lyrics.length})`;
+  if (videosTab) videosTab.textContent = `Vídeos (${state.videos.length})`;
+}
+
 function activateTab(dialog, name) {
   state.activeTab = name;
   dialog.querySelectorAll("[data-tab]").forEach((button) => {
@@ -153,6 +160,7 @@ function renderVideos(dialog) {
 function renderResults(dialog) {
   renderLyrics(dialog);
   renderVideos(dialog);
+  updateTabLabels(dialog);
   dialog.querySelector("[data-results-view]").hidden = false;
   dialog.querySelector("[data-search-view]").hidden = true;
   activateTab(dialog, state.activeTab);
@@ -162,6 +170,7 @@ function renderResults(dialog) {
 async function runSearch(dialog) {
   if ((state.selectedLyric || state.selectedVideo) && !confirm("Uma nova pesquisa substituirá as seleções atuais. Deseja continuar?")) return;
   const button = dialog.querySelector("[data-action='search']");
+  if (button.disabled) return;
   button.disabled = true;
   setStatus(dialog, "Pesquisando letras e vídeos…");
   try {
@@ -189,14 +198,36 @@ function applySelection(dialog) {
     const existing = getMusicaEditorHtml().replace(/<[^>]+>/g, "").trim();
     if (existing && !confirm("A letra atual será substituída pela letra selecionada. Deseja continuar?")) return;
     setMusicaEditorHtml(state.selectedLyric.contentHtml || "");
-    const title = document.getElementById("musica-titulo");
-    const author = document.getElementById("musica-autor");
-    if (title && !title.value.trim()) title.value = state.selectedLyric.title || "";
-    if (author && !author.value.trim()) author.value = state.selectedLyric.artist || "";
   }
+  const title = document.getElementById("musica-titulo");
+  const author = document.getElementById("musica-autor");
+  const searchedTitle = dialog.querySelector("[name='music-title']").value.trim();
+  const searchedArtist = dialog.querySelector("[name='music-artist']").value.trim();
+  if (title && !title.value.trim()) title.value = state.selectedLyric?.title || searchedTitle;
+  if (author && !author.value.trim()) author.value = state.selectedLyric?.artist || searchedArtist;
   if (state.selectedVideo) document.getElementById("musica-youtube").value = state.selectedVideo.url || "";
   dialog.close();
   document.getElementById("admin-editor-musica-status").textContent = "Pesquisa aplicada ao formulário. Revise tudo antes de salvar.";
+}
+
+function resetDialog(dialog) {
+  state.lyrics = [];
+  state.videos = [];
+  state.selectedLyric = null;
+  state.selectedVideo = null;
+  state.activeTab = "lyrics";
+  state.preview = null;
+  dialog.querySelector("[data-preview]").hidden = true;
+  dialog.querySelector("[data-preview-body]").replaceChildren();
+  dialog.querySelector("[data-results-view]").hidden = true;
+  dialog.querySelector("[data-search-view]").hidden = false;
+  dialog.querySelector("[data-lyrics-list]").replaceChildren();
+  dialog.querySelector("[data-videos-list]").replaceChildren();
+  dialog.querySelector("[name='music-details']").value = "";
+  updateTabLabels(dialog);
+  activateTab(dialog, "lyrics");
+  selectedSummary(dialog);
+  setStatus(dialog, "");
 }
 
 function ensureDialog() {
@@ -226,8 +257,21 @@ function ensureDialog() {
     </div>`;
   document.body.append(dialog);
   dialog.querySelector("[data-action='close']").addEventListener("click", () => dialog.close());
-  dialog.querySelector("[data-action='clear']").addEventListener("click", () => dialog.querySelectorAll("input,textarea").forEach((field) => field.value = ""));
+  dialog.addEventListener("close", () => {
+    state.preview = null;
+    dialog.querySelector("[data-preview-body]").replaceChildren();
+  });
+  dialog.querySelector("[data-action='clear']").addEventListener("click", () => {
+    dialog.querySelectorAll("input,textarea").forEach((field) => field.value = "");
+    setStatus(dialog, "");
+    dialog.querySelector("[name='music-title']").focus();
+  });
   dialog.querySelector("[data-action='search']").addEventListener("click", () => runSearch(dialog));
+  dialog.querySelectorAll("[data-search-view] input").forEach((field) => field.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    runSearch(dialog);
+  }));
   dialog.querySelector("[data-action='new-search']").addEventListener("click", () => { closePreview(dialog); dialog.querySelector("[data-results-view]").hidden = true; dialog.querySelector("[data-search-view]").hidden = false; });
   dialog.querySelector("[data-action='apply']").addEventListener("click", () => applySelection(dialog));
   dialog.querySelectorAll("[data-tab]").forEach((button) => button.addEventListener("click", () => activateTab(dialog, button.dataset.tab)));
@@ -247,8 +291,10 @@ export function initAdminMusicResearch() {
   if (!trigger) return;
   trigger.addEventListener("click", () => {
     const dialog = ensureDialog();
+    resetDialog(dialog);
     dialog.querySelector("[name='music-title']").value = document.getElementById("musica-titulo")?.value || "";
     dialog.querySelector("[name='music-artist']").value = document.getElementById("musica-autor")?.value || "";
     dialog.showModal();
+    dialog.querySelector("[name='music-title']").focus();
   });
 }

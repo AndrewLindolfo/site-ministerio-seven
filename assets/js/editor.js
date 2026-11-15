@@ -204,7 +204,7 @@ async function initCifraEditor() {
     verify_html: false,
     plugins: "autosave code fullscreen preview searchreplace visualblocks visualchars nonbreaking wordcount",
     toolbar:
-      "undo redo restoredraft | bold italic underline strikethrough | forecolor backcolor | " +
+      "undo redo restoredraft | fontsize lineheight | bold italic underline strikethrough | forecolor backcolor | " +
       "removeformat searchreplace | visualchars | fullscreen preview code",
     toolbar_mode: "sliding",
     remove_trailing_brs: false,

@@ -144,13 +144,13 @@ export function prepareChordImport(contentText = "", { title = "", subtitle = ""
   const kept = [];
   cleanExtractedText(contentText).split("\n").forEach((line, index) => {
     const trimmed = line.trim();
-    const keyMatch = trimmed.match(/(?:^|[•|])\s*(?:tom(?:\s+original)?|original)\s*:\s*([A-G](?:#|b)?m?)(?=\s|$|[•|])/i);
-    const capoMatch = trimmed.match(/capo(?:traste)?\s*:\s*([^•|]+)/i);
-    const bpmMatch = trimmed.match(/bpm\s*:\s*(\d{2,3})/i);
-    const compassoMatch = trimmed.match(/compasso\s*:\s*(\d+\s*\/\s*\d+)/i);
+    const keyMatch = trimmed.match(/(?:^|[•|])\s*(?:tom(?:\s+original)?|original)\s*(?::|=|-)\s*([A-G](?:#|b)?m?)(?=\s|$|[•|])/i);
+    const capoMatch = trimmed.match(/capo(?:traste)?\s*(?::|=|-)\s*([^•|]+)/i);
+    const bpmMatch = trimmed.match(/(?:bpm\s*(?::|=|-)?\s*(\d{2,3})|(\d{2,3})\s*bpm)/i);
+    const compassoMatch = trimmed.match(/compasso\s*(?::|=|-)?\s*(\d+\s*\/\s*\d+)/i);
     if (keyMatch && !metadata.originalKey) metadata.originalKey = keyMatch[1];
     if (capoMatch && !metadata.capo) metadata.capo = capoMatch[1].trim();
-    if (bpmMatch && !metadata.bpm) metadata.bpm = bpmMatch[1];
+    if (bpmMatch && !metadata.bpm) metadata.bpm = bpmMatch[1] || bpmMatch[2];
     if (compassoMatch && !metadata.compasso) metadata.compasso = compassoMatch[1].replace(/\s+/g, "");
     const isMetadata = keyMatch || capoMatch || bpmMatch || compassoMatch;
     const comparableLine = comparable(trimmed);

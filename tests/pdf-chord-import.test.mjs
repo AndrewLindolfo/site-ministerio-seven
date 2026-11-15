@@ -86,3 +86,11 @@ test("extrai o compasso quando ele existe nos metadados do PDF", () => {
   assert.equal(result.compasso, "6/8");
   assert.equal(result.contentText, "Bb   Eb/G");
 });
+
+test("aceita variações comuns dos metadados impressos no PDF", () => {
+  const result = prepareChordImport("Tom = F#m • 72 BPM • Compasso 4/4\nF#m   D   A   E", { title: "Canção" });
+  assert.equal(result.originalKey, "F#m");
+  assert.equal(result.bpm, "72");
+  assert.equal(result.compasso, "4/4");
+  assert.equal(result.contentText, "F#m   D   A   E");
+});

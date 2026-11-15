@@ -81,7 +81,7 @@
         ]
       },
       {
-          "source": "/@(agenda|cifra|cifras|conta|contato|downloads-por-musica|downloads|favoritos|ferramentas|fotos|login|modo-ensaio|musica|musicas|notificacoes|playlists)",
+          "source": "/@(agenda|cifra|cifras|conta|contato|downloads-por-musica|downloads|editor-ensaio|ensaios|favoritos|ferramentas|fotos|login|modo-ensaio|musica|musicas|notificacoes|playlists)",
         "headers": [
           {
             "key": "Cache-Control",

@@ -6,6 +6,8 @@ service cloud.firestore {
     // modoEnsaios, modoEnsaioMusicas, albuns, downloads, downloadsPorMusica and notificacoes.
     // Administrative identities live in admins; master is the primary admin,
     // and secondary invitations use email_<normalized email> as the document ID.
+    // integrantes stores private member invitations and granular rehearsal permissions;
+    // each member may read only the document matching the verified Google email.
     // usuariosPublicos and bibliotecasUsuarios are private, UID-owned documents.
     // contatos accepts validated public submissions and is otherwise admin-only.
     // config/site is public configuration; activity_logs is an append-only audit log.
@@ -14,8 +16,27 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isAuthenticated() {
+      return signedIn();
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function uidUnchanged() {
+      return 'uid' in request.resource.data && request.resource.data.uid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return (!('uid' in resource.data) && !('uid' in request.resource.data))
+        || ('uid' in resource.data
+          && 'uid' in request.resource.data
+          && request.resource.data.uid == resource.data.uid);
+    }
+
     function verifiedEmail() {
-      return signedIn()
+      return isAuthenticated()
         && request.auth.token.email is string
         && request.auth.token.email_verified == true;
     }
@@ -32,6 +53,14 @@ service cloud.firestore {
       return /databases/$(database)/documents/admins/$(secondaryId());
     }
 
+    function memberId() {
+      return 'email_' + request.auth.token.email;
+    }
+
+    function memberPath() {
+      return /databases/$(database)/documents/integrantes/$(memberId());
+    }
+
     function isOwnPendingAdmin(adminId) {
       return verifiedEmail()
         && resource.data.active == true
@@ -46,7 +75,7 @@ service cloud.firestore {
     function isValidUidBinding(adminId) {
       return isOwnPendingAdmin(adminId)
         && request.resource.data.email == request.auth.token.email
-        && request.resource.data.uid == request.auth.uid
+        && uidUnchanged()
         && request.resource.data.active == true
         && request.resource.data.pendingUid == false
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
@@ -76,10 +105,74 @@ service cloud.firestore {
       return isPrimary() || isSecondary();
     }
 
+    function isMember() {
+      return verifiedEmail()
+        && exists(memberPath())
+        && get(memberPath()).data.active == true
+        && get(memberPath()).data.uid == request.auth.uid
+        && get(memberPath()).data.email == request.auth.token.email;
+    }
+
+    function memberHasPermission(permissionName) {
+      return isMember()
+        && get(memberPath()).data.permissions.get('ensaios', {}).get(permissionName, false) == true;
+    }
+
+    function canManageEnsaios(permissionName) {
+      return hasPermission('ensaios', permissionName) || memberHasPermission(permissionName);
+    }
+
     function hasPermission(moduleName, permissionName) {
       return isPrimary()
         || (isSecondary()
           && get(secondaryPath()).data.permissions.get(moduleName, {}).get(permissionName, false) == true);
+    }
+
+    function isOwnPendingMember(memberDocumentId) {
+      return verifiedEmail()
+        && memberDocumentId == memberId()
+        && resource.data.active == true
+        && resource.data.email == request.auth.token.email
+        && resource.data.get('uid', '') == '';
+    }
+
+    function isValidMemberUidBinding(memberDocumentId) {
+      return isOwnPendingMember(memberDocumentId)
+        && request.resource.data.email == resource.data.email
+        && uidUnchanged()
+        && request.resource.data.active == true
+        && request.resource.data.pendingUid == false
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'uid', 'pendingUid', 'uidBoundAt', 'updatedAt'
+        ])
+        && request.resource.data.uidBoundAt == request.time
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    function validMember(data) {
+      return data.keys().hasOnly([
+          'name', 'email', 'permissions', 'active', 'pendingUid', 'uid',
+          'createdAt', 'updatedAt', 'uidBoundAt'
+        ])
+        && data.keys().hasAll([
+          'name', 'email', 'permissions', 'active', 'pendingUid', 'createdAt', 'updatedAt'
+        ])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 150
+        && data.email is string && data.email.size() > 5 && data.email.size() <= 254
+        && data.email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$')
+        && data.permissions is map && data.permissions.keys().hasOnly(['ensaios'])
+        && data.permissions.ensaios is map
+        && data.permissions.ensaios.keys().hasOnly(['create', 'edit', 'delete'])
+        && data.permissions.ensaios.keys().hasAll(['create', 'edit', 'delete'])
+        && data.permissions.ensaios.create is bool
+        && data.permissions.ensaios.edit is bool
+        && data.permissions.ensaios.delete is bool
+        && data.active is bool
+        && data.pendingUid is bool
+        && (!('uid' in data) || (data.uid is string && data.uid.size() > 0 && data.uid.size() <= 128))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && (!('uidBoundAt' in data) || data.uidBoundAt is timestamp);
     }
 
     function validAuditFields(data) {
@@ -351,7 +444,21 @@ service cloud.firestore {
         || (adminId == 'master' && isOwnPendingAdmin(adminId));
       allow list: if isPrimary();
       allow create, delete: if isPrimary();
-      allow update: if isPrimary() || isValidUidBinding(adminId);
+      allow update: if (isPrimary() && uidNotModified()) || isValidUidBinding(adminId);
+    }
+
+    match /integrantes/{memberDocumentId} {
+      allow get: if isPrimary() || (verifiedEmail() && memberDocumentId == memberId());
+      allow list: if isPrimary();
+      allow create: if isPrimary()
+        && memberDocumentId == 'email_' + request.resource.data.email
+        && validMember(request.resource.data);
+      allow update: if (isPrimary()
+          && memberDocumentId == 'email_' + request.resource.data.email
+          && uidNotModified()
+          && validMember(request.resource.data))
+        || (isValidMemberUidBinding(memberDocumentId) && validMember(request.resource.data));
+      allow delete: if isPrimary();
     }
 
     match /musicas/{documentId} {
@@ -378,42 +485,51 @@ service cloud.firestore {
     }
 
     match /modoEnsaios/{documentId} {
-      allow get: if isAdmin() || resource.data.active == true;
-      allow list: if isAdmin();
-      allow create: if hasPermission('ensaios', 'create')
+      allow get: if isAdmin() || isMember() || resource.data.active == true;
+      allow list: if isAdmin() || isMember();
+      allow create: if canManageEnsaios('create')
         && validModoEnsaio(request.resource.data)
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
-      allow update: if hasPermission('ensaios', 'edit')
+      allow update: if canManageEnsaios('edit')
         && validModoEnsaio(request.resource.data)
         && request.resource.data.createdBy == resource.data.createdBy
         && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.updatedAt == request.time;
-      allow delete: if hasPermission('ensaios', 'delete');
+      allow delete: if canManageEnsaios('delete');
     }
 
     match /modoEnsaioMusicas/{documentId} {
-      allow get, list: if isAdmin() || (
+      allow get, list: if isAdmin() || isMember() || (
         exists(/databases/$(database)/documents/modoEnsaios/$(resource.data.sessionId))
         && get(/databases/$(database)/documents/modoEnsaios/$(resource.data.sessionId)).data.active == true
       );
       allow create: if validModoEnsaioSong(request.resource.data)
         && existsAfter(/databases/$(database)/documents/modoEnsaios/$(request.resource.data.sessionId))
-        && (
-          hasPermission('ensaios', 'edit')
-          || (hasPermission('ensaios', 'create')
-            && getAfter(/databases/$(database)/documents/modoEnsaios/$(request.resource.data.sessionId)).data.createdBy == request.auth.uid)
-        )
+        && ((
+            !exists(/databases/$(database)/documents/modoEnsaios/$(request.resource.data.sessionId))
+            && canManageEnsaios('create')
+            && getAfter(/databases/$(database)/documents/modoEnsaios/$(request.resource.data.sessionId)).data.createdBy == request.auth.uid
+          ) || (
+            exists(/databases/$(database)/documents/modoEnsaios/$(request.resource.data.sessionId))
+            && canManageEnsaios('edit')
+          ))
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
-      allow update: if hasPermission('ensaios', 'edit')
+      allow update: if canManageEnsaios('edit')
         && validModoEnsaioSong(request.resource.data)
         && existsAfter(/databases/$(database)/documents/modoEnsaios/$(request.resource.data.sessionId))
         && request.resource.data.sessionId == resource.data.sessionId
         && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.updatedAt == request.time;
-      allow delete: if hasPermission('ensaios', 'edit') || hasPermission('ensaios', 'delete');
+      allow delete: if (
+          existsAfter(/databases/$(database)/documents/modoEnsaios/$(resource.data.sessionId))
+          && canManageEnsaios('edit')
+        ) || (
+          !existsAfter(/databases/$(database)/documents/modoEnsaios/$(resource.data.sessionId))
+          && canManageEnsaios('delete')
+        );
     }
 
     match /albuns/{documentId} {
@@ -488,10 +604,9 @@ service cloud.firestore {
     }
 
     match /usuariosPublicos/{userId} {
-      allow get: if signedIn() && request.auth.uid == userId;
+      allow get: if isOwner(userId);
       allow list, delete: if false;
-      allow create, update: if signedIn()
-        && request.auth.uid == userId
+      allow create, update: if isOwner(userId)
         && request.resource.data.keys().hasOnly([
           'firstName', 'lastName', 'displayName', 'email', 'phone', 'photoURL', 'updatedAt'
         ])
@@ -508,10 +623,9 @@ service cloud.firestore {
     }
 
     match /bibliotecasUsuarios/{userId} {
-      allow get: if signedIn() && request.auth.uid == userId;
+      allow get: if isOwner(userId);
       allow list, delete: if false;
-      allow create, update: if signedIn()
-        && request.auth.uid == userId
+      allow create, update: if isOwner(userId)
         && request.resource.data.keys().hasOnly(['favorites', 'playlists'])
         && request.resource.data.keys().hasAll(['favorites', 'playlists'])
         && request.resource.data.favorites is list

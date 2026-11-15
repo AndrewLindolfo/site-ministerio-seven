@@ -15,6 +15,7 @@ function resolveCardVisibility(admin, key = "") {
     case "links":
     case "backup":
     case "admins":
+    case "integrantes":
       return isPrimaryAdmin(admin);
     case "logs":
       return canAccessAdminPage(admin, "logs");

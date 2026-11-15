@@ -107,6 +107,7 @@ export function canAccessAdminPage(admin, pageKey = "") {
     case "logs":
       return hasPermission(admin, "logs", "view");
     case "admins":
+    case "integrantes":
     case "links":
     case "backup":
       return false;

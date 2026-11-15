@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Ensaios | Ministério Seven</title>
+  <link rel="icon" href="assets/img/favicon/favicon.ico" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <link rel="stylesheet" href="assets/css/theme.css" />
+  <link rel="stylesheet" href="assets/css/layout.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+  <link rel="stylesheet" href="assets/css/pages/admin-modo-ensaio.css" />
+  <link rel="stylesheet" href="assets/css/pages/ensaios.css" />
+</head>
+<body>
+<header class="site-header"><div class="container header-inner">
+  <a href="./index.html" class="brand-link"><img id="header-v7-logo" src="assets/img/v7/icon_120.png" alt="V7" class="brand-v7" /></a>
+  <nav class="main-nav" aria-label="Menu principal"><a href="./musicas.html">Músicas</a><a href="./cifras.html">Cifras</a><a href="./agenda.html">Agenda</a><a href="./ferramentas.html">Ferramentas</a></nav>
+  <div class="header-actions"><button type="button" id="theme-toggle" aria-label="Alternar tema">🌙</button><button type="button" id="mobile-menu-toggle" aria-label="Abrir menu">☰</button></div>
+</div></header>
+<div id="mobile-menu" class="mobile-menu" aria-hidden="true"><div class="mobile-menu-overlay" id="mobile-menu-overlay"></div><nav class="mobile-menu-panel"><button type="button" id="mobile-menu-close" aria-label="Fechar">✕</button><a href="./musicas.html" class="mobile-nav-link">Músicas</a><a href="./cifras.html" class="mobile-nav-link">Cifras</a><a href="./agenda.html" class="mobile-nav-link">Agenda</a><a href="./ferramentas.html" class="mobile-nav-link">Ferramentas</a></nav></div>
+<main class="simple-page rehearsal-members-page"><section class="container">
+  <a href="./index.html" class="admin-back-link">← Voltar ao site</a>
+  <div class="modo-admin-heading"><div><span class="rehearsal-eyebrow">Área dos integrantes</span><h1>Ensaios</h1><p class="admin-intro">Consulte e organize os repertórios do grupo.</p></div><a href="./editor-ensaio.html" class="button-primary hidden" id="member-new-rehearsal">Novo ensaio</a></div>
+  <p id="member-rehearsals-status" class="admin-status" role="status" aria-live="polite">Verificando acesso…</p>
+  <div id="member-rehearsals-list" class="modo-admin-list"></div>
+  <div id="member-access-denied" class="rehearsal-access-card hidden"><h2>Acesso restrito</h2><p>Entre com a conta Google cadastrada como integrante.</p><button type="button" id="member-login-button" class="button-primary">Entrar com Google</button></div>
+</section></main>
+<footer class="site-footer"><div class="container footer-inner"><img id="footer-logo" src="assets/img/logo/logo_light.png" alt="Ministério Seven" class="footer-logo" /><p>Ministério Seven</p><small>© <span id="footer-year"></span> Ministério Seven</small></div></footer>
+<div id="global-loading" class="global-loading hidden"><div class="spinner"></div></div>
+<script type="module" src="assets/js/app.js"></script>
+<script type="module" src="assets/js/pages/ensaios.js"></script>
+</body>
+</html>

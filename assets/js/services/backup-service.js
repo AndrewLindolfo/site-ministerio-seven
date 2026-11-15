@@ -3,6 +3,7 @@ import { encodeFirestoreValue } from "../lib/firestore-backup-codec.js";
 
 export const BACKUP_COLLECTIONS = [
   "admins",
+  "integrantes",
   "musicas",
   "cifras",
   "programacoes",

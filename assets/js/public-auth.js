@@ -6,6 +6,7 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getPublicUserProfile, normalizeProfilePhotoUrl, savePublicUserProfile } from "./services/public-user-service.js";
+import { getMemberProfileForUser } from "./services/member-permissions-service.js";
 
 let currentUser = null;
 let currentMenu = null;
@@ -158,6 +159,7 @@ async function buildProfileData(user) {
     displayName: profile?.displayName || user?.displayName || [firstName, lastName].filter(Boolean).join(" "),
     phone: profile?.phone || "",
     isAdmin: false,
+    isMember: false,
     isNewProfile: !profile
   };
 }
@@ -197,6 +199,13 @@ async function renderLoggedIn(slot, profile) {
     adminLink.textContent = "Admin";
     dropdown.insertBefore(adminLink, dropdown.lastElementChild);
   }
+  if (profile.isMember && dropdown) {
+    const rehearsalLink = document.createElement("a");
+    rehearsalLink.href = "./ensaios.html";
+    rehearsalLink.className = "public-user-member-link";
+    rehearsalLink.textContent = "Ensaios";
+    dropdown.insertBefore(rehearsalLink, dropdown.lastElementChild);
+  }
   currentMenu = dropdown;
 
   toggle?.addEventListener("click", (event) => {
@@ -229,6 +238,11 @@ async function renderHeaderAuth(user) {
     profile.isAdmin = await resolveAdminStatus(user);
   } catch (error) {
     console.warn("Não foi possível verificar o acesso administrativo.", error);
+  }
+  try {
+    profile.isMember = Boolean(await getMemberProfileForUser(user));
+  } catch (error) {
+    console.warn("Não foi possível verificar o acesso de integrante.", error);
   }
   currentUser = { ...profile, firebaseUser: user };
   if (profile.isNewProfile) {

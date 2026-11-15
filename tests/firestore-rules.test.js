@@ -5,6 +5,7 @@ import { initializeTestEnvironment, assertFails, assertSucceeds } from "@firebas
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -31,6 +32,21 @@ const editorAuth = {
 const creatorAuth = {
   uid: "creator-uid",
   email: "creator@example.com",
+  email_verified: true
+};
+const memberAuth = {
+  uid: "member-uid",
+  email: "member@example.com",
+  email_verified: true
+};
+const viewerAuth = {
+  uid: "viewer-uid",
+  email: "viewer@example.com",
+  email_verified: true
+};
+const memberCreatorAuth = {
+  uid: "member-creator-uid",
+  email: "member-creator@example.com",
   email_verified: true
 };
 let testEnv;
@@ -134,6 +150,24 @@ async function seedBaseData() {
       permissions: {
         ensaios: { create: true, edit: false, delete: false }
       }
+    });
+    await setDoc(doc(db, "integrantes", `email_${memberAuth.email}`), {
+      name: "Integrante completo", email: memberAuth.email, uid: memberAuth.uid,
+      active: true, pendingUid: false,
+      permissions: { ensaios: { create: true, edit: true, delete: true } },
+      createdAt: new Date(), updatedAt: new Date(), uidBoundAt: new Date()
+    });
+    await setDoc(doc(db, "integrantes", `email_${viewerAuth.email}`), {
+      name: "Integrante leitor", email: viewerAuth.email, uid: viewerAuth.uid,
+      active: true, pendingUid: false,
+      permissions: { ensaios: { create: false, edit: false, delete: false } },
+      createdAt: new Date(), updatedAt: new Date(), uidBoundAt: new Date()
+    });
+    await setDoc(doc(db, "integrantes", `email_${memberCreatorAuth.email}`), {
+      name: "Integrante criador", email: memberCreatorAuth.email, uid: memberCreatorAuth.uid,
+      active: true, pendingUid: false,
+      permissions: { ensaios: { create: true, edit: false, delete: false } },
+      createdAt: new Date(), updatedAt: new Date(), uidBoundAt: new Date()
     });
     await setDoc(doc(db, "musicas", "active-song"), musica());
     await setDoc(doc(db, "musicas", "hidden-song"), musica({ active: false, title: "Oculta", slug: "oculta" }));
@@ -277,6 +311,105 @@ describe("user-owned data", () => {
     await assertFails(setDoc(doc(db, "bibliotecasUsuarios", "user-a"), {
       favorites: Array.from({ length: 101 }, (_, index) => ({ key: String(index) })),
       playlists: []
+    }));
+  });
+});
+
+describe("member rehearsal authorization", () => {
+  test("the primary admin manages members while identities remain private", async () => {
+    const primaryDb = testEnv.authenticatedContext(primaryAuth.uid, token(primaryAuth)).firestore();
+    const editorDb = testEnv.authenticatedContext(editorAuth.uid, token(editorAuth)).firestore();
+    const memberDb = testEnv.authenticatedContext(memberAuth.uid, token(memberAuth)).firestore();
+    const data = {
+      name: "Novo integrante", email: "new-member@example.com",
+      permissions: { ensaios: { create: true, edit: false, delete: false } },
+      active: true, pendingUid: true,
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    };
+    await assertSucceeds(setDoc(doc(primaryDb, "integrantes", "email_new-member@example.com"), data));
+    await assertSucceeds(getDocs(collection(primaryDb, "integrantes")));
+    await assertFails(getDocs(collection(memberDb, "integrantes")));
+    await assertSucceeds(getDoc(doc(memberDb, "integrantes", `email_${memberAuth.email}`)));
+    await assertFails(getDoc(doc(memberDb, "integrantes", `email_${viewerAuth.email}`)));
+    await assertFails(setDoc(doc(editorDb, "integrantes", "email_attacker@example.com"), { ...data, email: "attacker@example.com" }));
+  });
+
+  test("an invited member can bind only the matching verified Google account", async () => {
+    const invited = { uid: "invited-member-uid", email: "invited-member@example.com", email_verified: true };
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "integrantes", `email_${invited.email}`), {
+        name: "Convidado", email: invited.email, active: true, pendingUid: true,
+        permissions: { ensaios: { create: false, edit: true, delete: false } },
+        createdAt: new Date(), updatedAt: new Date()
+      });
+    });
+    const invitedDb = testEnv.authenticatedContext(invited.uid, token(invited)).firestore();
+    await assertSucceeds(updateDoc(doc(invitedDb, "integrantes", `email_${invited.email}`), {
+      uid: invited.uid, pendingUid: false, uidBoundAt: serverTimestamp(), updatedAt: serverTimestamp()
+    }));
+    await assertFails(updateDoc(doc(invitedDb, "integrantes", `email_${memberAuth.email}`), { uid: invited.uid }));
+    await assertFails(updateDoc(doc(invitedDb, "integrantes", `email_${invited.email}`), {
+      permissions: { ensaios: { create: true, edit: true, delete: true } }
+    }));
+  });
+
+  test("a fully authorized member can create, edit and delete a rehearsal", async () => {
+    const db = testEnv.authenticatedContext(memberAuth.uid, token(memberAuth)).firestore();
+    const batch = writeBatch(db);
+    batch.set(doc(db, "modoEnsaios", "member-session"), {
+      title: "Ensaio do grupo", date: "2026-11-16", time: "20:00", location: "Igreja",
+      description: "", active: false, createdBy: memberAuth.uid,
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    });
+    batch.set(doc(db, "modoEnsaioMusicas", "member-session_00"), {
+      sessionId: "member-session", order: 0, musicaId: "active-song", title: "Música teste",
+      slug: "musica-teste", cifraId: "", cifraTitle: "", instrumento: "violao",
+      bpm: "", compasso: "", originalKey: "C", notes: "",
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    });
+    await assertSucceeds(batch.commit());
+    await assertSucceeds(updateDoc(doc(db, "modoEnsaios", "member-session"), { title: "Ensaio atualizado", updatedAt: serverTimestamp() }));
+    const deleteBatch = writeBatch(db);
+    deleteBatch.delete(doc(db, "modoEnsaioMusicas", "member-session_00"));
+    deleteBatch.delete(doc(db, "modoEnsaios", "member-session"));
+    await assertSucceeds(deleteBatch.commit());
+  });
+
+  test("view-only members can list drafts but cannot mutate rehearsals", async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "modoEnsaios", "private-session"), {
+        title: "Rascunho", date: "", time: "", location: "", description: "",
+        active: false, createdBy: primaryAuth.uid, createdAt: new Date(), updatedAt: new Date()
+      });
+    });
+    const db = testEnv.authenticatedContext(viewerAuth.uid, token(viewerAuth)).firestore();
+    await assertSucceeds(getDocs(collection(db, "modoEnsaios")));
+    await assertSucceeds(getDoc(doc(db, "modoEnsaios", "private-session")));
+    await assertFails(updateDoc(doc(db, "modoEnsaios", "private-session"), { title: "Ataque", updatedAt: serverTimestamp() }));
+    await assertFails(deleteDoc(doc(db, "modoEnsaios", "private-session")));
+  });
+
+  test("create-only members cannot alter an existing rehearsal after creation", async () => {
+    const db = testEnv.authenticatedContext(memberCreatorAuth.uid, token(memberCreatorAuth)).firestore();
+    const batch = writeBatch(db);
+    batch.set(doc(db, "modoEnsaios", "creator-member-session"), {
+      title: "Novo ensaio", date: "", time: "", location: "", description: "",
+      active: true, createdBy: memberCreatorAuth.uid,
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    });
+    batch.set(doc(db, "modoEnsaioMusicas", "creator-member-session_00"), {
+      sessionId: "creator-member-session", order: 0, musicaId: "active-song", title: "Música teste",
+      slug: "musica-teste", cifraId: "", cifraTitle: "", instrumento: "violao",
+      bpm: "", compasso: "", originalKey: "C", notes: "",
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    });
+    await assertSucceeds(batch.commit());
+    await assertFails(updateDoc(doc(db, "modoEnsaios", "creator-member-session"), { title: "Sem permissão", updatedAt: serverTimestamp() }));
+    await assertFails(setDoc(doc(db, "modoEnsaioMusicas", "creator-member-session_01"), {
+      sessionId: "creator-member-session", order: 1, musicaId: "active-song", title: "Outra",
+      slug: "musica-teste", cifraId: "", cifraTitle: "", instrumento: "violao",
+      bpm: "", compasso: "", originalKey: "C", notes: "",
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
     }));
   });
 });

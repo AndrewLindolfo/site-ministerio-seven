@@ -6,6 +6,7 @@ function resolveAdminPageKey() {
   const params = new URLSearchParams(window.location.search);
   if (path.endsWith("/admin/index.html")) return "dashboard";
   if (path.endsWith("/admin/admins.html")) return "admins";
+  if (path.endsWith("/admin/integrantes.html")) return "integrantes";
   if (path.endsWith("/admin/musicas.html")) return "musicas";
   if (path.endsWith("/admin/editor-musica.html")) return params.get("id") ? "editor-musica-edit" : "editor-musica-create";
   if (path.endsWith("/admin/cifras.html")) return "cifras";

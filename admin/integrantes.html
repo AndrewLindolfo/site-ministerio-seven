@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Integrantes | Admin Seven</title>
+  <link rel="stylesheet" href="../assets/css/main.css" />
+  <link rel="stylesheet" href="../assets/css/theme.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css" />
+  <link rel="stylesheet" href="../assets/css/responsive.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <link rel="stylesheet" href="../assets/css/pages/admin-admins.css" />
+</head>
+<body>
+<header class="admin-topbar"><div class="container admin-topbar-inner">
+  <a href="./index.html" class="admin-brand"><img src="../assets/img/v7/icon_120.png" alt="V7" class="admin-v7" /><strong>Área de Administração</strong></a>
+  <div class="header-actions"><button type="button" id="theme-toggle" aria-label="Alternar tema">🌙</button><div class="admin-account"><button type="button" id="admin-account-toggle">Conta</button><div id="admin-account-menu" class="admin-account-menu hidden"><img id="admin-user-photo" src="../assets/img/v7/icon_120.png" alt="Conta" class="admin-user-photo" /><p id="admin-user-email"></p><button type="button" id="admin-logout-button">Sair</button></div></div></div>
+</div></header>
+<main class="admin-section-page"><section class="container">
+  <a href="./index.html" class="admin-back-link">← Voltar ao painel</a>
+  <h1>Cadastro de integrantes</h1>
+  <p class="admin-intro">Autorize integrantes a criar, editar ou excluir ensaios sem liberar o painel administrativo.</p>
+  <form id="member-form" class="admin-form admin-admin-form">
+    <input type="hidden" id="member-id" />
+    <div class="admin-grid-two">
+      <label class="admin-field-block"><span>Nome do integrante</span><input type="text" id="member-name" maxlength="150" required /></label>
+      <label class="admin-field-block"><span>E-mail do Google</span><input type="email" id="member-email" maxlength="254" required /></label>
+    </div>
+    <div class="admin-note-box"><strong>Vinculação segura</strong><p id="member-uid-status">No primeiro login válido, a conta Google será vinculada automaticamente a este integrante.</p></div>
+    <section class="admin-permission-card">
+      <h3>Permissões de ensaios</h3>
+      <div class="admin-permission-items">
+        <label class="admin-permission-row"><span>Pode criar ensaios</span><span class="admin-switch"><input type="checkbox" data-member-permission="create" /><span class="admin-switch-slider"></span></span></label>
+        <label class="admin-permission-row"><span>Pode editar ensaios</span><span class="admin-switch"><input type="checkbox" data-member-permission="edit" /><span class="admin-switch-slider"></span></span></label>
+        <label class="admin-permission-row"><span>Pode excluir ensaios</span><span class="admin-switch"><input type="checkbox" data-member-permission="delete" /><span class="admin-switch-slider"></span></span></label>
+      </div>
+    </section>
+    <label class="admin-permission-row"><span>Integrante ativo</span><span class="admin-switch"><input type="checkbox" id="member-active" checked /><span class="admin-switch-slider"></span></span></label>
+    <div class="admin-form-actions"><button type="submit" class="button-primary">Salvar integrante</button><button type="button" id="member-reset" class="button-outline">Limpar</button></div>
+  </form>
+  <h2 class="admin-subtitle">Integrantes cadastrados</h2>
+  <p id="member-status" class="admin-form-status" role="status" aria-live="polite"></p>
+  <div id="member-list"></div>
+</section></main>
+<div id="global-loading" class="global-loading hidden"><div class="spinner"></div></div>
+<script type="module" src="../assets/js/app.js"></script>
+<script type="module" src="../assets/js/auth-guard.js"></script>
+<script type="module" src="../assets/js/pages/admin-integrantes.js"></script>
+</body>
+</html>

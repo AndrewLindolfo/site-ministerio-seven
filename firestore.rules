@@ -106,8 +106,21 @@ service cloud.firestore {
     }
 
     function validContentTimes(data) {
-      return (!('createdAt' in data) || data.createdAt is timestamp)
-        && (!('updatedAt' in data) || data.updatedAt is timestamp);
+      // Registros novos usam timestamp. Valores legados só podem permanecer
+      // quando já existiam e não foram modificados durante uma atualização.
+      return (!('createdAt' in data)
+          || data.createdAt is timestamp
+          || data.createdAt == resource.data.createdAt)
+        && (!('updatedAt' in data)
+          || data.updatedAt is timestamp
+          || data.updatedAt == resource.data.updatedAt);
+    }
+
+    // Relacionamentos de conteúdo devem sempre apontar para uma música real.
+    function musicExists(musicaId) {
+      return musicaId is string
+        && musicaId.size() > 0
+        && exists(/databases/$(database)/documents/musicas/$(musicaId));
     }
 
     function validMusica(data) {
@@ -157,6 +170,7 @@ service cloud.firestore {
         && data.chordColor is string && data.chordColor.size() <= 20
         && data.views is int && data.views >= 0 && data.views <= 2147483647
         && data.active is bool
+        && musicExists(data.musicaId)
         && validContentTimes(data);
     }
 
@@ -246,6 +260,7 @@ service cloud.firestore {
         && data.pptUrl is string && data.pptUrl.size() <= 2000
         && (data.pdfUrl.size() > 0 || data.pptUrl.size() > 0)
         && data.active is bool
+        && musicExists(data.musicaId)
         && validContentTimes(data);
     }
 

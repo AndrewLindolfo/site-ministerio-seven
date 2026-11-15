@@ -52,6 +52,44 @@ function musica(overrides = {}) {
   };
 }
 
+function cifra(overrides = {}) {
+  return {
+    musicaId: "active-song",
+    title: "Música teste",
+    slug: "musica-teste",
+    normalizedTitle: "musica teste",
+    subtitle: "",
+    cifraText: "C  G\nMúsica teste",
+    cifraHtml: "<p>C  G</p><p>Música teste</p>",
+    originalKey: "C",
+    capo: "",
+    bpm: "",
+    compasso: "",
+    instrumento: "violao",
+    chordColor: "#FF5C00",
+    views: 0,
+    active: true,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    ...overrides
+  };
+}
+
+function musicDownload(overrides = {}) {
+  return {
+    musicaId: "active-song",
+    title: "Música teste",
+    normalizedTitle: "musica teste",
+    slug: "musica-teste",
+    pdfUrl: "https://example.com/musica.pdf",
+    pptUrl: "",
+    active: true,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    ...overrides
+  };
+}
+
 async function seedBaseData() {
   await testEnv.withSecurityRulesDisabled(async (context) => {
     const db = context.firestore();
@@ -158,6 +196,40 @@ describe("user-owned data", () => {
 });
 
 describe("administrative authorization", () => {
+  test("cifras e downloads exigem uma música existente", async () => {
+    const db = testEnv.authenticatedContext(primaryAuth.uid, token(primaryAuth)).firestore();
+
+    await assertSucceeds(setDoc(doc(db, "cifras", "linked-chord"), cifra()));
+    await assertFails(setDoc(doc(db, "cifras", "orphan-chord"), cifra({ musicaId: "missing-song" })));
+    await assertFails(updateDoc(doc(db, "cifras", "linked-chord"), {
+      musicaId: "missing-song",
+      updatedAt: serverTimestamp()
+    }));
+
+    await assertSucceeds(setDoc(doc(db, "downloadsPorMusica", "linked-download"), musicDownload()));
+    await assertFails(setDoc(doc(db, "downloadsPorMusica", "orphan-download"), musicDownload({ musicaId: "missing-song" })));
+    await assertFails(updateDoc(doc(db, "downloadsPorMusica", "linked-download"), {
+      musicaId: "missing-song",
+      updatedAt: serverTimestamp()
+    }));
+  });
+
+  test("uma cifra migrada pode corrigir o vínculo sem regravar metadados legados", async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "cifras", "legacy-orphan"), cifra({
+        musicaId: "missing-song",
+        createdAt: { seconds: 1773691828, nanoseconds: 558000000, __type: "timestamp" },
+        updatedAt: "2026-04-02T13:47:12.070Z"
+      }));
+    });
+
+    const db = testEnv.authenticatedContext(primaryAuth.uid, token(primaryAuth)).firestore();
+    await assertSucceeds(updateDoc(doc(db, "cifras", "legacy-orphan"), {
+      musicaId: "active-song",
+      updatedAt: serverTimestamp()
+    }));
+  });
+
   test("secondary admins are limited to explicit permissions", async () => {
     const db = testEnv.authenticatedContext(editorAuth.uid, token(editorAuth)).firestore();
     await assertSucceeds(setDoc(doc(db, "musicas", "editor-created"), musica()));

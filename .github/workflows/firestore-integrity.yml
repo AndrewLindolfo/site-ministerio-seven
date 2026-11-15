@@ -1,0 +1,33 @@
+name: Auditoria de integridade do Firestore
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 9 * * *"
+  push:
+    branches: [main]
+    paths:
+      - "firestore.rules"
+      - "scripts/audit-firestore-integrity.mjs"
+      - "package.json"
+      - "package-lock.json"
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Instalar dependências
+        run: npm ci
+      - name: Auditar vínculos ativos
+        run: npm run audit:firestore

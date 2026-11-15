@@ -8,6 +8,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  onSnapshot,
   query,
   serverTimestamp,
   setDoc,
@@ -156,6 +157,48 @@ after(async () => {
 });
 
 describe("public content", () => {
+  test("uma página pública aberta recebe alterações do repertório em tempo real", async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore();
+      await setDoc(doc(db, "modoEnsaios", "live-session"), {
+        title: "Ensaio ao vivo", date: "2026-11-15", time: "19:00", location: "Igreja",
+        description: "", active: true, createdBy: primaryAuth.uid,
+        createdAt: new Date(), updatedAt: new Date()
+      });
+      await setDoc(doc(db, "modoEnsaioMusicas", "live-session_00"), {
+        sessionId: "live-session", order: 0, musicaId: "active-song", title: "Música teste",
+        slug: "musica-teste", cifraId: "", cifraTitle: "", instrumento: "violao",
+        bpm: "", compasso: "", originalKey: "C", notes: "Inicial",
+        createdAt: new Date(), updatedAt: new Date()
+      });
+    });
+
+    const publicDb = testEnv.unauthenticatedContext().firestore();
+    const publicQuery = query(collection(publicDb, "modoEnsaioMusicas"), where("sessionId", "==", "live-session"));
+    let resolveInitial;
+    let resolveChanged;
+    const initialSnapshot = new Promise((resolve) => { resolveInitial = resolve; });
+    const changedSnapshot = new Promise((resolve) => { resolveChanged = resolve; });
+    const unsubscribe = onSnapshot(publicQuery, (snapshot) => {
+      const notes = snapshot.docs[0]?.data()?.notes;
+      if (notes === "Inicial") resolveInitial();
+      if (notes === "Atualizada") resolveChanged(notes);
+    });
+
+    await initialSnapshot;
+    const primaryDb = testEnv.authenticatedContext(primaryAuth.uid, token(primaryAuth)).firestore();
+    await assertSucceeds(updateDoc(doc(primaryDb, "modoEnsaioMusicas", "live-session_00"), {
+      notes: "Atualizada",
+      updatedAt: serverTimestamp()
+    }));
+    const received = await Promise.race([
+      changedSnapshot,
+      new Promise((_, reject) => setTimeout(() => reject(new Error("Atualização em tempo real não recebida.")), 3000))
+    ]);
+    unsubscribe();
+    assert.equal(received, "Atualizada");
+  });
+
   test("public mode rehearsal links expose only active sessions and their songs", async () => {
     await testEnv.withSecurityRulesDisabled(async (context) => {
       const db = context.firestore();

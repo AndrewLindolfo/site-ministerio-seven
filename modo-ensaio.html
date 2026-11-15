@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Modo Ensaio | Ministério Seven</title>
+  <link rel="stylesheet" href="./assets/css/main.css" />
+  <link rel="stylesheet" href="./assets/css/theme.css" />
+  <link rel="stylesheet" href="./assets/css/pages/modo-ensaio.css" />
+</head>
+<body class="modo-palco-body">
+<header class="modo-palco-header">
+  <div class="modo-brand"><img src="./assets/img/v7/icon_120.png" alt="V7" /><div><strong id="session-title">Modo Ensaio</strong><span id="session-meta"></span></div></div>
+  <div class="modo-header-actions"><button id="wake-lock" type="button" title="Manter a tela ligada">Tela ligada</button><button id="share-session" type="button">Compartilhar</button><button id="fullscreen" type="button">Tela cheia</button></div>
+</header>
+<main class="modo-palco-shell">
+  <aside class="modo-setlist"><div class="modo-setlist-title"><strong>Repertório</strong><span id="song-progress"></span></div><ol id="setlist"></ol></aside>
+  <section class="modo-stage">
+    <div class="modo-stage-top"><div><span id="song-position" class="modo-eyebrow"></span><h1 id="song-title">Carregando…</h1><p id="song-details"></p></div><div class="modo-view-controls"><button id="lyrics-view" type="button">Letra</button><button id="chord-view" type="button" class="is-active">Letra e cifra</button></div></div>
+    <div id="song-note" class="modo-song-note hidden"></div>
+    <div class="modo-toolbar">
+      <div><button id="font-down" type="button" aria-label="Diminuir fonte">A−</button><button id="font-up" type="button" aria-label="Aumentar fonte">A+</button></div>
+      <div id="transpose-controls"><button id="transpose-down" type="button">Tom −</button><span id="transpose-value">Original</span><button id="transpose-up" type="button">Tom +</button></div>
+      <div><button id="scroll-toggle" type="button">Auto-rolagem</button><label>Velocidade <input id="scroll-speed" type="range" min="1" max="6" value="3" /></label></div>
+      <div id="metronome-controls"><button id="metronome-toggle" type="button">Metrônomo</button><span id="metronome-label"></span><i id="beat-indicator"></i></div>
+    </div>
+    <article id="stage-content" class="modo-content" tabindex="0"></article>
+    <nav class="modo-navigation"><button id="previous-song" type="button">← Anterior</button><button id="next-song" type="button">Próxima →</button></nav>
+  </section>
+</main>
+<div id="modo-error" class="modo-error hidden" role="alert"><h1>Modo ensaio indisponível</h1><p id="modo-error-message"></p><a href="./index.html">Voltar ao site</a></div>
+<script type="module" src="./assets/js/pages/modo-ensaio.js"></script>
+</body>
+</html>

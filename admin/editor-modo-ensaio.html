@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Editor do Modo Ensaio | Admin Seven</title>
+  <link rel="stylesheet" href="../assets/css/main.css" />
+  <link rel="stylesheet" href="../assets/css/theme.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css" />
+  <link rel="stylesheet" href="../assets/css/responsive.css" />
+  <link rel="stylesheet" href="../assets/css/admin.css" />
+  <link rel="stylesheet" href="../assets/css/pages/admin-modo-ensaio.css" />
+</head>
+<body>
+<header class="admin-topbar"><div class="container admin-topbar-inner">
+  <a href="./index.html" class="admin-brand"><img src="../assets/img/v7/icon_120.png" alt="V7" class="admin-v7" /><strong>Área de Administração</strong></a>
+  <div class="header-actions"><button type="button" id="theme-toggle" aria-label="Alternar tema">🌙</button><div class="admin-account"><button type="button" id="admin-account-toggle">Conta</button><div id="admin-account-menu" class="admin-account-menu hidden"><img id="admin-user-photo" src="../assets/img/v7/icon_120.png" alt="Conta" class="admin-user-photo" /><p id="admin-user-email"></p><button type="button" id="admin-logout-button">Sair</button></div></div></div>
+</div></header>
+<main class="admin-section-page"><section class="container">
+  <a href="./modo-ensaio.html" class="admin-back-link">← Voltar ao Modo Ensaio</a>
+  <h1 id="modo-editor-title">Novo modo ensaio</h1>
+  <form id="modo-editor-form" class="admin-form modo-editor-form">
+    <div class="modo-fields-grid">
+      <label class="field-group modo-field-wide"><span>Título *</span><input id="modo-title" maxlength="150" required placeholder="Ex.: Ensaio de domingo" /></label>
+      <label class="field-group"><span>Data</span><input id="modo-date" type="date" /></label>
+      <label class="field-group"><span>Horário</span><input id="modo-time" type="time" /></label>
+      <label class="field-group modo-field-wide"><span>Local</span><input id="modo-location" maxlength="300" placeholder="Ex.: Igreja — salão principal" /></label>
+      <label class="field-group modo-field-wide"><span>Observação geral</span><textarea id="modo-description" rows="3" maxlength="2000"></textarea></label>
+      <label class="modo-active"><input id="modo-active" type="checkbox" checked /><span>Link público ativo</span></label>
+    </div>
+    <section class="modo-picker"><div class="field-group"><span>Adicionar música cadastrada</span><input id="modo-search" type="search" placeholder="Digite o nome da música" autocomplete="off" /><ul id="modo-search-results" class="modo-search-list"></ul></div><div><h2>Repertório</h2><ol id="modo-selected-songs" class="modo-selected-list"></ol></div></section>
+    <p id="modo-editor-status" class="admin-status" role="status" aria-live="polite"></p>
+    <div class="admin-form-actions"><button class="button-primary hidden" id="modo-save" type="submit">Salvar</button><button class="button-danger hidden" id="modo-delete" type="button">Excluir</button><a class="button-outline hidden" id="modo-open-public" target="_blank" rel="noopener">Abrir página pública</a></div>
+  </form>
+</section></main>
+<div id="global-loading" class="global-loading hidden"><div class="spinner"></div></div>
+<script type="module" src="../assets/js/app.js"></script>
+<script type="module" src="../assets/js/auth-guard.js"></script>
+<script type="module" src="../assets/js/pages/admin-editor-modo-ensaio.js"></script>
+</body>
+</html>

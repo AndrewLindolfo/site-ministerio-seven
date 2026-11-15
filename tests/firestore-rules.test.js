@@ -114,6 +114,7 @@ async function seedBaseData() {
           create: true, edit: true, delete: false,
           popup: false, top: false, buttonLink: false, beforeStart: false
         },
+        ensaios: { create: true, edit: true, delete: false },
         logs: { view: false }
       }
     });
@@ -139,6 +140,32 @@ after(async () => {
 });
 
 describe("public content", () => {
+  test("public mode rehearsal links expose only active sessions and their songs", async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore();
+      await setDoc(doc(db, "modoEnsaios", "active-session"), {
+        title: "Ensaio", date: "2026-11-15", time: "19:00", location: "Igreja",
+        description: "", active: true, createdBy: primaryAuth.uid,
+        createdAt: new Date(), updatedAt: new Date()
+      });
+      await setDoc(doc(db, "modoEnsaios", "hidden-session"), {
+        title: "Rascunho", date: "", time: "", location: "",
+        description: "", active: false, createdBy: primaryAuth.uid,
+        createdAt: new Date(), updatedAt: new Date()
+      });
+      await setDoc(doc(db, "modoEnsaioMusicas", "active-session_00"), {
+        sessionId: "active-session", order: 0, musicaId: "active-song", title: "Música teste",
+        slug: "musica-teste", cifraId: "", cifraTitle: "", instrumento: "violao",
+        bpm: "", compasso: "", originalKey: "C", notes: "",
+        createdAt: new Date(), updatedAt: new Date()
+      });
+    });
+    const db = testEnv.unauthenticatedContext().firestore();
+    await assertSucceeds(getDoc(doc(db, "modoEnsaios", "active-session")));
+    await assertFails(getDoc(doc(db, "modoEnsaios", "hidden-session")));
+    await assertFails(getDocs(collection(db, "modoEnsaios")));
+    await assertSucceeds(getDocs(query(collection(db, "modoEnsaioMusicas"), where("sessionId", "==", "active-session"))));
+  });
   test("visitors read active content but cannot read hidden content or write", async () => {
     const db = testEnv.unauthenticatedContext().firestore();
     await assertSucceeds(getDoc(doc(db, "musicas", "active-song")));
@@ -196,6 +223,27 @@ describe("user-owned data", () => {
 });
 
 describe("administrative authorization", () => {
+  test("admins with rehearsal permissions can create bounded mode rehearsal data", async () => {
+    const db = testEnv.authenticatedContext(editorAuth.uid, token(editorAuth)).firestore();
+    await assertSucceeds(setDoc(doc(db, "modoEnsaios", "session-one"), {
+      title: "Ensaio de domingo", date: "2026-11-15", time: "19:00", location: "Igreja",
+      description: "Passagem às 18h", active: true, createdBy: editorAuth.uid,
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    }));
+    await assertSucceeds(setDoc(doc(db, "modoEnsaioMusicas", "session-one_00"), {
+      sessionId: "session-one", order: 0, musicaId: "active-song", title: "Música teste",
+      slug: "musica-teste", cifraId: "", cifraTitle: "", instrumento: "violao",
+      bpm: "72", compasso: "4/4", originalKey: "C", notes: "Começar suave",
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    }));
+    await assertFails(updateDoc(doc(db, "modoEnsaios", "session-one"), { createdBy: "attacker", updatedAt: serverTimestamp() }));
+    await assertFails(setDoc(doc(db, "modoEnsaioMusicas", "bad-song"), {
+      sessionId: "session-one", order: 99, musicaId: "missing-song", title: "Inválida",
+      slug: "invalida", cifraId: "", cifraTitle: "", instrumento: "violao",
+      bpm: "", compasso: "", originalKey: "", notes: "",
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    }));
+  });
   test("cifras e downloads exigem uma música existente", async () => {
     const db = testEnv.authenticatedContext(primaryAuth.uid, token(primaryAuth)).firestore();
 

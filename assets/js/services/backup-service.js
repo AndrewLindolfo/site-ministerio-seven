@@ -1,4 +1,4 @@
-import { getCollection, explainFirebaseError } from "../db.js";
+import { getCollection, getDocument, explainFirebaseError } from "../db.js";
 
 export const BACKUP_COLLECTIONS = [
   "admins",
@@ -6,6 +6,8 @@ export const BACKUP_COLLECTIONS = [
   "cifras",
   "programacoes",
   "ensaios",
+  "modoEnsaios",
+  "modoEnsaioMusicas",
   "albuns",
   "downloads",
   "downloadsPorMusica",
@@ -42,7 +44,13 @@ export async function exportBackupJson() {
     }
   };
   const summary = { exported: {}, skipped: [], warnings: [] };
-  const responses = await Promise.allSettled(BACKUP_COLLECTIONS.map((name) => getCollection(name)));
+  const responses = await Promise.allSettled(BACKUP_COLLECTIONS.map(async (name) => {
+    if (name === "config") {
+      const siteConfig = await getDocument("config", "site");
+      return siteConfig ? [siteConfig] : [];
+    }
+    return getCollection(name);
+  }));
 
   for (let index = 0; index < BACKUP_COLLECTIONS.length; index += 1) {
     const name = BACKUP_COLLECTIONS[index];

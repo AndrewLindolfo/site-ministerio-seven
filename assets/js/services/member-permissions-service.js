@@ -1,4 +1,12 @@
-import { deleteDocument, getCollection, getDocument, serverTimestamp, setDocument } from "../db.js";
+import {
+  createWriteBatch,
+  deleteDocument,
+  getCollection,
+  getDocument,
+  getDocumentReference,
+  serverTimestamp,
+  setDocument
+} from "../db.js";
 
 export const MEMBER_COLLECTION = "integrantes";
 export const DEFAULT_MEMBER_PERMISSIONS = {
@@ -97,8 +105,17 @@ export async function saveMember(payload = {}, existingId = "") {
   if (uid) data.uid = uid;
   if (!current?.createdAt || emailChanged) data.createdAt = serverTimestamp();
   if (uid && current?.uidBoundAt) data.uidBoundAt = current.uidBoundAt;
-  await setDocument(MEMBER_COLLECTION, targetId, data, { merge: true });
-  if (emailChanged && existingId && existingId !== targetId) await deleteDocument(MEMBER_COLLECTION, existingId);
+  if (emailChanged && existingId && existingId !== targetId) {
+    // Changing the Google account moves the invitation to a new document ID.
+    // Keep creation and removal atomic so a network interruption cannot leave
+    // two invitations for the same person behind.
+    const batch = createWriteBatch();
+    batch.set(getDocumentReference(MEMBER_COLLECTION, targetId), data);
+    batch.delete(getDocumentReference(MEMBER_COLLECTION, existingId));
+    await batch.commit();
+  } else {
+    await setDocument(MEMBER_COLLECTION, targetId, data, { merge: true });
+  }
   return targetId;
 }
 

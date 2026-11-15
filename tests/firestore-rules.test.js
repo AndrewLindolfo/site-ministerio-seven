@@ -353,6 +353,42 @@ describe("member rehearsal authorization", () => {
     }));
   });
 
+  test("unverified, inactive and mismatched identities cannot become members", async () => {
+    const unverifiedDb = testEnv.authenticatedContext("unverified-uid", {
+      email: memberAuth.email,
+      email_verified: false
+    }).firestore();
+    await assertFails(getDoc(doc(unverifiedDb, "integrantes", `email_${memberAuth.email}`)));
+
+    const wrongUidDb = testEnv.authenticatedContext("wrong-member-uid", token(memberAuth)).firestore();
+    await assertSucceeds(getDoc(doc(wrongUidDb, "integrantes", `email_${memberAuth.email}`)));
+    await assertFails(getDocs(collection(wrongUidDb, "modoEnsaios")));
+
+    const inactive = { uid: "inactive-uid", email: "inactive@example.com", email_verified: true };
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "integrantes", `email_${inactive.email}`), {
+        name: "Integrante inativo", email: inactive.email, uid: inactive.uid,
+        active: false, pendingUid: false,
+        permissions: { ensaios: { create: true, edit: true, delete: true } },
+        createdAt: new Date(), updatedAt: new Date(), uidBoundAt: new Date()
+      });
+    });
+    const inactiveDb = testEnv.authenticatedContext(inactive.uid, token(inactive)).firestore();
+    await assertFails(getDocs(collection(inactiveDb, "modoEnsaios")));
+  });
+
+  test("member records reject schema pollution, oversized data and UID changes", async () => {
+    const primaryDb = testEnv.authenticatedContext(primaryAuth.uid, token(primaryAuth)).firestore();
+    const memberRef = doc(primaryDb, "integrantes", `email_${memberAuth.email}`);
+    await assertFails(updateDoc(memberRef, { uid: "reassigned-uid", updatedAt: serverTimestamp() }));
+    await assertFails(updateDoc(memberRef, { unexpectedAdmin: true, updatedAt: serverTimestamp() }));
+    await assertFails(setDoc(doc(primaryDb, "integrantes", "email_huge@example.com"), {
+      name: "x".repeat(151), email: "huge@example.com", active: true, pendingUid: true,
+      permissions: { ensaios: { create: false, edit: false, delete: false } },
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    }));
+  });
+
   test("a fully authorized member can create, edit and delete a rehearsal", async () => {
     const db = testEnv.authenticatedContext(memberAuth.uid, token(memberAuth)).firestore();
     const batch = writeBatch(db);
@@ -411,6 +447,38 @@ describe("member rehearsal authorization", () => {
       bpm: "", compasso: "", originalKey: "C", notes: "",
       createdAt: serverTimestamp(), updatedAt: serverTimestamp()
     }));
+  });
+
+  test("delete-only members remove a rehearsal atomically but cannot edit it", async () => {
+    const deleteOnly = { uid: "delete-only-uid", email: "delete-only@example.com", email_verified: true };
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore();
+      await setDoc(doc(db, "integrantes", `email_${deleteOnly.email}`), {
+        name: "Integrante exclusor", email: deleteOnly.email, uid: deleteOnly.uid,
+        active: true, pendingUid: false,
+        permissions: { ensaios: { create: false, edit: false, delete: true } },
+        createdAt: new Date(), updatedAt: new Date(), uidBoundAt: new Date()
+      });
+      await setDoc(doc(db, "modoEnsaios", "delete-only-session"), {
+        title: "Excluir", date: "", time: "", location: "", description: "",
+        active: false, createdBy: primaryAuth.uid, createdAt: new Date(), updatedAt: new Date()
+      });
+      await setDoc(doc(db, "modoEnsaioMusicas", "delete-only-session_00"), {
+        sessionId: "delete-only-session", order: 0, musicaId: "active-song", title: "Música teste",
+        slug: "musica-teste", cifraId: "", cifraTitle: "", instrumento: "violao",
+        bpm: "", compasso: "", originalKey: "C", notes: "",
+        createdAt: new Date(), updatedAt: new Date()
+      });
+    });
+    const db = testEnv.authenticatedContext(deleteOnly.uid, token(deleteOnly)).firestore();
+    await assertFails(updateDoc(doc(db, "modoEnsaios", "delete-only-session"), {
+      title: "Sem edição", updatedAt: serverTimestamp()
+    }));
+    await assertFails(deleteDoc(doc(db, "modoEnsaioMusicas", "delete-only-session_00")));
+    const batch = writeBatch(db);
+    batch.delete(doc(db, "modoEnsaioMusicas", "delete-only-session_00"));
+    batch.delete(doc(db, "modoEnsaios", "delete-only-session"));
+    await assertSucceeds(batch.commit());
   });
 });
 

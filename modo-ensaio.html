@@ -11,8 +11,8 @@
 </head>
 <body class="modo-palco-body">
 <header class="modo-palco-header hidden">
-  <div class="modo-brand"><img src="./assets/img/v7/icon_120.png" alt="V7" /><div><strong id="session-title">Modo Ensaio</strong><span id="session-meta"></span></div></div>
-  <div class="modo-header-actions"><button id="wake-lock" type="button" title="Manter a tela ligada">Tela ligada</button><button id="share-session" type="button">Compartilhar</button><button id="fullscreen" type="button">Tela cheia</button></div>
+  <div class="modo-brand"><img id="header-v7-logo" src="./assets/img/v7/icon_dark.png" alt="V7" /><div><strong id="session-title">Modo Ensaio</strong><span id="session-meta"></span></div></div>
+  <div class="modo-header-actions"><button id="theme-toggle" type="button" title="Ativar modo claro" aria-label="Ativar modo claro">☀️</button><button id="wake-lock" type="button" title="Manter a tela ligada">Tela ligada</button><button id="share-session" type="button">Compartilhar</button><button id="fullscreen" type="button">Tela cheia</button></div>
 </header>
 <main class="modo-palco-shell hidden">
   <aside class="modo-setlist"><div class="modo-setlist-title"><strong>Repertório</strong><span id="song-progress"></span></div><ol id="setlist"></ol></aside>
@@ -21,7 +21,7 @@
     <div id="song-note" class="modo-song-note hidden"></div>
     <div class="modo-toolbar">
       <div><button id="font-down" type="button" aria-label="Diminuir fonte">A−</button><button id="font-up" type="button" aria-label="Aumentar fonte">A+</button></div>
-      <div id="transpose-controls"><button id="transpose-down" type="button">Tom −</button><span id="transpose-value">Original</span><button id="transpose-up" type="button">Tom +</button></div>
+      <div id="transpose-controls"><button id="transpose-down" type="button">Tom −</button><button id="transpose-reset" type="button" title="Voltar ao tom original">Original</button><button id="transpose-up" type="button">Tom +</button></div>
       <div><button id="scroll-toggle" type="button">Auto-rolagem</button><label>Velocidade <input id="scroll-speed" type="range" min="1" max="6" value="3" /></label></div>
       <div id="metronome-controls"><button id="metronome-toggle" type="button">Metrônomo</button><span id="metronome-label"></span><i id="beat-indicator"></i></div>
     </div>

@@ -24,12 +24,16 @@ test("interpreta acordes simples, alterados e com baixo", () => {
     normalized: "C#m7/G#"
   });
   assert.equal(parseChordSymbol("H7"), null);
+  assert.equal(parseChordSymbol("A7/9")?.quality, "7/9");
+  assert.equal(parseChordSymbol("D#°")?.quality, "°");
 });
 
 test("calcula as notas essenciais dos acordes", () => {
   assert.deepEqual(buildChordNotes("C"), ["C", "E", "G"]);
   assert.deepEqual(buildChordNotes("Am7"), ["A", "C", "E", "G"]);
   assert.deepEqual(buildChordNotes("D/F#"), ["F#", "D", "A"]);
+  assert.deepEqual(buildChordNotes("D#°"), ["D#", "F#", "A"]);
+  assert.deepEqual(buildChordNotes("A7/9"), ["A", "C#", "E", "G", "B"]);
 });
 
 test("limita instrumentos às opções suportadas", () => {

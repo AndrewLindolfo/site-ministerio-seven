@@ -1,16 +1,6 @@
+import { analyzeChordText, isChordSymbol, isLikelyChordLine } from "../modules/chord-symbol.js";
+
 const PDF_MAX_PAGES = 24;
-const CHORD_TOKEN_REGEX = /^[A-G](?:#|b)?(?:(?:maj|min|m|sus|dim|aug|add|mmaj)?(?:2|4|5|6|7|7M|9|11|13)?(?:sus2|sus4|add2|add4|add9|maj7|maj9|maj11|maj13|m7|m9|m11|m13|dim7|aug7|7M|º|°|\+)?(?:\([^)]+\))?)?(?:\/[A-G](?:#|b)?)?$/i;
-
-function cleanChordToken(value = "") {
-  return String(value || "")
-    .trim()
-    .replace(/^[\[\({|'"`]+/, "")
-    .replace(/[\]\)}|'"`.,;:!?]+$/, "");
-}
-
-function isChordToken(value = "") {
-  return CHORD_TOKEN_REGEX.test(cleanChordToken(value));
-}
 
 export function analyzeChordContent(value = "") {
   const lines = cleanExtractedText(value).split("\n").map((line) => line.trim()).filter(Boolean);
@@ -20,13 +10,13 @@ export function analyzeChordContent(value = "") {
 
   lines.forEach((line) => {
     const withoutSection = line.replace(/^\[[^\]]{1,50}\]\s*/, "");
-    const tokens = withoutSection.split(/\s+/).map(cleanChordToken).filter(Boolean);
-    if (tokens.length && tokens.every(isChordToken)) {
+    const analysis = analyzeChordText(withoutSection);
+    if (isLikelyChordLine(withoutSection)) {
       chordLines += 1;
-      chordTokens += tokens.length;
+      chordTokens += analysis.chordCount;
     }
     bracketedChords += [...line.matchAll(/\[([^\]\r\n]+)\]/g)]
-      .filter((match) => isChordToken(match[1])).length;
+      .filter((match) => isChordSymbol(match[1])).length;
   });
 
   return {

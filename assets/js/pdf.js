@@ -1,3 +1,5 @@
+import { isLikelyChordLine } from "./modules/chord-symbol.js";
+
 const JSPDF_SRC = new URL("../vendor/jspdf/jspdf.umd.min.js", import.meta.url).href;
 const PAGE = { width: 210, height: 297, margin: 16, bottom: 16 };
 let jsPdfPromise = null;
@@ -99,10 +101,7 @@ function splitLongMonospaceLine(line, maxChars) {
 }
 
 function looksLikeChordLine(line = "") {
-  const tokens = String(line).trim().split(/\s+/).filter(Boolean);
-  if (!tokens.length) return false;
-  const chord = /^[A-G](?:#|b)?(?:m|maj|min|dim|aug|sus|add)?(?:2|4|5|6|7|9|11|13)?(?:º|°|\+)?(?:\([^)]*\))?(?:\/[A-G](?:#|b)?)?[,;|:]*$/i;
-  return tokens.every((token) => chord.test(token));
+  return isLikelyChordLine(line);
 }
 
 function drawChordBody(doc, content, startY) {

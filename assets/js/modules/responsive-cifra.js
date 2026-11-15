@@ -1,20 +1,4 @@
-const CHORD_TOKEN_REGEX = /^[A-G](?:#|b)?(?:(?:maj|min|m|sus|dim|aug|add|mmaj)?(?:2|4|5|6|7|7M|9|11|13)?(?:sus2|sus4|add2|add4|add9|maj7|maj9|maj11|maj13|m7|m9|m11|m13|dim7|aug7|7M|º|°|\+)?(?:\([^)]+\))?)?(?:\/[A-G](?:#|b)?)?$/i;
-
-function cleanChordToken(token = "") {
-  return String(token || "")
-    .trim()
-    .replace(/^[\[(\{'"`]+/, "")
-    .replace(/[\])\}'"`.,;:!?]+$/, "");
-}
-
-function isChordToken(token = "") {
-  return CHORD_TOKEN_REGEX.test(cleanChordToken(token));
-}
-
-function isChordOnlyLine(text = "") {
-  const tokens = String(text || "").trim().split(/\s+/).map(cleanChordToken).filter(Boolean);
-  return tokens.length > 0 && tokens.every(isChordToken);
-}
+import { analyzeChordText, cleanChordToken, isLikelyChordLine, shouldFormatChordToken } from "./chord-symbol.js";
 
 function isSafeBoundary(text, position) {
   if (position <= 0 || position >= text.length) return true;
@@ -85,11 +69,12 @@ function createChordLine(text = "") {
   const line = document.createElement("div");
   line.className = "cifra-pair-line cifra-pair-chords";
   const parts = String(text || "").split(/(\s+)/);
+  const analysis = analyzeChordText(text);
   parts.forEach((part) => {
-    if (part && !/^\s+$/.test(part) && isChordToken(part)) {
+    if (part && !/^\s+$/.test(part) && shouldFormatChordToken(part, analysis)) {
       const span = document.createElement("span");
       span.className = "chord-token";
-      span.dataset.chordSymbol = cleanChordToken(part);
+      span.dataset.chordSymbol = cleanChordToken(part).token;
       span.textContent = part;
       line.appendChild(span);
     } else {
@@ -151,8 +136,8 @@ export function prepareResponsiveCifra(content) {
     const currentText = segmentText(currentHtml);
     const nextHtml = lines[index + 1];
     const nextText = nextHtml === undefined ? "" : segmentText(nextHtml);
-    const canPair = isChordOnlyLine(currentText) && nextHtml !== undefined && nextText.trim() &&
-      !isChordOnlyLine(nextText) && isPlainLyricSegment(nextHtml);
+    const canPair = isLikelyChordLine(currentText) && nextHtml !== undefined && nextText.trim() &&
+      !isLikelyChordLine(nextText) && isPlainLyricSegment(nextHtml);
 
     if (canPair) {
       const pair = document.createElement("div");

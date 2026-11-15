@@ -10,10 +10,8 @@ import { hasPermission } from "../services/admin-permissions-service.js";
 import { bindChordInteractions } from "../modules/chord-interactive.js";
 import { createPersonalButtons, refreshPersonalActionButtons } from "../modules/personal-actions.js";
 import { sanitizeRichHtml } from "../lib/sanitize-html.js";
+import { analyzeChordText, cleanChordToken, shouldFormatChordToken } from "../modules/chord-symbol.js";
 
-const CHORD_TOKEN_REGEX = /^[A-G](?:#|b)?(?:(?:maj|min|m|sus|dim|aug|add|mmaj)?(?:2|4|5|6|7|7M|9|11|13)?(?:sus2|sus4|add2|add4|add9|maj7|maj9|maj11|maj13|m7|m9|m11|m13|dim7|aug7|7M|º|°|\+)?(?:\([^)]+\))?)?(?:\/[A-G](?:#|b)?)?$/i;
-const INTRO_LINE_REGEX = /^\s*\[Intro\]\s*$/i;
-const INTRO_WITH_CHORDS_REGEX = /^\s*\[Intro\]\s+/i;
 const CHORD_COLOR_MAP = {
   padrao: "#FF5C00",
   preto: "#0d0d0d",
@@ -73,27 +71,6 @@ function stripHtmlToPlainText(html = "") {
   return (tmp.innerText || tmp.textContent || "").replace(/\r\n?/g, "\n");
 }
 
-function cleanToken(token = "") {
-  return String(token || "")
-    .trim()
-    .replace(/^[\[(\{'"`]+/, "")
-    .replace(/[\])\}'"`.,;:!?]+$/, "");
-}
-
-function isChordToken(token = "") {
-  return CHORD_TOKEN_REGEX.test(cleanToken(token));
-}
-
-function isChordOnlyLine(text = "") {
-  const tokens = String(text || "")
-    .trim()
-    .split(/\s+/)
-    .map(cleanToken)
-    .filter(Boolean);
-  if (!tokens.length) return false;
-  return tokens.every(isChordToken);
-}
-
 function resolveChordColor(value = "") {
   const raw = String(value || "").trim();
   if (!raw) return CHORD_COLOR_MAP.padrao;
@@ -110,7 +87,7 @@ function applyChordColor(cifra = {}) {
   contentEl.style.setProperty("--seven-chord-color", resolved);
 }
 
-function wrapTokensInTextNode(node) {
+function wrapTokensInTextNode(node, analysis) {
   const text = node.nodeValue || "";
   if (!text.trim()) return;
   const parts = text.split(/(\s+)/);
@@ -122,11 +99,11 @@ function wrapTokensInTextNode(node) {
       frag.appendChild(document.createTextNode(part));
       continue;
     }
-    if (isChordToken(part)) {
+    if (shouldFormatChordToken(part, analysis)) {
       const span = document.createElement('span');
       span.className = 'chord-token';
       span.textContent = part;
-      span.dataset.chordSymbol = cleanToken(part);
+      span.dataset.chordSymbol = cleanChordToken(part).token;
       frag.appendChild(span);
       changed = true;
     } else {
@@ -139,11 +116,12 @@ function wrapTokensInTextNode(node) {
 function applyChordTokensToInlineHtml(html = "") {
   const wrapper = document.createElement('span');
   wrapper.innerHTML = html;
+  const analysis = analyzeChordText(String(wrapper.textContent || '').replace(/\u00a0/g, ' '));
   const walker = document.createTreeWalker(wrapper, NodeFilter.SHOW_TEXT);
   const nodes = [];
   let current;
   while ((current = walker.nextNode())) nodes.push(current);
-  nodes.forEach(wrapTokensInTextNode);
+  nodes.forEach((node) => wrapTokensInTextNode(node, analysis));
   return wrapper.innerHTML;
 }
 
@@ -162,64 +140,19 @@ function richHtmlToLineSegments(html = "") {
 
 function wrapChordLinesFromHtml(html = "") {
   const lines = richHtmlToLineSegments(html);
-  let introBlockRemaining = 0;
-
-  return lines.map((segmentHtml) => {
-    const text = stripHtmlToPlainText(segmentHtml);
-    const trimmed = text.trim();
-    let shouldProcess = false;
-
-    if (INTRO_LINE_REGEX.test(trimmed)) {
-      introBlockRemaining = 4;
-    } else if (INTRO_WITH_CHORDS_REGEX.test(trimmed)) {
-      shouldProcess = true;
-      introBlockRemaining = 4;
-    } else if (introBlockRemaining > 0) {
-      if (isChordOnlyLine(trimmed)) {
-        shouldProcess = true;
-        introBlockRemaining -= 1;
-      } else {
-        introBlockRemaining = 0;
-      }
-    } else if (isChordOnlyLine(trimmed)) {
-      shouldProcess = true;
-    }
-
-    return shouldProcess ? applyChordTokensToInlineHtml(segmentHtml) : segmentHtml;
-  }).join("<br>");
+  return lines.map(applyChordTokensToInlineHtml).join("<br>");
 }
 
 function wrapChordLinesFromPlainText(text = "") {
   const lines = String(text || "").replace(/\r\n?/g, "\n").split("\n");
-  let introBlockRemaining = 0;
-
   return lines.map((line) => {
-    const trimmed = line.trim();
-    let shouldProcess = false;
-
-    if (INTRO_LINE_REGEX.test(trimmed)) {
-      introBlockRemaining = 4;
-    } else if (INTRO_WITH_CHORDS_REGEX.test(trimmed)) {
-      shouldProcess = true;
-      introBlockRemaining = 4;
-    } else if (introBlockRemaining > 0) {
-      if (isChordOnlyLine(trimmed)) {
-        shouldProcess = true;
-        introBlockRemaining -= 1;
-      } else {
-        introBlockRemaining = 0;
-      }
-    } else if (isChordOnlyLine(trimmed)) {
-      shouldProcess = true;
-    }
-
     const safe = line
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
       .replace(/ /g, "&nbsp;");
 
-    return shouldProcess ? applyChordTokensToInlineHtml(safe) : safe;
+    return applyChordTokensToInlineHtml(safe);
   }).join("<br>");
 }
 
@@ -301,7 +234,7 @@ function annotateInteractiveChordTokens() {
   const contentEl = document.getElementById("cifra-content");
   if (!contentEl) return;
   contentEl.querySelectorAll(".chord-token").forEach((node) => {
-    const symbol = cleanToken(node.dataset.chordSymbol || node.dataset.chordSymbol || node.textContent || "");
+    const symbol = cleanChordToken(node.dataset.chordSymbol || node.textContent || "").token;
     if (!symbol) return;
     node.dataset.chordSymbol = symbol;
     node.setAttribute("data-chord-symbol", symbol);

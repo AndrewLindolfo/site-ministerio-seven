@@ -1,9 +1,10 @@
+import { parseChordSymbol as parseChordSymbolCore } from "./chord-symbol.js";
+
 const NOTE_SEQUENCE_SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 const FLAT_TO_SHARP = {
   "Db":"C#","Eb":"D#","Gb":"F#","Ab":"G#","Bb":"A#",
   "Cb":"B","Fb":"E"
 };
-const CHORD_REGEX = /^([A-G])([#b]?)([^/]*?)(?:\/([A-G])([#b]?))?$/;
 
 export function normalizeNote(note = "") {
   const raw = String(note || "").trim();
@@ -25,14 +26,17 @@ export function transposeNote(note = "", semitones = 0) {
 }
 
 export function parseChordSymbol(symbol = "") {
-  const raw = String(symbol || "").trim();
-  const match = raw.match(CHORD_REGEX);
-  if (!match) return null;
+  const parsed = parseChordSymbolCore(symbol);
+  if (!parsed) return null;
 
-  const [, rootLetter, accidental, qualityRaw = "", bassLetter = "", bassAccidental = ""] = match;
-  const root = normalizeNote(rootLetter + (accidental || ""));
-  const quality = qualityRaw || "";
-  const bass = bassLetter ? normalizeNote(bassLetter + (bassAccidental || "")) : "";
+  const raw = parsed.raw;
+  const root = normalizeNote(parsed.root);
+  const extensionSuffix = parsed.slashParts
+    .filter((part) => part.type === "extension")
+    .map((part) => `/${part.raw}`)
+    .join("");
+  const quality = `${parsed.body}${extensionSuffix}`;
+  const bass = parsed.bass ? normalizeNote(parsed.bass) : "";
 
   return {
     raw,
@@ -51,38 +55,31 @@ export function chordDisplayName(parsed) {
 }
 
 function intervalPatternFromQuality(quality = "") {
-  const q = String(quality || "").toLowerCase();
+  const raw = String(quality || "");
+  const q = raw.toLowerCase();
+  let intervals;
 
-  if (!q || q === "maj") return [0, 4, 7];
-  if (q === "m" || q === "min") return [0, 3, 7];
-  if (q === "5") return [0, 7];
-  if (q === "dim") return [0, 3, 6];
-  if (q === "aug") return [0, 4, 8];
-  if (q === "sus2") return [0, 2, 7];
-  if (q === "sus4" || q === "sus") return [0, 5, 7];
-  if (q === "6") return [0, 4, 7, 9];
-  if (q === "m6") return [0, 3, 7, 9];
-  if (q === "7") return [0, 4, 7, 10];
-  if (q === "maj7" || q === "7m" || q === "7maj" || q === "7m+") return [0, 4, 7, 11];
-  if (q === "m7") return [0, 3, 7, 10];
-  if (q === "9") return [0, 4, 7, 10, 14];
-  if (q === "m9") return [0, 3, 7, 10, 14];
-  if (q === "add9") return [0, 4, 7, 14];
-  if (q === "madd9") return [0, 3, 7, 14];
-  if (q === "11") return [0, 4, 7, 10, 14, 17];
-  if (q === "13") return [0, 4, 7, 10, 14, 21];
+  if (/ø|m7\s*\(?b5\)?/.test(q)) intervals = [0, 3, 6];
+  else if (/dim|[°º]/.test(q) || q === "o") intervals = [0, 3, 6];
+  else if (q === "aug" || q === "+") intervals = [0, 4, 8];
+  else if (/sus2/.test(q)) intervals = [0, 2, 7];
+  else if (/sus(?:4)?/.test(q)) intervals = [0, 5, 7];
+  else if (/^(?:m|min|mi|-)/.test(q)) intervals = [0, 3, 7];
+  else if (q === "5") intervals = [0, 7];
+  else intervals = [0, 4, 7];
 
-  if (q.includes("m7")) return [0, 3, 7, 10];
-  if (q.includes("maj7")) return [0, 4, 7, 11];
-  if (q.includes("m")) return [0, 3, 7];
-  if (q.includes("sus2")) return [0, 2, 7];
-  if (q.includes("sus4") || q.includes("sus")) return [0, 5, 7];
-  if (q.includes("add9")) return [0, 4, 7, 14];
-  if (q.includes("dim")) return [0, 3, 6];
-  if (q.includes("aug")) return [0, 4, 8];
-  if (q.includes("7")) return [0, 4, 7, 10];
+  const add = (value) => {
+    if (!intervals.includes(value)) intervals.push(value);
+  };
+  if (/7m|maj7|7maj|7\+|Δ7|△7/i.test(raw)) add(11);
+  else if (/7/.test(q)) add(10);
+  if (/6/.test(q)) add(9);
+  if (/9/.test(q)) add(14);
+  if (/11/.test(q)) add(17);
+  if (/13/.test(q)) add(21);
+  if (/ø|m7\s*\(?b5\)?/.test(q)) add(10);
 
-  return [0, 4, 7];
+  return intervals.sort((a, b) => a - b);
 }
 
 export function buildChordNotes(symbol = "") {

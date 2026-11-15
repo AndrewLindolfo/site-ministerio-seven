@@ -1,15 +1,11 @@
+import { analyzeChordText, cleanChordToken, parseChordSymbol, shouldFormatChordToken } from "./chord-symbol.js";
+
 const SHARP_NOTES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 const FLAT_NOTES  = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
 const ENHARMONIC = {
   Cb: "B", "B#": "C", "E#": "F", Fb: "E",
   Db: "C#", Eb: "D#", Gb: "F#", Ab: "G#", Bb: "A#"
 };
-
-const CHORD_REGEX = /([A-G](?:#|b)?(?:[A-Za-z0-9º°+\-]*(?:\([^)]+\))?)?(?:\/[A-G](?:#|b)?)?)/g;
-
-const INTRO_LINE_REGEX = /^\s*\[Intro\]\s*$/i;
-const INTRO_WITH_CHORDS_REGEX = /^\s*\[Intro\]\s+/i;
-const STRICT_CHORD_TOKEN_REGEX = /^[A-G](?:#|b)?(?:(?:maj|min|m|sus|dim|aug|add|mmaj)?(?:2|4|5|6|7|7M|9|11|13)?(?:sus2|sus4|add2|add4|add9|maj7|maj9|maj11|maj13|m7|m9|m11|m13|dim7|aug7|7M|º|°|\+)?(?:\([^)]+\))?)?(?:\/[A-G](?:#|b)?)?$/;
 
 export function normalizeNote(note = "") {
   const n = String(note || "").trim();
@@ -22,6 +18,17 @@ export function transposeNote(note = "", steps = 0, preferFlats = false) {
 
   let idx = SHARP_NOTES.indexOf(normalized);
   if (idx === -1) idx = FLAT_NOTES.indexOf(original);
+  if (idx === -1) {
+    const match = original.match(/^([A-G])((?:#{1,2}|b{1,2}|[♯♭]|x)?)$/);
+    if (match) {
+      const naturalIndex = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[match[1]];
+      const accidental = String(match[2] || "")
+        .replaceAll("♯", "#")
+        .replaceAll("♭", "b")
+        .replaceAll("x", "##");
+      idx = naturalIndex + [...accidental].reduce((sum, char) => sum + (char === "#" ? 1 : -1), 0);
+    }
+  }
   if (idx === -1) return original;
 
   const next = (idx + steps + 1200) % 12;
@@ -42,61 +49,27 @@ function normalizeChordTokenCase(token = "") {
   return `${root}${accidental}${suffix}`;
 }
 
-function isChordToken(token = "") {
-  const t = normalizeChordTokenCase(String(token).trim());
-  return STRICT_CHORD_TOKEN_REGEX.test(t);
-}
-
 function transposeChordToken(token = "", steps = 0) {
-  const normalizedToken = normalizeChordTokenCase(token);
+  const original = String(token || "");
+  const parsed = parseChordSymbol(original);
+  if (!parsed) return original;
 
-  return String(normalizedToken).replace(
-    /^([A-G](?:#|b)?)([^/\s]*)(?:\/([A-G](?:#|b)?))?$/,
-    (_, root, suffix = "", bass = "") => {
-      const useFlats = /b/.test(root) || /b/.test(bass || "");
-      const newRoot = transposeNote(root, steps, useFlats);
-      const newBass = bass ? transposeNote(bass, steps, useFlats) : "";
-      return newBass ? `${newRoot}${suffix}/${newBass}` : `${newRoot}${suffix}`;
-    }
-  );
-}
-
-function cleanToken(token = "") {
-  return String(token || "")
-    .trim()
-    .replace(/^[\[\(\{'"`]+/, "")
-    .replace(/[\]\)\}'"`.,;:!?]+$/, "");
-}
-
-function isChordOnlyLine(line = "") {
-  const tokens = String(line || "")
-    .trim()
-    .split(/\s+/)
-    .map(cleanToken)
-    .filter(Boolean);
-
-  if (!tokens.length) return false;
-  return tokens.every(isChordToken);
+  const useFlats = /b|♭/.test(parsed.rootRaw)
+    || parsed.slashParts.some((part) => part.type === "bass" && /b|♭/.test(part.raw));
+  const newRoot = transposeNote(parsed.root, steps, useFlats);
+  const slash = parsed.slashParts.map((part) => part.type === "bass"
+    ? transposeNote(part.note, steps, useFlats)
+    : part.raw);
+  const rebuilt = `${newRoot}${parsed.body}${slash.map((part) => `/${part}`).join("")}`;
+  const cleaned = cleanChordToken(original).token;
+  return original.replace(cleaned, rebuilt);
 }
 
 function transposeChordLine(line = "", steps = 0) {
-  return line.replace(
-    CHORD_REGEX,
-    (match) => isChordToken(match) ? transposeChordToken(match, steps) : match
-  );
-}
-
-function transposeBracketedChords(line = "", steps = 0) {
-  return String(line || "").replace(/\[([^\]\r\n]+)\]/g, (match, token) => {
-    const chord = String(token || "").trim();
-    if (!isChordToken(chord)) return match;
-    return `[${transposeChordToken(chord, steps)}]`;
-  });
-}
-
-function hasBracketedChord(line = "") {
-  return [...String(line || "").matchAll(/\[([^\]\r\n]+)\]/g)]
-    .some((match) => isChordToken(String(match[1] || "").trim()));
+  const analysis = analyzeChordText(line);
+  return String(line || "").split(/(\s+)/).map((part) =>
+    shouldFormatChordToken(part, analysis) ? transposeChordToken(part, steps) : part
+  ).join("");
 }
 
 export function transposeKeyLabel(value = "", steps = 0) {
@@ -114,49 +87,5 @@ export function transposeKeyLabel(value = "", steps = 0) {
 
 export function transposeText(text = "", steps = 0) {
   const lines = String(text || "").replace(/\r\n?/g, "\n").split("\n");
-  const out = [];
-
-  let introBlockRemaining = 0;
-
-  for (const line of lines) {
-    const trimmed = String(line || "").trim();
-    const lineWithBracketedChords = transposeBracketedChords(line, steps);
-
-    if (INTRO_LINE_REGEX.test(trimmed)) {
-      out.push(line);
-      introBlockRemaining = 4; // próximas 1-4 linhas de acordes também entram
-      continue;
-    }
-
-    if (INTRO_WITH_CHORDS_REGEX.test(trimmed)) {
-      out.push(transposeChordLine(lineWithBracketedChords, steps));
-      introBlockRemaining = 4;
-      continue;
-    }
-
-    if (hasBracketedChord(line)) {
-      out.push(lineWithBracketedChords);
-      introBlockRemaining = 0;
-      continue;
-    }
-
-    if (introBlockRemaining > 0) {
-      if (isChordOnlyLine(trimmed)) {
-        out.push(transposeChordLine(lineWithBracketedChords, steps));
-        introBlockRemaining -= 1;
-        continue;
-      }
-
-      introBlockRemaining = 0;
-    }
-
-    if (isChordOnlyLine(trimmed)) {
-      out.push(transposeChordLine(lineWithBracketedChords, steps));
-      continue;
-    }
-
-    out.push(lineWithBracketedChords);
-  }
-
-  return out.join("\n");
+  return lines.map((line) => transposeChordLine(line, steps)).join("\n");
 }

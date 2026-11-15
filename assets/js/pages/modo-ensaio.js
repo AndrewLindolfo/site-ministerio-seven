@@ -9,7 +9,7 @@ import { initTheme } from "../theme.js";
 import { initThemeBranding } from "../modules/theme-branding.js";
 
 const sessionId = new URLSearchParams(location.search).get("id") || "";
-const state = { session: null, songs: [], index: 0, view: "chord", transpose: 0, fontSize: 22, scrollTimer: 0, metronomeTimer: 0, audio: null, beat: 0, wakeLock: null, liveUnsubscribers: [] };
+const state = { session: null, songs: [], index: 0, view: "chord", transpose: 0, fontSize: 18, scrollTimer: 0, metronomeTimer: 0, audio: null, beat: 0, wakeLock: null, wakeLockRequested: false, liveUnsubscribers: [] };
 const $ = (selector) => document.querySelector(selector);
 
 function showError(message) { $(".modo-palco-header").classList.add("hidden"); $(".modo-palco-shell").classList.add("hidden"); $("#modo-error-message").textContent = message; $("#modo-error").classList.remove("hidden"); }
@@ -40,6 +40,15 @@ function appendChordLine(container, line) {
 
 function renderTextContent(text = "") { const content = $("#stage-content"); content.replaceChildren(); text.split("\n").forEach((line) => appendChordLine(content, line)); }
 
+function renderLyricContent(html = "") {
+  const content = $("#stage-content");
+  content.innerHTML = sanitizeRichHtml(html) || `<p>Letra não disponível.</p>`;
+  content.querySelectorAll("p").forEach((paragraph) => {
+    const hasVisibleContent = Boolean(paragraph.textContent.replace(/\u00a0/g, " ").trim() || paragraph.querySelector("img, video, iframe, table, ul, ol"));
+    paragraph.classList.toggle("modo-blank-paragraph", !hasVisibleContent);
+  });
+}
+
 async function resolveCurrent() {
   const row = state.songs[state.index];
   if (!row) return null;
@@ -55,8 +64,9 @@ async function renderCurrent(resetTranspose = true) {
   const key = hasCifra ? (cifra.originalKey || row.originalKey) : ""; const details = [key ? `Tom ${transposeKeyLabel(key, state.transpose)}` : "", hasCifra ? getInstrumentLabel(cifra.instrumento || row.instrumento) : "Somente letra", (cifra?.bpm || row.bpm) ? `${cifra?.bpm || row.bpm} BPM` : "", cifra?.compasso || row.compasso].filter(Boolean); $("#song-details").textContent = details.join(" • ");
   $("#song-note").textContent = row.notes || ""; $("#song-note").classList.toggle("hidden", !row.notes);
   $("#view-toggle").classList.toggle("hidden", !hasCifra); $("#view-toggle").textContent = state.view === "chord" ? "Cifra" : "Letra"; $("#view-toggle").setAttribute("aria-label", state.view === "chord" ? "Exibindo cifra; mudar para letra" : "Exibindo letra; mudar para cifra"); $("#transpose-controls").classList.toggle("hidden", !hasCifra || state.view !== "chord"); $("#metronome-controls").classList.toggle("hidden", !(cifra?.bpm || row.bpm)); $("#metronome-label").textContent = (cifra?.bpm || row.bpm) ? `${cifra?.bpm || row.bpm} BPM • ${cifra?.compasso || row.compasso || "4/4"}` : "";
-  const lyricHtml = music?.lyricHtml || ""; const chordText = cifra?.cifraText || stripHtml(cifra?.cifraHtml || "");
-  if (state.view === "chord" && chordText) renderTextContent(transposeText(chordText, state.transpose)); else { $("#stage-content").innerHTML = sanitizeRichHtml(lyricHtml) || `<p>Letra não disponível.</p>`; }
+  const lyricHtml = music?.lyricHtml || ""; const chordText = cifra?.cifraText || stripHtml(cifra?.cifraHtml || ""); const showingChord = state.view === "chord" && chordText;
+  $("#stage-content").classList.toggle("is-chord", Boolean(showingChord)); $("#stage-content").classList.toggle("is-lyrics", !showingChord);
+  if (showingChord) renderTextContent(transposeText(chordText, state.transpose)); else renderLyricContent(lyricHtml);
   $("#stage-content").style.fontSize = `${state.fontSize}px`; $("#transpose-reset").textContent = state.transpose ? `Original (${state.transpose > 0 ? "+" : ""}${state.transpose})` : "Original"; $("#transpose-reset").classList.toggle("is-active", state.transpose !== 0); $("#previous-song").disabled = state.index === 0; $("#next-song").disabled = state.index === state.songs.length - 1;
   document.querySelectorAll("#setlist li").forEach((li, index) => li.classList.toggle("is-current", index === state.index));
   $("#stage-content").scrollTop = 0;
@@ -69,7 +79,9 @@ function toggleAutoScroll() { if (state.scrollTimer) return stopAutoScroll(); co
 function stopMetronome() { if (state.metronomeTimer) clearInterval(state.metronomeTimer); state.metronomeTimer = 0; state.beat = 0; $("#metronome-toggle")?.classList.remove("is-active"); }
 function clickBeat(accent) { const AudioContextClass = window.AudioContext || window.webkitAudioContext; if (!AudioContextClass) return; state.audio ||= new AudioContextClass(); const oscillator = state.audio.createOscillator(); const gain = state.audio.createGain(); oscillator.frequency.value = accent ? 1200 : 850; gain.gain.setValueAtTime(.12, state.audio.currentTime); gain.gain.exponentialRampToValueAtTime(.001, state.audio.currentTime + .05); oscillator.connect(gain).connect(state.audio.destination); oscillator.start(); oscillator.stop(state.audio.currentTime + .055); const dot = $("#beat-indicator"); dot.classList.remove("pulse"); requestAnimationFrame(() => dot.classList.add("pulse")); }
 async function toggleMetronome() { if (state.metronomeTimer) return stopMetronome(); const row = state.songs[state.index]; const cifra = row.cifraId ? await getCifra(row.cifraId) : null; const bpm = Number(cifra?.bpm || row.bpm); if (!bpm) return; const beats = Number((cifra?.compasso || row.compasso || "4/4").split("/")[0]) || 4; state.beat = 0; clickBeat(true); state.metronomeTimer = setInterval(() => { state.beat = (state.beat + 1) % beats; clickBeat(state.beat === 0); }, 60000 / bpm); $("#metronome-toggle").classList.add("is-active"); }
-async function toggleWakeLock() { try { if (state.wakeLock) { await state.wakeLock.release(); state.wakeLock = null; $("#wake-lock").classList.remove("is-active"); return; } if (!("wakeLock" in navigator)) throw new Error(); state.wakeLock = await navigator.wakeLock.request("screen"); $("#wake-lock").classList.add("is-active"); state.wakeLock.addEventListener("release", () => { state.wakeLock = null; $("#wake-lock").classList.remove("is-active"); }); } catch { alert("Este navegador não permite manter a tela ligada automaticamente."); } }
+function updateWakeLockButton(active) { const button = $("#wake-lock"); button.classList.toggle("is-active", active); button.textContent = active ? "Tela protegida" : "Tela ligada"; button.setAttribute("aria-pressed", active ? "true" : "false"); button.title = active ? "A tela permanecerá ligada durante o ensaio" : "Impedir que a tela apague durante o ensaio"; }
+async function requestWakeLock() { if (!("wakeLock" in navigator) || document.visibilityState !== "visible") throw new Error(); state.wakeLock = await navigator.wakeLock.request("screen"); updateWakeLockButton(true); state.wakeLock.addEventListener("release", () => { state.wakeLock = null; updateWakeLockButton(false); }); }
+async function toggleWakeLock() { try { if (state.wakeLockRequested) { state.wakeLockRequested = false; if (state.wakeLock) await state.wakeLock.release(); updateWakeLockButton(false); return; } state.wakeLockRequested = true; await requestWakeLock(); } catch { state.wakeLockRequested = false; updateWakeLockButton(false); alert("Este navegador não permite manter a tela ligada automaticamente."); } }
 async function share() { const data = { title: state.session.title, text: `Modo Ensaio — ${state.session.title}`, url: location.href }; if (navigator.share) await navigator.share(data).catch(() => {}); else { await navigator.clipboard.writeText(location.href); alert("Link copiado."); } }
 
 async function init() {
@@ -84,5 +96,6 @@ $("#font-down").onclick = () => { state.fontSize = Math.max(14, state.fontSize -
 $("#transpose-down").onclick = () => { state.transpose--; renderCurrent(false); }; $("#transpose-reset").onclick = () => { state.transpose = 0; renderCurrent(false); }; $("#transpose-up").onclick = () => { state.transpose++; renderCurrent(false); }; $("#scroll-toggle").onclick = toggleAutoScroll; $("#metronome-toggle").onclick = toggleMetronome; $("#wake-lock").onclick = toggleWakeLock; $("#share-session").onclick = share; $("#fullscreen").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
 document.addEventListener("keydown", (event) => { if (["ArrowLeft", "PageUp"].includes(event.key)) $("#previous-song").click(); if (["ArrowRight", "PageDown"].includes(event.key)) $("#next-song").click(); if (event.key === " ") { event.preventDefault(); toggleAutoScroll(); } });
 $("#setlist-toggle").onclick = openSetlist; $("#setlist-close").onclick = closeSetlist; $("#setlist-backdrop").onclick = closeSetlist; $("#reload-session").onclick = () => location.reload();
+document.addEventListener("visibilitychange", () => { if (state.wakeLockRequested && !state.wakeLock && document.visibilityState === "visible") requestWakeLock().catch(() => { state.wakeLockRequested = false; updateWakeLockButton(false); }); });
 window.addEventListener("beforeunload", () => state.liveUnsubscribers.forEach((unsubscribe) => unsubscribe?.()));
 init();

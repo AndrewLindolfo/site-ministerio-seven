@@ -256,14 +256,28 @@ body {
 }
 
 .modo-toolbar {
-  flex: 0 0 auto;
-  justify-content: space-between;
-  padding: 10px 28px;
-  border-block: 1px solid var(--stage-line);
-  background: var(--stage-panel);
+  position: absolute;
+  z-index: 8;
+  right: 118px;
+  bottom: 0;
+  left: 118px;
+  height: 64px;
+  padding: 8px;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 0;
+  background: var(--stage-header);
+  scrollbar-width: none;
+}
+
+.modo-toolbar::-webkit-scrollbar {
+  display: none;
 }
 
 .modo-toolbar > div {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -293,13 +307,17 @@ body {
   box-shadow: 0 0 18px var(--stage-accent);
 }
 
+#metronome-label {
+  display: none;
+}
+
 .modo-content {
   flex: 1 1 0;
   min-height: 0;
   overflow-x: auto;
   overflow-y: scroll;
-  padding: 32px clamp(24px, 6vw, 90px) 80px;
-  line-height: 1.75;
+  padding: 32px clamp(24px, 6vw, 90px) 88px;
+  line-height: 1.45;
   white-space: normal;
   scroll-behavior: auto;
   scrollbar-gutter: stable;
@@ -308,12 +326,27 @@ body {
   touch-action: pan-y pan-x;
 }
 
-.modo-content p {
-  margin: 0 0 1em;
+.modo-content.is-lyrics {
+  line-height: 1.5;
+}
+
+.modo-content.is-lyrics p {
+  margin: 0;
+}
+
+.modo-content.is-lyrics p + p:not(.modo-blank-paragraph) {
+  margin-top: .65em;
+}
+
+.modo-content.is-lyrics .modo-blank-paragraph {
+  min-height: .8em;
+  height: .8em;
+  margin: 0;
 }
 
 .modo-line {
-  min-height: 1.75em;
+  min-height: 1.45em;
+  line-height: 1.45;
   white-space: pre-wrap;
   font-family: "Courier New", monospace;
 }
@@ -324,12 +357,25 @@ body {
 }
 
 .modo-navigation {
-  flex: 0 0 auto;
+  position: absolute;
+  z-index: 7;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 64px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  padding: 12px 28px;
+  padding: 8px 16px;
   border-top: 1px solid var(--stage-line);
   background: var(--stage-header);
+  pointer-events: none;
+}
+
+.modo-navigation button {
+  position: relative;
+  z-index: 9;
+  pointer-events: auto;
 }
 
 .modo-navigation button:disabled {
@@ -395,6 +441,10 @@ body {
     content: "TELA";
     font-size: .58rem;
     font-weight: 800;
+  }
+
+  .modo-header-actions #wake-lock.is-active::before {
+    content: "ATIVA";
   }
 
   .modo-header-actions #share-session::before {

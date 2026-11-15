@@ -1,11 +1,11 @@
 import { getCollection, getDocument, explainFirebaseError } from "../db.js";
+import { encodeFirestoreValue } from "../lib/firestore-backup-codec.js";
 
 export const BACKUP_COLLECTIONS = [
   "admins",
   "musicas",
   "cifras",
   "programacoes",
-  "ensaios",
   "modoEnsaios",
   "modoEnsaioMusicas",
   "albuns",
@@ -19,25 +19,11 @@ export const BACKUP_COLLECTIONS = [
 
 const OPTIONAL_COLLECTIONS = new Set(["contatos", "activity_logs"]);
 
-function sanitizeForJson(value) {
-  if (value === undefined || value === null) return null;
-  if (Array.isArray(value)) return value.map(sanitizeForJson);
-  if (typeof value === "object") {
-    const out = {};
-    for (const [key, val] of Object.entries(value)) {
-      if (typeof val === "function") continue;
-      out[key] = sanitizeForJson(val);
-    }
-    return out;
-  }
-  return value;
-}
-
 export async function exportBackupJson() {
   const result = {
     _meta: {
       app: "Ministerio Seven",
-      version: 2,
+      version: 3,
       backupType: "full-clone",
       exportedAt: new Date().toISOString(),
       collections: [...BACKUP_COLLECTIONS]
@@ -57,7 +43,7 @@ export async function exportBackupJson() {
     const response = responses[index];
     if (response.status === "fulfilled") {
       const items = response.value;
-      result[name] = sanitizeForJson(items);
+      result[name] = encodeFirestoreValue(items);
       summary.exported[name] = Array.isArray(items) ? items.length : 0;
       continue;
     }

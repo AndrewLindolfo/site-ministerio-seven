@@ -6,6 +6,7 @@
   "scripts": {
     "audit:static": "node scripts/audit-static.mjs",
     "audit:firestore": "node scripts/audit-firestore-integrity.mjs",
+    "audit:modo-ensaio": "node scripts/audit-modo-ensaio-admin.mjs",
     "audit:real-pdfs": "node scripts/audit-real-pdf-library.mjs",
     "test": "npm run test:unit && npm run test:rules",
     "test:unit": "node --test tests/*.test.mjs",

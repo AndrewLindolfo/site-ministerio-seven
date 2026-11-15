@@ -12,6 +12,7 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  writeBatch,
   where
 } from "firebase/firestore";
 
@@ -24,6 +25,11 @@ const primaryAuth = {
 const editorAuth = {
   uid: "editor-uid",
   email: "editor@example.com",
+  email_verified: true
+};
+const creatorAuth = {
+  uid: "creator-uid",
+  email: "creator@example.com",
   email_verified: true
 };
 let testEnv;
@@ -116,6 +122,16 @@ async function seedBaseData() {
         },
         ensaios: { create: true, edit: true, delete: false },
         logs: { view: false }
+      }
+    });
+    await setDoc(doc(db, "admins", `email_${creatorAuth.email}`), {
+      name: "Criador",
+      email: creatorAuth.email,
+      uid: creatorAuth.uid,
+      active: true,
+      pendingUid: false,
+      permissions: {
+        ensaios: { create: true, edit: false, delete: false }
       }
     });
     await setDoc(doc(db, "musicas", "active-song"), musica());
@@ -223,6 +239,56 @@ describe("user-owned data", () => {
 });
 
 describe("administrative authorization", () => {
+  test("modo ensaio e repertório são criados atomicamente em um único lote", async () => {
+    const db = testEnv.authenticatedContext(creatorAuth.uid, token(creatorAuth)).firestore();
+    const batch = writeBatch(db);
+    batch.set(doc(db, "modoEnsaios", "creator-session"), {
+      title: "Ensaio do criador", date: "2026-11-15", time: "19:00", location: "Igreja",
+      description: "", active: true, createdBy: creatorAuth.uid,
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    });
+    batch.set(doc(db, "modoEnsaioMusicas", "creator-session_00"), {
+      sessionId: "creator-session", order: 0, musicaId: "active-song", title: "Música teste",
+      slug: "musica-teste", cifraId: "", cifraTitle: "", instrumento: "violao",
+      bpm: "72", compasso: "4/4", originalKey: "C", notes: "",
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    });
+    await assertSucceeds(batch.commit());
+  });
+
+  test("administrador apenas criador não injeta músicas no modo ensaio de outra pessoa", async () => {
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), "modoEnsaios", "primary-session"), {
+        title: "Ensaio principal", date: "2026-11-15", time: "19:00", location: "Igreja",
+        description: "", active: true, createdBy: primaryAuth.uid,
+        createdAt: new Date(), updatedAt: new Date()
+      });
+    });
+    const db = testEnv.authenticatedContext(creatorAuth.uid, token(creatorAuth)).firestore();
+    await assertFails(setDoc(doc(db, "modoEnsaioMusicas", "primary-session_00"), {
+      sessionId: "primary-session", order: 0, musicaId: "active-song", title: "Música teste",
+      slug: "musica-teste", cifraId: "", cifraTitle: "", instrumento: "violao",
+      bpm: "72", compasso: "4/4", originalKey: "C", notes: "",
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    }));
+  });
+
+  test("modo ensaio rejeita BPM e compasso fora dos limites", async () => {
+    const db = testEnv.authenticatedContext(editorAuth.uid, token(editorAuth)).firestore();
+    await setDoc(doc(db, "modoEnsaios", "validation-session"), {
+      title: "Validação", date: "2026-11-15", time: "19:00", location: "",
+      description: "", active: true, createdBy: editorAuth.uid,
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    });
+    const base = {
+      sessionId: "validation-session", order: 0, musicaId: "active-song", title: "Música teste",
+      slug: "musica-teste", cifraId: "", cifraTitle: "", instrumento: "violao",
+      bpm: "999", compasso: "13/9", originalKey: "C", notes: "",
+      createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+    };
+    await assertFails(setDoc(doc(db, "modoEnsaioMusicas", "invalid-metrics"), base));
+  });
+
   test("admins with rehearsal permissions can create bounded mode rehearsal data", async () => {
     const db = testEnv.authenticatedContext(editorAuth.uid, token(editorAuth)).firestore();
     await assertSucceeds(setDoc(doc(db, "modoEnsaios", "session-one"), {
@@ -372,7 +438,7 @@ describe("administrative authorization", () => {
       updatedAt: serverTimestamp()
     }));
     const snapshot = await assertSucceeds(getDocs(collection(db, "admins")));
-    assert.equal(snapshot.size, 2);
+    assert.equal(snapshot.size, 3);
   });
 
   test("activity logs are append-only and bound to the authenticated admin", async () => {

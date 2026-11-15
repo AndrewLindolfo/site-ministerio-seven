@@ -51,7 +51,7 @@ function payload() { return { title: els.title.value, date: els.date.value, time
 
 async function initialize() {
   setStatus("Carregando músicas e cifras…"); [state.musicas, state.cifras] = await Promise.all([listMusicas(true), listCifras(true)]);
-  if (id) { session = await getModoEnsaio(id); if (!session) throw new Error("Modo ensaio não encontrado."); state.selected = await listModoEnsaioSongs(id); els.title.value = session.title; els.date.value = session.date; els.time.value = session.time; els.location.value = session.location; els.description.value = session.description; els.active.checked = session.active; byId("modo-editor-title").textContent = "Editar modo ensaio"; els.save.textContent = "Salvar alterações"; els["open-public"].href = `../modo-ensaio.html?id=${encodeURIComponent(id)}`; els["open-public"].classList.toggle("hidden", !session.active); }
+  if (id) { session = await getModoEnsaio(id); if (!session) throw new Error("Modo ensaio não encontrado."); state.selected = await listModoEnsaioSongs(id); els.title.value = session.title; els.date.value = session.date; els.time.value = session.time; els.location.value = session.location; els.description.value = session.description; els.active.checked = session.active; byId("modo-editor-title").textContent = "Editar modo ensaio"; els.save.textContent = "Salvar alterações"; els["open-public"].href = `https://ministerioseven.site/modo-ensaio?id=${encodeURIComponent(id)}`; els["open-public"].rel = "noopener"; els["open-public"].classList.toggle("hidden", !session.active); }
   els.save.classList.toggle("hidden", !can(id ? "edit" : "create")); els.delete.classList.toggle("hidden", !(id && can("delete"))); renderSearch(); renderSelected(); setStatus("");
 }
 

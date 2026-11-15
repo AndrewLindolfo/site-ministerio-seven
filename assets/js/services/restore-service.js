@@ -1,5 +1,6 @@
-import { setDocument, explainFirebaseError } from "../db.js";
+import { setDocument, explainFirebaseError, Timestamp } from "../db.js";
 import { BACKUP_COLLECTIONS } from "./backup-service.js";
+import { decodeFirestoreValue } from "../lib/firestore-backup-codec.js";
 
 const OPTIONAL_COLLECTIONS = new Set(["contatos", "activity_logs"]);
 const MAX_BACKUP_BYTES = 20 * 1024 * 1024;
@@ -8,21 +9,6 @@ const RESTORE_BATCH_SIZE = 20;
 
 function isObject(value) {
   return value && typeof value === "object" && !Array.isArray(value);
-}
-
-function sanitizeForFirestore(value, depth = 0) {
-  if (depth > 20) throw new Error("Estrutura do backup excede a profundidade permitida.");
-  if (value === undefined || value === null) return null;
-  if (Array.isArray(value)) return value.slice(0, 5000).map((item) => sanitizeForFirestore(item, depth + 1));
-  if (isObject(value)) {
-    const out = {};
-    for (const [key, val] of Object.entries(value)) {
-      if (["__proto__", "constructor", "prototype"].includes(key)) continue;
-      out[key.slice(0, 1500)] = sanitizeForFirestore(val, depth + 1);
-    }
-    return out;
-  }
-  return typeof value === "string" ? value.slice(0, 700_000) : value;
 }
 
 function getBackupDataRoot(json) {
@@ -40,7 +26,8 @@ async function restoreCollection(collectionName, items) {
       const id = String(item?.id || "").trim();
       if (!id || id.length > 1500 || id.includes("/")) return false;
       const { id: ignoredId, ...documentData } = item;
-      await setDocument(collectionName, id, sanitizeForFirestore(documentData));
+      const decoded = decodeFirestoreValue(documentData, (seconds, nanoseconds) => new Timestamp(seconds, nanoseconds));
+      await setDocument(collectionName, id, decoded);
       return true;
     });
     const restored = await Promise.all(batch);

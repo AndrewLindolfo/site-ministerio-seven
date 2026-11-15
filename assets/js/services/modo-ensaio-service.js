@@ -1,11 +1,10 @@
 import {
-  addDocument,
-  deleteDocument,
+  createDocumentReference,
+  createWriteBatch,
   getCollection,
   getDocument,
-  serverTimestamp,
-  setDocument,
-  updateDocument
+  getDocumentReference,
+  serverTimestamp
 } from "../db.js";
 
 const SESSION_COLLECTION = "modoEnsaios";
@@ -75,18 +74,20 @@ export async function listModoEnsaioSongs(sessionId = "") {
   return rows.map(normalizeSong).sort((a, b) => a.order - b.order);
 }
 
-async function replaceSongs(sessionId, songs = []) {
+export async function listAllModoEnsaioSongs() {
+  const rows = await getCollection(SONG_COLLECTION);
+  return rows.map(normalizeSong);
+}
+
+function normalizeSongs(sessionId, songs = []) {
   const normalized = songs.slice(0, MAX_SONGS).map((song, order) => normalizeSong({ ...song, sessionId, order }, order));
   if (!normalized.length) throw new Error("Adicione pelo menos uma música ao modo ensaio.");
   if (normalized.some((song) => !song.musicaId || !song.title)) throw new Error("Há uma música inválida na lista.");
+  return normalized;
+}
 
-  const existing = await listModoEnsaioSongs(sessionId);
-  const wantedIds = new Set();
-  for (const song of normalized) {
-    const childId = `${sessionId}_${String(song.order).padStart(2, "0")}`;
-    wantedIds.add(childId);
-    const current = existing.find((item) => item.id === childId);
-    await setDocument(SONG_COLLECTION, childId, {
+function songData(sessionId, song, createdAt) {
+  return {
       sessionId,
       order: song.order,
       musicaId: song.musicaId,
@@ -99,17 +100,19 @@ async function replaceSongs(sessionId, songs = []) {
       compasso: song.compasso,
       originalKey: song.originalKey,
       notes: song.notes,
-      createdAt: current?.createdAt || serverTimestamp(),
+      createdAt: createdAt || serverTimestamp(),
       updatedAt: serverTimestamp()
-    });
-  }
-  await Promise.all(existing.filter((item) => !wantedIds.has(item.id)).map((item) => deleteDocument(SONG_COLLECTION, item.id)));
+  };
 }
 
 export async function createModoEnsaio(payload = {}, userUid = "") {
   const session = normalizeSession(payload);
   if (!session.title) throw new Error("Informe o título do modo ensaio.");
-  const id = await addDocument(SESSION_COLLECTION, {
+  const songs = normalizeSongs("pending", payload.songs || []);
+  const parentRef = createDocumentReference(SESSION_COLLECTION);
+  const id = parentRef.id;
+  const batch = createWriteBatch();
+  batch.set(parentRef, {
     title: session.title,
     date: session.date,
     time: session.time,
@@ -120,12 +123,11 @@ export async function createModoEnsaio(payload = {}, userUid = "") {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   });
-  try {
-    await replaceSongs(id, payload.songs || []);
-  } catch (error) {
-    await deleteDocument(SESSION_COLLECTION, id).catch(() => {});
-    throw error;
+  for (const song of songs) {
+    const childId = `${id}_${String(song.order).padStart(2, "0")}`;
+    batch.set(getDocumentReference(SONG_COLLECTION, childId), songData(id, song));
   }
+  await batch.commit();
   return id;
 }
 
@@ -133,8 +135,12 @@ export async function updateModoEnsaio(id = "", payload = {}) {
   const sessionId = text(id, 150);
   const session = normalizeSession(payload);
   if (!sessionId || !session.title) throw new Error("Modo ensaio inválido.");
-  await replaceSongs(sessionId, payload.songs || []);
-  await updateDocument(SESSION_COLLECTION, sessionId, {
+  const songs = normalizeSongs(sessionId, payload.songs || []);
+  const existing = await listModoEnsaioSongs(sessionId);
+  const existingById = new Map(existing.map((item) => [item.id, item]));
+  const wantedIds = new Set();
+  const batch = createWriteBatch();
+  batch.update(getDocumentReference(SESSION_COLLECTION, sessionId), {
     title: session.title,
     date: session.date,
     time: session.time,
@@ -143,6 +149,18 @@ export async function updateModoEnsaio(id = "", payload = {}) {
     active: session.active,
     updatedAt: serverTimestamp()
   });
+  for (const song of songs) {
+    const childId = `${sessionId}_${String(song.order).padStart(2, "0")}`;
+    wantedIds.add(childId);
+    batch.set(
+      getDocumentReference(SONG_COLLECTION, childId),
+      songData(sessionId, song, existingById.get(childId)?.createdAt)
+    );
+  }
+  existing.filter((item) => !wantedIds.has(item.id)).forEach((item) => {
+    batch.delete(getDocumentReference(SONG_COLLECTION, item.id));
+  });
+  await batch.commit();
   return sessionId;
 }
 
@@ -150,6 +168,8 @@ export async function removeModoEnsaio(id = "") {
   const sessionId = text(id, 150);
   if (!sessionId) return;
   const songs = await listModoEnsaioSongs(sessionId);
-  await Promise.all(songs.map((song) => deleteDocument(SONG_COLLECTION, song.id)));
-  await deleteDocument(SESSION_COLLECTION, sessionId);
+  const batch = createWriteBatch();
+  songs.forEach((song) => batch.delete(getDocumentReference(SONG_COLLECTION, song.id)));
+  batch.delete(getDocumentReference(SESSION_COLLECTION, sessionId));
+  await batch.commit();
 }

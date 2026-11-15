@@ -82,7 +82,8 @@ function moduleLabel(value = "") {
     notificacoes: "Notificações",
     backup: "Backup",
     admins: "Administradores",
-    ensaios: "Ensaio",
+    ensaios: "Modo Ensaio",
+    "modo-ensaio": "Modo Ensaio",
     logs: "Log"
   })[value] || value || "Geral";
 }

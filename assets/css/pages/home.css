@@ -8,14 +8,12 @@
 }
 
 .programacao-section h2,
-.ensaio-section h2,
 .destaques-section h2{
   font-size:clamp(1.5rem,2vw,2rem);
   margin-bottom:18px;
 }
 
 #programacao-card,
-#ensaio-home-card,
 #destaques-grid{
   display:grid;
   gap:16px;

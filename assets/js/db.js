@@ -14,10 +14,24 @@ import {
   limit,
   serverTimestamp,
   increment,
-  onSnapshot
+  onSnapshot,
+  writeBatch,
+  Timestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-export { serverTimestamp, increment };
+export { serverTimestamp, increment, Timestamp };
+
+export function createWriteBatch() {
+  return writeBatch(db);
+}
+
+export function createDocumentReference(collectionName) {
+  return doc(collection(db, collectionName));
+}
+
+export function getDocumentReference(collectionName, id) {
+  return doc(db, collectionName, id);
+}
 
 export function normalizeText(value = "") {
   return String(value)

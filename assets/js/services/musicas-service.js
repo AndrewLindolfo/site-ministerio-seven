@@ -89,12 +89,13 @@ export async function findDuplicateMusicaTitle(title, ignoreId = "") {
 
 export async function getMusicaDependencies(id = "") {
   const musicaId = String(id || "").trim();
-  if (!musicaId) return { cifras: 0, downloads: 0 };
-  const [cifras, downloads] = await Promise.all([
+  if (!musicaId) return { cifras: 0, downloads: 0, modoEnsaios: 0 };
+  const [cifras, downloads, modoEnsaios] = await Promise.all([
     getCollection("cifras", { where: [["musicaId", "==", musicaId]], limit: 1 }),
-    getCollection("downloadsPorMusica", { where: [["musicaId", "==", musicaId]], limit: 1 })
+    getCollection("downloadsPorMusica", { where: [["musicaId", "==", musicaId]], limit: 1 }),
+    getCollection("modoEnsaioMusicas", { where: [["musicaId", "==", musicaId]], limit: 1 })
   ]);
-  return { cifras: cifras.length, downloads: downloads.length };
+  return { cifras: cifras.length, downloads: downloads.length, modoEnsaios: modoEnsaios.length };
 }
 
 export async function saveMusica(payload, id = "") {
@@ -135,8 +136,8 @@ export async function removeMusica(id) {
   const musicaId = String(id || "").trim();
   if (!musicaId) throw new Error("Música inválida.");
   const dependencies = await getMusicaDependencies(musicaId);
-  if (dependencies.cifras || dependencies.downloads) {
-    throw new Error("Remova primeiro as cifras e os downloads vinculados a esta música.");
+  if (dependencies.cifras || dependencies.downloads || dependencies.modoEnsaios) {
+    throw new Error("Remova primeiro as cifras, os downloads e os modos de ensaio vinculados a esta música.");
   }
   listCache.clear();
   await deleteDocument(COLLECTION, musicaId);

@@ -218,8 +218,15 @@ export async function saveCifra(payload, id = "") {
 }
 
 export async function removeCifra(id) {
+  const cifraId = String(id || "").trim();
+  if (!cifraId) throw new Error("Cifra inválida.");
+  const linkedSessions = await getCollection("modoEnsaioMusicas", {
+    where: [["cifraId", "==", cifraId]],
+    limit: 1
+  });
+  if (linkedSessions.length) throw new Error("Remova primeiro esta cifra dos modos de ensaio vinculados.");
   listCache.clear();
-  await deleteDocument(COLLECTION, id);
+  await deleteDocument(COLLECTION, cifraId);
 }
 
 export async function updateCifraMetronome(id, bpm = "", compasso = "") {

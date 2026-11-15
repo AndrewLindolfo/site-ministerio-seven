@@ -11,7 +11,7 @@ function resolveCardVisibility(admin, key = "") {
     case "downloads": return canAccessAdminPage(admin, "downloads");
     case "contatos": return canAccessAdminPage(admin, "contatos");
     case "notificacoes": return canAccessAdminPage(admin, "notificacoes");
-    case "ensaios": return canAccessAdminPage(admin, "ensaios");
+    case "ensaios": return canAccessAdminPage(admin, "modo-ensaio");
     case "links":
     case "backup":
     case "admins":

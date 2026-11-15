@@ -3,7 +3,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // Data model: public content is stored in musicas, cifras, programacoes,
-    // ensaios, albuns, downloads, downloadsPorMusica and notificacoes.
+    // modoEnsaios, modoEnsaioMusicas, albuns, downloads, downloadsPorMusica and notificacoes.
     // Administrative identities live in admins; master is the primary admin,
     // and secondary invitations use email_<normalized email> as the document ID.
     // usuariosPublicos and bibliotecasUsuarios are private, UID-owned documents.
@@ -206,15 +206,6 @@ service cloud.firestore {
         && validContentTimes(data);
     }
 
-    function validEnsaio(data) {
-      return data.keys().hasOnly(['titulo', 'descricao', 'musicas', 'createdAt', 'updatedAt'])
-        && data.keys().hasAll(['titulo', 'descricao', 'musicas', 'updatedAt'])
-        && data.titulo is string && data.titulo.size() > 0 && data.titulo.size() <= 150
-        && data.descricao is string && data.descricao.size() <= 2000
-        && data.musicas is list && data.musicas.size() <= 100
-        && validContentTimes(data);
-    }
-
     function validModoEnsaio(data) {
       return data.keys().hasOnly([
           'title', 'date', 'time', 'location', 'description', 'active',
@@ -225,8 +216,8 @@ service cloud.firestore {
           'createdBy', 'createdAt', 'updatedAt'
         ])
         && data.title is string && data.title.size() > 0 && data.title.size() <= 150
-        && data.date is string && data.date.size() <= 10
-        && data.time is string && data.time.size() <= 5
+        && data.date is string && (data.date == '' || data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$'))
+        && data.time is string && (data.time == '' || data.time.matches('^(?:[01][0-9]|2[0-3]):[0-5][0-9]$'))
         && data.location is string && data.location.size() <= 300
         && data.description is string && data.description.size() <= 2000
         && data.active is bool
@@ -254,8 +245,8 @@ service cloud.firestore {
         && data.cifraId is string && data.cifraId.size() <= 150
         && data.cifraTitle is string && data.cifraTitle.size() <= 150
         && data.instrumento in ['violao', 'guitarra', 'baixo', 'teclado']
-        && data.bpm is string && data.bpm.size() <= 3
-        && data.compasso is string && data.compasso.size() <= 4
+        && data.bpm is string && (data.bpm == '' || data.bpm.matches('^(?:[2-9][0-9]|[12][0-9][0-9]|300)$'))
+        && data.compasso is string && data.compasso in ['', '2/4', '3/4', '4/4', '5/4', '6/8', '7/8', '9/8', '12/8']
         && data.originalKey is string && data.originalKey.size() <= 20
         && data.notes is string && data.notes.size() <= 2000
         && data.createdAt is timestamp
@@ -386,13 +377,6 @@ service cloud.firestore {
       allow delete: if hasPermission('programacoes', 'delete');
     }
 
-    match /ensaios/{documentId} {
-      allow read: if true;
-      allow create: if hasPermission('ensaios', 'create') && validEnsaio(request.resource.data);
-      allow update: if hasPermission('ensaios', 'edit') && validEnsaio(request.resource.data);
-      allow delete: if hasPermission('ensaios', 'delete');
-    }
-
     match /modoEnsaios/{documentId} {
       allow get: if isAdmin() || resource.data.active == true;
       allow list: if isAdmin();
@@ -414,13 +398,18 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/modoEnsaios/$(resource.data.sessionId))
         && get(/databases/$(database)/documents/modoEnsaios/$(resource.data.sessionId)).data.active == true
       );
-      allow create: if (hasPermission('ensaios', 'create') || hasPermission('ensaios', 'edit'))
-        && validModoEnsaioSong(request.resource.data)
-        && exists(/databases/$(database)/documents/modoEnsaios/$(request.resource.data.sessionId))
+      allow create: if validModoEnsaioSong(request.resource.data)
+        && existsAfter(/databases/$(database)/documents/modoEnsaios/$(request.resource.data.sessionId))
+        && (
+          hasPermission('ensaios', 'edit')
+          || (hasPermission('ensaios', 'create')
+            && getAfter(/databases/$(database)/documents/modoEnsaios/$(request.resource.data.sessionId)).data.createdBy == request.auth.uid)
+        )
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
       allow update: if hasPermission('ensaios', 'edit')
         && validModoEnsaioSong(request.resource.data)
+        && existsAfter(/databases/$(database)/documents/modoEnsaios/$(request.resource.data.sessionId))
         && request.resource.data.sessionId == resource.data.sessionId
         && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.updatedAt == request.time;

@@ -124,10 +124,48 @@ function parseSlashPart(value = "") {
   return null;
 }
 
+function splitCompoundChord(value = "") {
+  const source = String(value || "");
+  let depth = 0;
+  let opening = -1;
+
+  for (let index = 0; index < source.length; index += 1) {
+    const char = source[index];
+    if (char === "(" && depth === 0) {
+      opening = index;
+      break;
+    }
+    if (char === "(") depth += 1;
+    if (char === ")") depth -= 1;
+  }
+
+  if (opening <= 0 || !source.endsWith(")")) return null;
+  const primaryRaw = source.slice(0, opening);
+  const alternateRaw = source.slice(opening + 1, -1);
+  if (!/^[A-G]/.test(alternateRaw)) return null;
+
+  const primary = parseChordSymbol(primaryRaw);
+  const alternate = parseChordSymbol(alternateRaw);
+  if (!primary || !alternate) return null;
+  return { primary, alternate };
+}
+
 export function parseChordSymbol(value = "") {
   const cleaned = cleanChordToken(value);
   const raw = cleaned.token;
   if (!raw || !hasBalancedParentheses(raw)) return null;
+
+  const compound = splitCompoundChord(raw);
+  if (compound) {
+    return {
+      ...compound.primary,
+      raw,
+      wrapped: cleaned.wrapped,
+      explicit: true,
+      strong: true,
+      compoundParts: [compound.primary, compound.alternate]
+    };
+  }
 
   const slashParts = splitTopLevelSlashes(raw);
   const head = slashParts.shift() || "";

@@ -31,6 +31,10 @@ test("transpõe extensão numérica e baixo sem alterar os modificadores", () =>
   assert.equal(transposeText("A7/9 A7/C# F#m7(b5)", 2), "B7/9 B7/D# G#m7(b5)");
 });
 
+test("transpõe variações de acorde agrupadas entre parênteses", () => {
+  assert.equal(transposeText("A(A9) D(Dsus4)", 2), "B(B9) E(Esus4)");
+});
+
 test("transpõe acordes válidos mesmo com um token desconhecido na linha", () => {
   assert.equal(transposeText("D A7/9 desconhecido Em", 2), "E B7/9 desconhecido F#m");
 });

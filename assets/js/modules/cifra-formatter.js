@@ -54,6 +54,12 @@ function transposeChordToken(token = "", steps = 0) {
   const parsed = parseChordSymbol(original);
   if (!parsed) return original;
 
+  if (parsed.compoundParts?.length === 2) {
+    const [primary, alternate] = parsed.compoundParts;
+    const rebuilt = `${transposeChordToken(primary.raw, steps)}(${transposeChordToken(alternate.raw, steps)})`;
+    return original.replace(cleanChordToken(original).token, rebuilt);
+  }
+
   const useFlats = /b|♭/.test(parsed.rootRaw)
     || parsed.slashParts.some((part) => part.type === "bass" && /b|♭/.test(part.raw));
   const newRoot = transposeNote(parsed.root, steps, useFlats);

@@ -14,15 +14,23 @@ test("reconhece qualidades, extensões, alterações e inversões usuais", () =>
     "C", "Cm", "Cmaj7", "C7M", "C7+", "CΔ7", "C5", "C6", "C6/9",
     "C7", "C7/9", "C9", "C11", "C13", "Cadd9", "Csus2", "Csus4",
     "Cdim", "C°", "Cº", "Cø", "Caug", "C+", "Cm7(b5)", "C7(b9)",
-    "C7(#5/#9)", "F#m7", "Bb7M(9)", "G/B", "A7/C#", "D♭maj7", "F♯m9"
+    "C7(#5/#9)", "F#m7", "Bb7M(9)", "G/B", "A7/C#", "D♭maj7", "F♯m9",
+    "A(A9)", "D(Dsus4)"
   ];
 
   valid.forEach((symbol) => assert.equal(isChordSymbol(symbol), true, symbol));
 });
 
 test("rejeita palavras e marcações que não são acordes", () => {
-  const invalid = ["Deus", "Quero", "Refrão", "Intro", "Abençoe", "H7", "Cbanana", "7/9"];
+  const invalid = ["Deus", "Quero", "Refrão", "Intro", "Abençoe", "H7", "Cbanana", "7/9", "A(Amém)"];
   invalid.forEach((symbol) => assert.equal(isChordSymbol(symbol), false, symbol));
+});
+
+test("reconhece uma variação de acorde agrupada entre parênteses", () => {
+  const parsed = parseChordSymbol("A(A9)");
+  assert.equal(parsed.compoundParts[0].raw, "A");
+  assert.equal(parsed.compoundParts[1].raw, "A9");
+  assert.equal(shouldFormatChordToken("A(A9)"), true);
 });
 
 test("separa extensão numérica de baixo invertido", () => {

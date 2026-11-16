@@ -18,6 +18,8 @@ Padrão visual recomendado
 - Pontas e cantos arredondados.
 - Cor controlada pelo tema do site.
 - Não misturar emojis com os novos SVGs.
+- Nome dos arquivos: letras minúsculas, sem acentos, sem espaços e separados por hífen.
+- Salvar exatamente com a extensão .svg indicada em cada item.
 
 ======================================================================
 NAVEGAÇÃO E CABEÇALHO
@@ -25,54 +27,67 @@ NAVEGAÇÃO E CABEÇALHO
 
 01. Início
     Inglês: Home
+    Arquivo SVG: home.svg
     Uso: menu principal, retorno à página inicial e atalhos do site.
 
 02. Buscar / Lupa
     Inglês: Search
+    Arquivo SVG: search.svg
     Uso: busca geral, busca de músicas, cifras, integrantes e conteúdo administrativo.
 
 03. Menu
     Inglês: Menu / Hamburger
+    Arquivo SVG: menu.svg
     Uso: abrir o menu principal no celular.
 
 04. Fechar
     Inglês: X / Close
+    Arquivo SVG: x.svg
     Uso: fechar menu, busca, pop-ups, autorrolagem, lista de músicas, comunicados e modais.
 
 05. Voltar
     Inglês: Arrow Left / Back
+    Arquivo SVG: arrow-left.svg
     Uso: voltar ao site, voltar ao painel, voltar à tela anterior e música anterior.
 
 06. Avançar
     Inglês: Arrow Right / Forward
+    Arquivo SVG: arrow-right.svg
     Uso: avançar etapas, abrir próxima tela e navegar para a próxima música.
 
 07. Anterior
     Inglês: Chevron Left
+    Arquivo SVG: chevron-left.svg
     Uso: item anterior, cifra anterior, variação anterior e navegação compacta.
 
 08. Próximo
     Inglês: Chevron Right
+    Arquivo SVG: chevron-right.svg
     Uso: próximo item, próxima cifra, próxima variação e navegação compacta.
 
 09. Atualizar
     Inglês: Refresh CW
+    Arquivo SVG: refresh-cw.svg
     Uso: atualizar ensaio, recarregar informações e sincronizar alterações.
 
 10. Link externo
     Inglês: External Link
+    Arquivo SVG: external-link.svg
     Uso: YouTube, Instagram, agenda externa, downloads e outros endereços externos.
 
 11. Copiar
     Inglês: Copy
+    Arquivo SVG: copy.svg
     Uso: copiar link do ensaio, endereço de compartilhamento e informações.
 
 12. Compartilhar
     Inglês: Share 2
+    Arquivo SVG: share-2.svg
     Uso: compartilhar ensaio, música, cifra e páginas do site.
 
 13. Mais opções
     Inglês: More Vertical / Ellipsis Vertical
+    Arquivo SVG: ellipsis-vertical.svg
     Uso: menu compacto com ações adicionais.
 
 ======================================================================
@@ -81,46 +96,57 @@ TEMA, CONTA E ACESSO
 
 14. Modo claro
     Inglês: Sun
+    Arquivo SVG: sun.svg
     Uso: ativar o tema claro em todas as páginas.
 
 15. Modo escuro
     Inglês: Moon
+    Arquivo SVG: moon.svg
     Uso: ativar o tema escuro em todas as páginas.
 
 16. Usuário deslogado
     Inglês: User Round / Circle User
+    Arquivo SVG: user-round.svg
     Uso: botão de login quando não existe usuário conectado.
 
 17. Perfil do usuário
     Inglês: User Circle / Avatar
+    Arquivo SVG: circle-user-round.svg
     Uso: conta conectada, menu do usuário e perfil.
 
 18. Entrar
     Inglês: Log In
+    Arquivo SVG: log-in.svg
     Uso: login público, login de integrante e login administrativo.
 
 19. Sair
     Inglês: Log Out
+    Arquivo SVG: log-out.svg
     Uso: menu da conta e painel administrativo.
 
 20. Google
     Inglês: Google Logo
+    Arquivo SVG: google.svg
     Uso: botão de entrar com a conta Google.
 
 21. Integrantes
     Inglês: Users
+    Arquivo SVG: users.svg
     Uso: área dos integrantes, cadastro e gerenciamento de integrantes.
 
 22. Administrador
     Inglês: Shield User
+    Arquivo SVG: shield-user.svg
     Uso: gerenciamento de administradores e identificação de acesso administrativo.
 
 23. Bloqueado
     Inglês: Lock
+    Arquivo SVG: lock.svg
     Uso: acesso restrito, função indisponível e conteúdo protegido.
 
 24. Permissão confirmada
     Inglês: Shield Check
+    Arquivo SVG: shield-check.svg
     Uso: permissões, acesso autorizado e confirmação de tela protegida.
 
 ======================================================================
@@ -129,111 +155,138 @@ MÚSICA, CIFRA E MODO ENSAIO
 
 25. Música
     Inglês: Music / Music 2
+    Arquivo SVG: music-2.svg
     Uso: músicas, repertório, páginas musicais e itens da programação.
 
 26. Repertório / Lista de músicas
     Inglês: List Music
+    Arquivo SVG: list-music.svg
     Uso: abrir a lista de músicas do Modo Ensaio e representar repertórios.
 
 27. Letra
     Inglês: Align Left / File Text
+    Arquivo SVG: file-text.svg
     Uso: alternar para letra, visualizar letra e identificar conteúdo textual.
 
 28. Cifra / Violão / Guitarra
     Inglês: Guitar
+    Arquivo SVG: guitar.svg
     Uso: alternar para cifra, identificar cifras e representar violão ou guitarra.
 
 29. Teclado
     Inglês: Piano
+    Arquivo SVG: piano.svg
     Uso: identificar cifras e recursos para teclado.
 
 30. Microfone / Vocal
     Inglês: Mic 2
+    Arquivo SVG: mic-2.svg
     Uso: letra, vocal, programação musical e observações de canto.
 
 31. Aumentar fonte
     Inglês: Zoom In / Type Plus
+    Arquivo SVG: zoom-in.svg
     Uso: aumentar a letra em músicas, cifras e Modo Ensaio.
 
 32. Diminuir fonte
     Inglês: Zoom Out / Type Minus
+    Arquivo SVG: zoom-out.svg
     Uso: diminuir a letra em músicas, cifras e Modo Ensaio.
 
 33. Adicionar / Aumentar
     Inglês: Plus
+    Arquivo SVG: plus.svg
     Uso: subir o tom, aumentar valores e criar músicas, cifras, ensaios, integrantes,
     administradores e outros registros.
 
 34. Diminuir tom
     Inglês: Minus
+    Arquivo SVG: minus.svg
     Uso: baixar o tom da cifra e outras ações de redução.
 
 35. Restaurar tom original
     Inglês: Rotate CCW / Undo 2
+    Arquivo SVG: rotate-ccw.svg
     Uso: voltar a cifra para o tom original e restaurar valores.
 
 36. Visualizar / Modo foco
     Inglês: Eye
+    Arquivo SVG: eye.svg
     Uso: modo foco, prévia, visualização de música, cifra e PDF.
 
 37. Ocultar / Sair do modo foco
     Inglês: Eye Off
+    Arquivo SVG: eye-off.svg
     Uso: encerrar modo foco e ocultar elementos.
 
 38. Tela cheia
     Inglês: Maximize
+    Arquivo SVG: maximize.svg
     Uso: entrar em tela cheia nas músicas, cifras, ferramentas e Modo Ensaio.
 
 39. Sair da tela cheia
     Inglês: Minimize
+    Arquivo SVG: minimize.svg
     Uso: retornar da tela cheia.
 
 40. Manter tela ligada
     Inglês: Smartphone / Monitor Up
+    Arquivo SVG: monitor-up.svg
     Uso: impedir que a tela apague durante o ensaio.
 
 41. Autorrolagem
     Inglês: Chevrons Down / Scroll Text
+    Arquivo SVG: scroll-text.svg
     Uso: abrir e identificar os controles automáticos de rolagem.
 
 42. Iniciar / Play
     Inglês: Play
+    Arquivo SVG: play.svg
     Uso: iniciar autorrolagem, metrônomo, áudio, vídeo e prévias.
 
 43. Pausar
     Inglês: Pause
+    Arquivo SVG: pause.svg
     Uso: pausar autorrolagem, metrônomo, áudio e vídeo.
 
 44. Velocidade / Ajustes
     Inglês: Gauge / Sliders Horizontal
+    Arquivo SVG: gauge.svg
     Uso: velocidade da autorrolagem, controles rápidos e configurações do conteúdo.
 
 45. Metrônomo
     Inglês: Timer / Audio Lines
+    Arquivo SVG: timer.svg
     Uso: ferramenta de metrônomo, cifra e Modo Ensaio.
 
 46. Pulso / Batida
     Inglês: Circle / Radio
+    Arquivo SVG: circle.svg
     Uso: indicador visual do tempo e das batidas do metrônomo.
 
 47. Afinador
     Inglês: Audio Waveform / Tuning Fork
+    Arquivo SVG: audio-waveform.svg
     Uso: ferramenta de afinação e detecção de notas.
 
 48. Favoritar
     Inglês: Star
+    Arquivo SVG: star.svg
     Uso: adicionar música ou cifra aos favoritos.
 
 49. Remover dos favoritos
     Inglês: Star Off
+    Arquivo SVG: star-off.svg
     Uso: retirar música ou cifra dos favoritos.
 
 50. Adicionar à playlist
     Inglês: List Plus
+    Arquivo SVG: list-plus.svg
     Uso: adicionar música ou cifra a uma playlist.
 
 51. PDF / Exportar PDF
     Inglês: File PDF / File Down
+    Arquivo SVG: file-down.svg
     Uso: gerar, baixar ou visualizar PDF de letra e cifra.
 
 ======================================================================
@@ -242,66 +295,82 @@ CONTEÚDO PÚBLICO
 
 52. Agenda / Calendário
     Inglês: Calendar Days
+    Arquivo SVG: calendar-days.svg
     Uso: agenda, data da programação e data do ensaio.
 
 53. Horário
     Inglês: Clock
+    Arquivo SVG: clock.svg
     Uso: horários de programação, evento e ensaio.
 
 54. Localização
     Inglês: Map Pin
+    Arquivo SVG: map-pin.svg
     Uso: local de evento, culto, programação ou ensaio.
 
 55. Álbum
     Inglês: Images / Album
+    Arquivo SVG: images.svg
     Uso: página de álbuns, coleções de fotos e capas.
 
 56. Foto / Imagem
     Inglês: Image
+    Arquivo SVG: image.svg
     Uso: fotos, capas, banners, perfil e prévias.
 
 57. Download
     Inglês: Download
+    Arquivo SVG: download.svg
     Uso: baixar arquivos, materiais, PDFs e apresentações.
 
 58. Upload
     Inglês: Upload
+    Arquivo SVG: upload.svg
     Uso: enviar arquivos, imagens, PDFs e materiais administrativos.
 
 59. YouTube
     Inglês: Youtube / Play Square
+    Arquivo SVG: youtube.svg
     Uso: vídeos das músicas e prévias de vídeo.
 
 60. Instagram
     Inglês: Instagram
+    Arquivo SVG: instagram.svg
     Uso: rodapé, contato e redes sociais.
 
 61. E-mail
     Inglês: Mail
+    Arquivo SVG: mail.svg
     Uso: contato, cadastro, login e informações da conta.
 
 62. Telefone
     Inglês: Phone
+    Arquivo SVG: phone.svg
     Uso: informações de contato.
 
 63. Notificação
     Inglês: Bell
+    Arquivo SVG: bell.svg
     Uso: comunicados, novidades e alertas do site.
 
 64. Informação
     Inglês: Info
+    Arquivo SVG: info.svg
     Uso: orientações, observações e mensagens informativas.
 
 65. Alerta
     Inglês: Triangle Alert
+    Arquivo SVG: triangle-alert.svg
     Uso: erros, avisos importantes e confirmações de risco.
 
 66. Sucesso
     Inglês: Circle Check
+    Arquivo SVG: circle-check.svg
     Uso: cadastro salvo, importação concluída e confirmação de ações.
 
 67. Erro
     Inglês: Circle X
+    Arquivo SVG: circle-x.svg
     Uso: falha de carregamento, erro de formulário e operação recusada.
 
 ======================================================================
@@ -310,67 +379,83 @@ ADMINISTRAÇÃO E EDIÇÃO
 
 68. Editar
     Inglês: Pencil
+    Arquivo SVG: pencil.svg
     Uso: editar registros, letras, cifras, ensaios e configurações.
 
 69. Excluir
     Inglês: Trash 2
+    Arquivo SVG: trash-2.svg
     Uso: remover registros, integrantes, ensaios, músicas e cifras.
 
 70. Salvar
     Inglês: Save
+    Arquivo SVG: save.svg
     Uso: formulários, editores e configurações.
 
 71. Confirmar
     Inglês: Check
+    Arquivo SVG: check.svg
     Uso: confirmar seleção, cadastro, importação e ajustes.
 
 72. Configurações
     Inglês: Settings
+    Arquivo SVG: settings.svg
     Uso: configurações gerais, opções de página e painel administrativo.
 
 73. Mover para cima
     Inglês: Arrow Up
+    Arquivo SVG: arrow-up.svg
     Uso: reorganizar músicas e itens das listas.
 
 74. Mover para baixo
     Inglês: Arrow Down
+    Arquivo SVG: arrow-down.svg
     Uso: reorganizar músicas e itens das listas.
 
 75. Arrastar / Reordenar
     Inglês: Grip Vertical
+    Arquivo SVG: grip-vertical.svg
     Uso: alterar a ordem do repertório e de outras listas.
 
 76. Backup
     Inglês: Database Backup
+    Arquivo SVG: database-backup.svg
     Uso: backup do Firebase e proteção dos dados.
 
 77. Restaurar backup
     Inglês: Database Restore / Rotate CCW
+    Arquivo SVG reutilizado: rotate-ccw.svg
     Uso: restaurar os dados do site.
 
 78. Histórico / Log
     Inglês: History / Activity
+    Arquivo SVG: history.svg
     Uso: log de atividades e histórico de mudanças.
 
 79. Contatos / Mensagens
     Inglês: Messages / Mail
+    Arquivo SVG reutilizado: mail.svg
     Uso: mensagens recebidas pelo formulário de contato.
     Observação: o mesmo SVG de e-mail pode ser reutilizado.
 
 80. Painel administrativo
     Inglês: Layout Dashboard
+    Arquivo SVG: layout-dashboard.svg
     Uso: página principal e navegação do painel ADM.
 
 81. Banco de dados
     Inglês: Database
+    Arquivo SVG: database.svg
     Uso: Firebase, auditorias, integridade e gerenciamento de dados.
 
 82. Pasta / Arquivos
     Inglês: Folder
+    Arquivo SVG: folder.svg
     Uso: downloads, uploads, biblioteca de PDFs e organização de arquivos.
 
 83. Código / Integração
     Inglês: Code 2
+    Arquivo SVG: code-2.svg
     Uso: integrações, API e recursos técnicos administrativos.
 
 ======================================================================
@@ -379,16 +464,19 @@ LOGOTIPOS E MARCAS — NÃO SÃO ÍCONES DE CONTROLE
 
 84. Logo V7
     Inglês: V7 Brand Logo
+    Arquivos SVG: logo-v7-light.svg e logo-v7-dark.svg
     Uso: cabeçalho, Modo Ensaio, painel ADM, favicon e retorno ao site principal.
     Variações necessárias: branca para fundo escuro e preta para fundo claro.
 
 85. Logo Ministério Seven
     Inglês: Ministério Seven Brand Logo
+    Arquivos SVG: logo-ministerio-seven-light.svg e logo-ministerio-seven-dark.svg
     Uso: rodapé, banner, telas institucionais e materiais de identidade visual.
     Variações necessárias: clara e escura.
 
 86. Favicon V7
     Inglês: V7 Favicon / App Icon
+    Arquivos SVG: favicon-v7-light.svg, favicon-v7-dark.svg e app-icon-v7.svg
     Uso: aba do navegador, atalhos e instalação do site.
     Variações necessárias: clara, escura e tamanhos para aplicativo.
 

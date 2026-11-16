@@ -261,9 +261,7 @@ export function toggleMusicaFullscreen() {
 }
 
 export function initMusicaControls() {
-  if (readStorage(MUSIC_SCROLL_VISIBLE_KEY) === null) {
-    writeStorage(MUSIC_SCROLL_VISIBLE_KEY, "0");
-  }
+  writeStorage(MUSIC_SCROLL_VISIBLE_KEY, "0");
   ensureMusicaControls();
   ensureMusicaScrollPanel();
   applySavedFont();
@@ -276,5 +274,5 @@ export function initMusicaControls() {
   $("#musica-fullscreen-toggle")?.addEventListener("click", toggleMusicaFullscreen);
   $("#musica-pdf-toggle")?.addEventListener("click", exportMusicaPdf);
 
-  setScrollPanelVisible(isScrollPanelVisible());
+  setScrollPanelVisible(false);
 }

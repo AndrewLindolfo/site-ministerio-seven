@@ -479,9 +479,7 @@ export function toggleScroll() {
 }
 
 export function initCifraControls() {
-  if (storageGet(SCROLL_PANEL_VISIBLE_KEY) === null) {
-    storageSet(SCROLL_PANEL_VISIBLE_KEY, "0");
-  }
+  storageSet(SCROLL_PANEL_VISIBLE_KEY, "0");
 
   initMobileScrollBar();
   initResponsiveControlsAutoHide();
@@ -517,6 +515,6 @@ export function initCifraControls() {
 
   updateScrollButton(false);
   updateSpeedIndicator();
-  setScrollPanelVisible(isScrollPanelVisible());
+  setScrollPanelVisible(false);
 }
 

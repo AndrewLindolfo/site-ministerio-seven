@@ -344,6 +344,45 @@ body {
   line-height: 1.5;
 }
 
+.modo-content.is-chord {
+  overflow-x: hidden;
+  touch-action: pan-y;
+  font-family: "Courier New", monospace;
+  font-variant-ligatures: none;
+}
+
+.modo-content.is-chord .cifra-standalone-line {
+  min-height: 1.45em;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.modo-content.is-chord .cifra-aligned-pair,
+.modo-content.is-chord .cifra-pair-segment {
+  display: block;
+}
+
+.modo-content.is-chord .cifra-pair-line {
+  min-height: 1.45em;
+  line-height: 1.45;
+  white-space: pre;
+}
+
+.modo-content.is-chord .cifra-width-probe {
+  position: absolute;
+  display: inline-block;
+  width: max-content;
+  visibility: hidden;
+  white-space: pre;
+  pointer-events: none;
+}
+
+.modo-content.is-chord .chord-token {
+  color: var(--stage-accent);
+  font-weight: 900;
+}
+
 .modo-content.is-lyrics p {
   margin: 0;
 }

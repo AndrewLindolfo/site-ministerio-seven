@@ -4,7 +4,7 @@ import { getCifra, getInstrumentLabel } from "../services/cifras-service.js";
 import { sanitizeRichHtml } from "../lib/sanitize-html.js";
 import { watchCollection, watchDocument } from "../db.js";
 import { transposeText, transposeKeyLabel } from "../modules/cifra-formatter.js";
-import { analyzeChordText, cleanChordToken, shouldFormatChordToken } from "../modules/chord-symbol.js";
+import { prepareResponsiveCifra, reflowResponsiveCifra } from "../modules/responsive-cifra.js";
 import { initTheme } from "../theme.js";
 import { initThemeBranding } from "../modules/theme-branding.js";
 
@@ -32,13 +32,11 @@ function startLiveUpdates() {
   }, { where: [["sessionId", "==", sessionId]] }, showUpdateNotice));
 }
 
-function appendChordLine(container, line) {
-  const row = document.createElement("div"); row.className = "modo-line"; const analysis = analyzeChordText(line);
-  String(line).split(/(\s+)/).forEach((token) => { if (!token) return; if (shouldFormatChordToken(token, analysis)) { const span = document.createElement("span"); span.className = "modo-chord"; span.textContent = token; span.dataset.chordSymbol = cleanChordToken(token).token; row.append(span); } else row.append(document.createTextNode(token)); });
-  container.append(row);
+function renderTextContent(text = "") {
+  const content = $("#stage-content");
+  content.textContent = String(text || "").replace(/\r\n?/g, "\n");
+  prepareResponsiveCifra(content);
 }
-
-function renderTextContent(text = "") { const content = $("#stage-content"); content.replaceChildren(); text.split("\n").forEach((line) => appendChordLine(content, line)); }
 
 function renderLyricContent(html = "") {
   const content = $("#stage-content");
@@ -92,10 +90,16 @@ async function init() {
 
 $("#previous-song").onclick = () => { if (state.index > 0) { state.index--; renderCurrent(); } }; $("#next-song").onclick = () => { if (state.index < state.songs.length - 1) { state.index++; renderCurrent(); } };
 $("#view-toggle").onclick = () => { state.view = state.view === "chord" ? "lyrics" : "chord"; renderCurrent(false); };
-$("#font-down").onclick = () => { state.fontSize = Math.max(14, state.fontSize - 2); $("#stage-content").style.fontSize = `${state.fontSize}px`; }; $("#font-up").onclick = () => { state.fontSize = Math.min(42, state.fontSize + 2); $("#stage-content").style.fontSize = `${state.fontSize}px`; };
+$("#font-down").onclick = () => { state.fontSize = Math.max(14, state.fontSize - 2); $("#stage-content").style.fontSize = `${state.fontSize}px`; reflowResponsiveCifra($("#stage-content")); }; $("#font-up").onclick = () => { state.fontSize = Math.min(42, state.fontSize + 2); $("#stage-content").style.fontSize = `${state.fontSize}px`; reflowResponsiveCifra($("#stage-content")); };
 $("#transpose-down").onclick = () => { state.transpose--; renderCurrent(false); }; $("#transpose-reset").onclick = () => { state.transpose = 0; renderCurrent(false); }; $("#transpose-up").onclick = () => { state.transpose++; renderCurrent(false); }; $("#scroll-toggle").onclick = toggleAutoScroll; $("#metronome-toggle").onclick = toggleMetronome; $("#wake-lock").onclick = toggleWakeLock; $("#share-session").onclick = share; $("#fullscreen").onclick = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
 document.addEventListener("keydown", (event) => { if (["ArrowLeft", "PageUp"].includes(event.key)) $("#previous-song").click(); if (["ArrowRight", "PageDown"].includes(event.key)) $("#next-song").click(); if (event.key === " ") { event.preventDefault(); toggleAutoScroll(); } });
 $("#setlist-toggle").onclick = openSetlist; $("#setlist-close").onclick = closeSetlist; $("#setlist-backdrop").onclick = closeSetlist; $("#reload-session").onclick = () => location.reload();
 document.addEventListener("visibilitychange", () => { if (state.wakeLockRequested && !state.wakeLock && document.visibilityState === "visible") requestWakeLock().catch(() => { state.wakeLockRequested = false; updateWakeLockButton(false); }); });
+let resizeFrame = 0;
+window.addEventListener("resize", () => {
+  if (!$("#stage-content")?.classList.contains("is-chord")) return;
+  cancelAnimationFrame(resizeFrame);
+  resizeFrame = requestAnimationFrame(() => reflowResponsiveCifra($("#stage-content")));
+}, { passive: true });
 window.addEventListener("beforeunload", () => state.liveUnsubscribers.forEach((unsubscribe) => unsubscribe?.()));
 init();

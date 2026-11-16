@@ -65,6 +65,20 @@ body {
   object-fit: contain;
 }
 
+.modo-home-link {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  outline-offset: 4px;
+  transition: transform .18s ease, filter .18s ease;
+}
+
+.modo-home-link:hover {
+  transform: translateY(-1px);
+  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, .28));
+}
+
 .modo-brand div {
   display: grid;
   min-width: 0;

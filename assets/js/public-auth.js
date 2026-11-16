@@ -7,6 +7,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getPublicUserProfile, normalizeProfilePhotoUrl, savePublicUserProfile } from "./services/public-user-service.js";
 import { getMemberProfileForUser } from "./services/member-permissions-service.js";
+import {
+  clearPublicAuthPreview,
+  ensurePublicUserSlot,
+  writePublicAuthPreview
+} from "./modules/public-auth-shell.js";
 
 let currentUser = null;
 let currentMenu = null;
@@ -18,6 +23,7 @@ const ADMIN_CACHE_PREFIX = "seven_public_admin_status_";
 const ADMIN_CACHE_TTL_MS = 5 * 60 * 1000;
 let authReadyResolver = null;
 let authModalPreviousFocus = null;
+let publicAuthInitialized = false;
 const authReadyPromise = new Promise((resolve) => {
   authReadyResolver = resolve;
 });
@@ -124,21 +130,6 @@ export function closePublicAuthModal() {
   authModalPreviousFocus = null;
 }
 
-function ensureHeaderSlot() {
-  const actions = $(".header-actions");
-  const mobileToggle = $("#mobile-menu-toggle");
-  if (!actions || !mobileToggle) return null;
-
-  let slot = $("#public-user-slot");
-  if (slot) return slot;
-
-  slot = document.createElement("div");
-  slot.id = "public-user-slot";
-  slot.className = "public-user-slot";
-  actions.insertBefore(slot, mobileToggle);
-  return slot;
-}
-
 function closeUserMenu() {
   currentMenu?.classList.add("hidden");
   $("#public-user-toggle")?.setAttribute("aria-expanded", "false");
@@ -165,6 +156,7 @@ async function buildProfileData(user) {
 }
 
 async function renderLoggedOut(slot) {
+  clearPublicAuthPreview();
   slot.innerHTML = `
     <button type="button" id="public-login-button" class="public-login-button public-login-button--image-only" aria-label="Entrar">
       <img src="/assets/img/ui/login-user-preto.png" alt="Entrar" class="public-login-button__image public-login-button__image--light" />
@@ -174,6 +166,7 @@ async function renderLoggedOut(slot) {
 }
 
 async function renderLoggedIn(slot, profile) {
+  writePublicAuthPreview(profile);
   slot.innerHTML = `
     <div class="public-user-menu">
       <button type="button" id="public-user-toggle" class="public-user-toggle" aria-label="Minha conta" aria-expanded="false">
@@ -225,7 +218,7 @@ async function renderLoggedIn(slot, profile) {
 }
 
 async function renderHeaderAuth(user) {
-  const slot = ensureHeaderSlot();
+  const slot = ensurePublicUserSlot();
 
   if (!user) {
     currentUser = null;
@@ -233,17 +226,17 @@ async function renderHeaderAuth(user) {
     return;
   }
 
-  const profile = await buildProfileData(user);
-  try {
-    profile.isAdmin = await resolveAdminStatus(user);
-  } catch (error) {
-    console.warn("Não foi possível verificar o acesso administrativo.", error);
-  }
-  try {
-    profile.isMember = Boolean(await getMemberProfileForUser(user));
-  } catch (error) {
-    console.warn("Não foi possível verificar o acesso de integrante.", error);
-  }
+  const [profileResult, adminResult, memberResult] = await Promise.allSettled([
+    buildProfileData(user),
+    resolveAdminStatus(user),
+    getMemberProfileForUser(user)
+  ]);
+  if (profileResult.status !== "fulfilled") throw profileResult.reason;
+  const profile = profileResult.value;
+  if (adminResult.status === "fulfilled") profile.isAdmin = Boolean(adminResult.value);
+  else console.warn("Não foi possível verificar o acesso administrativo.", adminResult.reason);
+  if (memberResult.status === "fulfilled") profile.isMember = Boolean(memberResult.value);
+  else console.warn("Não foi possível verificar o acesso de integrante.", memberResult.reason);
   currentUser = { ...profile, firebaseUser: user };
   if (profile.isNewProfile) {
     await savePublicUserProfile(profile.uid, {
@@ -325,6 +318,8 @@ export function requirePublicLogin(onReady) {
 }
 
 export function initPublicAuth() {
+  if (publicAuthInitialized) return;
+  publicAuthInitialized = true;
   ensureAuthModal();
   ensureAuthWatcher();
 

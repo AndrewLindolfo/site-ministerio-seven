@@ -5,7 +5,6 @@ const FONT_KEY = "seven_musica_font";
 const FOCUS_KEY = "seven_musica_focus";
 const MUSIC_SCROLL_SPEED_KEY = "seven_musica_scroll_speed";
 const MUSIC_SCROLL_VISIBLE_KEY = "seven_musica_scroll_visible";
-const MUSIC_SCROLL_POS_KEY = "seven_musica_scroll_pos";
 
 let scrollInterval = null;
 let scrollSpeed = readStoredNumber(MUSIC_SCROLL_SPEED_KEY, 0.35, 0.08, 1.2);
@@ -93,7 +92,7 @@ function ensureMusicaControls() {
 function ensureMusicaScrollPanel() {
   if (document.getElementById("musica-scroll-bubble")) return;
   const panel = document.createElement("div");
-  panel.className = "scroll-bubble musica-scroll-bubble";
+  panel.className = "scroll-bubble musica-scroll-bubble reading-scroll-panel";
   panel.id = "musica-scroll-bubble";
   panel.setAttribute("aria-hidden", "true");
   panel.hidden = true;
@@ -105,72 +104,8 @@ function ensureMusicaScrollPanel() {
   document.body.appendChild(panel);
 }
 
-function getStoredScrollPanelPos() {
-  try {
-    return JSON.parse(readStorage(MUSIC_SCROLL_POS_KEY) || "null");
-  } catch {
-    return null;
-  }
-}
-
-function saveScrollPanelPos(pos) {
-  writeStorage(MUSIC_SCROLL_POS_KEY, JSON.stringify(pos));
-}
-
 function isScrollPanelVisible() {
   return readStorage(MUSIC_SCROLL_VISIBLE_KEY) === "1";
-}
-
-function applyDefaultScrollPanelPos() {
-  const bubble = $("#musica-scroll-bubble");
-  if (!bubble) return;
-
-  const anchor = document.getElementById("ver-cifra-link")?.closest(".page-cross-link") ||
-                 document.getElementById("ver-cifra-link") ||
-                 document.querySelector(".page-cross-link");
-
-  if (anchor) {
-    const rect = anchor.getBoundingClientRect();
-    const top = window.scrollY + rect.top - 6;
-    const left = window.scrollX + rect.right + 14;
-    const maxLeft = Math.max(8, window.scrollX + window.innerWidth - bubble.offsetWidth - 8);
-    bubble.style.left = `${clamp(left, window.scrollX + 8, maxLeft)}px`;
-    bubble.style.top = `${Math.max(window.scrollY + 8, top)}px`;
-    bubble.style.right = "auto";
-    bubble.style.bottom = "auto";
-    return;
-  }
-
-  bubble.style.left = `${Math.max(16, (window.innerWidth - bubble.offsetWidth) / 2)}px`;
-  bubble.style.top = `${Math.max(16, window.scrollY + 120)}px`;
-  bubble.style.right = "auto";
-  bubble.style.bottom = "auto";
-}
-
-function applyScrollPanelPos() {
-  const bubble = $("#musica-scroll-bubble");
-  if (!bubble) return;
-
-  if (window.innerWidth <= 1024) {
-    bubble.style.left = "";
-    bubble.style.top = "";
-    bubble.style.right = "";
-    bubble.style.bottom = "";
-    return;
-  }
-
-  const stored = getStoredScrollPanelPos();
-  if (!stored || typeof stored.left !== "number" || typeof stored.top !== "number") {
-    applyDefaultScrollPanelPos();
-    return;
-  }
-
-  const maxLeft = Math.max(window.scrollX + 8, window.scrollX + window.innerWidth - bubble.offsetWidth - 8);
-  const maxTop = Math.max(window.scrollY + 8, window.scrollY + window.innerHeight - bubble.offsetHeight - 8);
-  bubble.style.left = `${clamp(stored.left, window.scrollX + 8, maxLeft)}px`;
-  bubble.style.top = `${clamp(stored.top, window.scrollY + 8, maxTop)}px`;
-  bubble.style.right = "auto";
-  bubble.style.bottom = "auto";
 }
 
 function updateScrollButton(isRunning) {
@@ -234,70 +169,11 @@ function setScrollPanelVisible(visible) {
     toggleBtn.classList.toggle("is-active", isVisible);
     toggleBtn.setAttribute("aria-expanded", isVisible ? "true" : "false");
   }
-  if (isVisible) requestAnimationFrame(() => applyScrollPanelPos());
   if (!isVisible) stopScroll();
 }
 
 function toggleScrollPanel() {
   setScrollPanelVisible(!isScrollPanelVisible());
-}
-
-function initScrollPanelDrag() {
-  if (window.innerWidth <= 1024) return;
-  const bubble = $("#musica-scroll-bubble");
-  if (!bubble || bubble.dataset.dragReady === "1") return;
-  bubble.dataset.dragReady = "1";
-
-  let dragging = false;
-  let startX = 0;
-  let startY = 0;
-  let startLeft = 0;
-  let startTop = 0;
-
-  const begin = (clientX, clientY) => {
-    const rect = bubble.getBoundingClientRect();
-    dragging = true;
-    startX = clientX;
-    startY = clientY;
-    startLeft = rect.left + window.scrollX;
-    startTop = rect.top + window.scrollY;
-    bubble.classList.add("is-dragging");
-    bubble.style.right = "auto";
-    bubble.style.bottom = "auto";
-    bubble.style.left = `${startLeft}px`;
-    bubble.style.top = `${startTop}px`;
-  };
-
-  const move = (clientX, clientY) => {
-    if (!dragging) return;
-    const maxLeft = Math.max(window.scrollX + 8, window.scrollX + window.innerWidth - bubble.offsetWidth - 8);
-    const maxTop = Math.max(window.scrollY + 8, window.scrollY + window.innerHeight - bubble.offsetHeight - 8);
-    bubble.style.left = `${clamp(startLeft + (clientX - startX), window.scrollX + 8, maxLeft)}px`;
-    bubble.style.top = `${clamp(startTop + (clientY - startY), window.scrollY + 8, maxTop)}px`;
-  };
-
-  const end = () => {
-    if (!dragging) return;
-    dragging = false;
-    bubble.classList.remove("is-dragging");
-    saveScrollPanelPos({
-      left: parseFloat(bubble.style.left) || (bubble.getBoundingClientRect().left + window.scrollX),
-      top: parseFloat(bubble.style.top) || (bubble.getBoundingClientRect().top + window.scrollY)
-    });
-  };
-
-  bubble.addEventListener("pointerdown", (event) => {
-    if (event.target.closest("button,input")) return;
-    event.preventDefault();
-    begin(event.clientX, event.clientY);
-  });
-
-  window.addEventListener("pointermove", (event) => move(event.clientX, event.clientY));
-  window.addEventListener("pointerup", end);
-  window.addEventListener("pointercancel", end);
-  window.addEventListener("resize", () => {
-    if (isScrollPanelVisible()) applyScrollPanelPos();
-  });
 }
 
 function initScrollPanelControls() {
@@ -316,6 +192,16 @@ function initScrollPanelControls() {
     event.preventDefault();
     event.stopPropagation();
     setScrollPanelVisible(false);
+  });
+
+  document.addEventListener("click", (event) => {
+    const bubble = $("#musica-scroll-bubble");
+    if (!bubble || bubble.hidden) return;
+    if (event.target.closest("#musica-scroll-bubble, #musica-scroll-panel-toggle")) return;
+    setScrollPanelVisible(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") setScrollPanelVisible(false);
   });
 }
 
@@ -383,7 +269,6 @@ export function initMusicaControls() {
   applySavedFont();
   applySavedFocus();
   initScrollPanelControls();
-  initScrollPanelDrag();
 
   $("#musica-font-up")?.addEventListener("click", increaseMusicaFont);
   $("#musica-font-down")?.addEventListener("click", decreaseMusicaFont);
@@ -391,5 +276,5 @@ export function initMusicaControls() {
   $("#musica-fullscreen-toggle")?.addEventListener("click", toggleMusicaFullscreen);
   $("#musica-pdf-toggle")?.addEventListener("click", exportMusicaPdf);
 
-  setScrollPanelVisible(window.innerWidth > 1024 && isScrollPanelVisible());
+  setScrollPanelVisible(isScrollPanelVisible());
 }

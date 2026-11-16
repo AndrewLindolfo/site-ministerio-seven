@@ -8,7 +8,6 @@ const SPEED_KEY = "seven_scroll_speed";
 const FOCUS_KEY = "seven_focus_mode";
 const TRANSPOSE_KEY = "seven_transpose_amount";
 const SCROLL_PANEL_VISIBLE_KEY = "seven_scroll_panel_visible";
-const SCROLL_PANEL_POS_KEY = "seven_scroll_panel_pos";
 
 const SPEED_STEPS = [0.08, 0.18, 0.35, 0.7, 1.2];
 
@@ -29,8 +28,8 @@ function storageSet(key, value) {
 }
 
 let scrollInterval = null;
-let scrollSpeed = Number(storageGet(SPEED_KEY, "0.35"));
-if (!SPEED_STEPS.includes(scrollSpeed)) scrollSpeed = 0.35;
+let scrollSpeed = clamp(Number(storageGet(SPEED_KEY, "0.35")), 0.08, 1.2);
+if (!Number.isFinite(scrollSpeed)) scrollSpeed = 0.35;
 let scrollAccumulator = 0;
 
 function $(selector) {
@@ -64,18 +63,6 @@ function setTransposeAmount(value) {
   storageSet(TRANSPOSE_KEY, clamp(Number(value) || 0, -11, 11));
 }
 
-function getStoredScrollPanelPos() {
-  try {
-    return JSON.parse(storageGet(SCROLL_PANEL_POS_KEY, "null"));
-  } catch {
-    return null;
-  }
-}
-
-function saveScrollPanelPos(pos) {
-  storageSet(SCROLL_PANEL_POS_KEY, JSON.stringify(pos));
-}
-
 function isScrollPanelVisible() {
   return storageGet(SCROLL_PANEL_VISIBLE_KEY) === "1";
 }
@@ -91,50 +78,6 @@ function nearestSpeedIndex(value) {
     }
   });
   return idx;
-}
-
-function applyScrollPanelPos() {
-  const bubble = $("#scroll-bubble");
-  if (!bubble) return;
-
-  if (window.innerWidth <= 1024) {
-    bubble.style.left = "";
-    bubble.style.top = "";
-    bubble.style.right = "";
-    bubble.style.bottom = "";
-    return;
-  }
-
-  const stored = getStoredScrollPanelPos();
-  if (!stored || typeof stored.left !== "number" || typeof stored.top !== "number") {
-    const anchor = document.getElementById("ver-letra-link")?.closest(".page-cross-link") ||
-                   document.getElementById("ver-letra-link") ||
-                   document.querySelector(".page-cross-link");
-    if (anchor) {
-      const rect = anchor.getBoundingClientRect();
-      const top = window.scrollY + rect.top - 6;
-      const left = window.scrollX + rect.right + 14;
-      const maxLeft = Math.max(window.scrollX + 8, window.scrollX + window.innerWidth - bubble.offsetWidth - 8);
-      bubble.style.left = `${clamp(left, window.scrollX + 8, maxLeft)}px`;
-      bubble.style.top = `${Math.max(window.scrollY + 8, top)}px`;
-      bubble.style.right = "auto";
-      bubble.style.bottom = "auto";
-      return;
-    }
-    bubble.style.left = `${Math.max(16, window.scrollX + ((window.innerWidth - bubble.offsetWidth) / 2))}px`;
-    bubble.style.top = `${Math.max(window.scrollY + 16, window.scrollY + 120)}px`;
-    bubble.style.right = "auto";
-    bubble.style.bottom = "auto";
-    return;
-  }
-
-  const maxLeft = Math.max(4, window.innerWidth - bubble.offsetWidth - 4);
-  const maxTop = Math.max(4, window.innerHeight - bubble.offsetHeight - 4);
-
-  bubble.style.left = `${clamp(stored.left, 4, maxLeft)}px`;
-  bubble.style.top = `${clamp(stored.top, 4, maxTop)}px`;
-  bubble.style.right = "auto";
-  bubble.style.bottom = "auto";
 }
 
 function setScrollPanelVisible(visible) {
@@ -153,7 +96,6 @@ function setScrollPanelVisible(visible) {
     toggleBtn.classList.toggle("is-active", isVisible);
     toggleBtn.setAttribute("aria-expanded", isVisible ? "true" : "false");
   }
-  if (isVisible) requestAnimationFrame(() => applyScrollPanelPos());
   requestAnimationFrame(() => {
     const controls = $(".cifra-top-controls");
     if (controls && window.innerWidth <= 1024) {
@@ -171,67 +113,6 @@ function setScrollPanelVisible(visible) {
 
 function toggleScrollPanel() {
   setScrollPanelVisible(!isScrollPanelVisible());
-}
-
-function initScrollPanelDrag() {
-  if (window.innerWidth <= 1024) return;
-  const bubble = $("#scroll-bubble");
-  if (!bubble || bubble.dataset.dragReady === "1") return;
-  bubble.dataset.dragReady = "1";
-
-  let dragging = false;
-  let startX = 0;
-  let startY = 0;
-  let startLeft = 0;
-  let startTop = 0;
-
-  const begin = (clientX, clientY) => {
-    const rect = bubble.getBoundingClientRect();
-    dragging = true;
-    startX = clientX;
-    startY = clientY;
-    startLeft = rect.left;
-    startTop = rect.top;
-    bubble.classList.add("is-dragging");
-    bubble.style.right = "auto";
-    bubble.style.bottom = "auto";
-    bubble.style.left = `${rect.left}px`;
-    bubble.style.top = `${rect.top}px`;
-  };
-
-  const move = (clientX, clientY) => {
-    if (!dragging) return;
-    const maxLeft = Math.max(4, window.innerWidth - bubble.offsetWidth - 4);
-    const maxTop = Math.max(4, window.innerHeight - bubble.offsetHeight - 4);
-    bubble.style.left = `${clamp(startLeft + (clientX - startX), 4, maxLeft)}px`;
-    bubble.style.top = `${clamp(startTop + (clientY - startY), 4, maxTop)}px`;
-  };
-
-  const end = () => {
-    if (!dragging) return;
-    dragging = false;
-    bubble.classList.remove("is-dragging");
-    saveScrollPanelPos({
-      left: parseFloat(bubble.style.left) || bubble.getBoundingClientRect().left,
-      top: parseFloat(bubble.style.top) || bubble.getBoundingClientRect().top
-    });
-  };
-
-  bubble.addEventListener("pointerdown", (event) => {
-    if (event.target.closest("button")) return;
-    event.preventDefault();
-    begin(event.clientX, event.clientY);
-  });
-
-  window.addEventListener("pointermove", (event) => move(event.clientX, event.clientY));
-  window.addEventListener("pointerup", end);
-  window.addEventListener("pointercancel", end);
-
-  window.addEventListener("resize", () => {
-    initMobileScrollBar();
-    initResponsiveControlsAutoHide();
-    if (isScrollPanelVisible()) applyScrollPanelPos();
-  });
 }
 
 function ensureOriginalResetAction() {
@@ -603,7 +484,6 @@ export function initCifraControls() {
   }
 
   initMobileScrollBar();
-  initScrollPanelDrag();
   initResponsiveControlsAutoHide();
   applySavedFont();
   applySavedFocus();
@@ -625,13 +505,18 @@ export function initCifraControls() {
   $("#pdf-toggle")?.addEventListener("click", exportCifraPdf);
   $("#scroll-toggle")?.addEventListener("click", toggleScroll);
   $("#scroll-bubble-close")?.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); setScrollPanelVisible(false); });
+  document.addEventListener("click", (event) => {
+    const bubble = $("#scroll-bubble");
+    if (!bubble || bubble.hidden) return;
+    if (event.target.closest("#scroll-bubble, #scroll-panel-toggle")) return;
+    setScrollPanelVisible(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") setScrollPanelVisible(false);
+  });
 
   updateScrollButton(false);
   updateSpeedIndicator();
-  if (window.innerWidth <= 1024) {
-    setScrollPanelVisible(false);
-  } else {
-    setScrollPanelVisible(isScrollPanelVisible());
-  }
+  setScrollPanelVisible(isScrollPanelVisible());
 }
 

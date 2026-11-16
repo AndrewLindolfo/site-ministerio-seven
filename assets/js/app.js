@@ -1,13 +1,10 @@
 import { initTheme } from "./theme.js";
 import { setFooterYear } from "./ui.js";
-import { initSearch } from "./search.js";
 import { initMobileMenu } from "./modules/mobile-menu.js";
-import { initAdminAccountMenu } from "./modules/menu.js";
 import { initThemeBranding } from "./modules/theme-branding.js";
-import { initNotificacoesPopup } from "./modules/notificacoes-popup.js";
 import { initDownloadsSplitMenu } from "./modules/downloads-menu.js";
-import { initPublicAuth } from "./public-auth.js";
-import { initPersonalActions } from "./modules/personal-actions.js";
+import { initPublicNavigation } from "./modules/public-navigation.js";
+import { initPublicAuthShell } from "./modules/public-auth-shell.js";
 import { SITE_CONFIG } from "./config.js";
 import { getPageName } from "./lib/page-route.js";
 
@@ -41,20 +38,34 @@ function injectAdminSiteShortcut() {
   }
 }
 
-function injectHomeLinks() {
-  document.querySelectorAll(".main-nav, .mobile-menu-panel").forEach((nav) => {
-    if (!nav || nav.querySelector('[data-home-link="1"]')) return;
-    const homeLink = document.createElement("a");
-    homeLink.href = "./index.html";
-    homeLink.textContent = "Início";
-    homeLink.setAttribute("data-home-link", "1");
-    homeLink.className = nav.classList.contains("mobile-menu-panel") ? "mobile-nav-link" : "";
-    nav.insertBefore(homeLink, nav.firstChild);
-  });
-}
-
 function isPersonalActionPage() {
   return PERSONAL_ACTION_PAGES.has(getPageName(window.location.pathname));
+}
+
+let publicAuthModulePromise = null;
+
+async function loadPublicAuth() {
+  publicAuthModulePromise ||= import("./public-auth.js");
+  const module = await publicAuthModulePromise;
+  module.initPublicAuth();
+  return module;
+}
+
+function loadPublicFeatures() {
+  loadPublicAuth().catch((error) => console.error("Erro ao carregar autenticação pública.", error));
+  import("./search.js")
+    .then(({ initSearch }) => initSearch())
+    .catch((error) => console.error("Erro ao carregar a busca.", error));
+  if (isPersonalActionPage()) {
+    import("./modules/personal-actions.js")
+      .then(({ initPersonalActions }) => initPersonalActions())
+      .catch((error) => console.error("Erro ao carregar ações pessoais.", error));
+  }
+  if (document.querySelector(".home-page")) {
+    import("./modules/notificacoes-popup.js")
+      .then(({ initNotificacoesPopup }) => initNotificacoesPopup())
+      .catch((error) => console.error("Erro ao carregar notificações.", error));
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -64,16 +75,22 @@ document.addEventListener("DOMContentLoaded", () => {
   setFooterYear();
 
   if (isAdminPage) {
-    initAdminAccountMenu();
     injectAdminSiteShortcut();
+    import("./modules/menu.js")
+      .then(({ initAdminAccountMenu }) => initAdminAccountMenu())
+      .catch((error) => console.error("Erro ao carregar a conta administrativa.", error));
     return;
   }
 
-  injectHomeLinks();
-  initSearch();
+  initPublicNavigation();
+  initPublicAuthShell();
   initMobileMenu();
   initDownloadsSplitMenu();
-  initPublicAuth();
-  if (isPersonalActionPage()) initPersonalActions();
-  if (document.querySelector(".home-page")) initNotificacoesPopup();
+  document.addEventListener("seven:public-auth-request", async () => {
+    const module = await loadPublicAuth();
+    const user = await module.whenPublicAuthReady();
+    if (user?.uid) document.getElementById("public-user-toggle")?.click();
+    else module.openPublicAuthModal();
+  });
+  loadPublicFeatures();
 });

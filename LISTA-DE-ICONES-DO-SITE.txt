@@ -1,0 +1,410 @@
+MINISTÉRIO SEVEN
+LISTA CONSOLIDADA DE ÍCONES DO SITE
+
+Objetivo
+Esta lista reúne, sem duplicações, os ícones necessários para padronizar o site público,
+o Modo Ensaio, as páginas de música e cifra e o painel administrativo.
+
+Cada ícone deve ser criado ou baixado apenas uma vez e poderá ser reutilizado em todas
+as áreas indicadas. Os nomes em inglês podem ser usados para pesquisar os SVGs em
+bibliotecas como Lucide Icons.
+
+Padrão visual recomendado
+- Formato: SVG.
+- Família sugerida: Lucide Icons.
+- Tamanho padrão: 24 x 24 px.
+- Tamanhos auxiliares: 18 x 18 px e 20 x 20 px.
+- Espessura do traço: 2 px.
+- Pontas e cantos arredondados.
+- Cor controlada pelo tema do site.
+- Não misturar emojis com os novos SVGs.
+
+======================================================================
+NAVEGAÇÃO E CABEÇALHO
+======================================================================
+
+01. Início
+    Inglês: Home
+    Uso: menu principal, retorno à página inicial e atalhos do site.
+
+02. Buscar / Lupa
+    Inglês: Search
+    Uso: busca geral, busca de músicas, cifras, integrantes e conteúdo administrativo.
+
+03. Menu
+    Inglês: Menu / Hamburger
+    Uso: abrir o menu principal no celular.
+
+04. Fechar
+    Inglês: X / Close
+    Uso: fechar menu, busca, pop-ups, autorrolagem, lista de músicas, comunicados e modais.
+
+05. Voltar
+    Inglês: Arrow Left / Back
+    Uso: voltar ao site, voltar ao painel, voltar à tela anterior e música anterior.
+
+06. Avançar
+    Inglês: Arrow Right / Forward
+    Uso: avançar etapas, abrir próxima tela e navegar para a próxima música.
+
+07. Anterior
+    Inglês: Chevron Left
+    Uso: item anterior, cifra anterior, variação anterior e navegação compacta.
+
+08. Próximo
+    Inglês: Chevron Right
+    Uso: próximo item, próxima cifra, próxima variação e navegação compacta.
+
+09. Atualizar
+    Inglês: Refresh CW
+    Uso: atualizar ensaio, recarregar informações e sincronizar alterações.
+
+10. Link externo
+    Inglês: External Link
+    Uso: YouTube, Instagram, agenda externa, downloads e outros endereços externos.
+
+11. Copiar
+    Inglês: Copy
+    Uso: copiar link do ensaio, endereço de compartilhamento e informações.
+
+12. Compartilhar
+    Inglês: Share 2
+    Uso: compartilhar ensaio, música, cifra e páginas do site.
+
+13. Mais opções
+    Inglês: More Vertical / Ellipsis Vertical
+    Uso: menu compacto com ações adicionais.
+
+======================================================================
+TEMA, CONTA E ACESSO
+======================================================================
+
+14. Modo claro
+    Inglês: Sun
+    Uso: ativar o tema claro em todas as páginas.
+
+15. Modo escuro
+    Inglês: Moon
+    Uso: ativar o tema escuro em todas as páginas.
+
+16. Usuário deslogado
+    Inglês: User Round / Circle User
+    Uso: botão de login quando não existe usuário conectado.
+
+17. Perfil do usuário
+    Inglês: User Circle / Avatar
+    Uso: conta conectada, menu do usuário e perfil.
+
+18. Entrar
+    Inglês: Log In
+    Uso: login público, login de integrante e login administrativo.
+
+19. Sair
+    Inglês: Log Out
+    Uso: menu da conta e painel administrativo.
+
+20. Google
+    Inglês: Google Logo
+    Uso: botão de entrar com a conta Google.
+
+21. Integrantes
+    Inglês: Users
+    Uso: área dos integrantes, cadastro e gerenciamento de integrantes.
+
+22. Administrador
+    Inglês: Shield User
+    Uso: gerenciamento de administradores e identificação de acesso administrativo.
+
+23. Bloqueado
+    Inglês: Lock
+    Uso: acesso restrito, função indisponível e conteúdo protegido.
+
+24. Permissão confirmada
+    Inglês: Shield Check
+    Uso: permissões, acesso autorizado e confirmação de tela protegida.
+
+======================================================================
+MÚSICA, CIFRA E MODO ENSAIO
+======================================================================
+
+25. Música
+    Inglês: Music / Music 2
+    Uso: músicas, repertório, páginas musicais e itens da programação.
+
+26. Repertório / Lista de músicas
+    Inglês: List Music
+    Uso: abrir a lista de músicas do Modo Ensaio e representar repertórios.
+
+27. Letra
+    Inglês: Align Left / File Text
+    Uso: alternar para letra, visualizar letra e identificar conteúdo textual.
+
+28. Cifra / Violão / Guitarra
+    Inglês: Guitar
+    Uso: alternar para cifra, identificar cifras e representar violão ou guitarra.
+
+29. Teclado
+    Inglês: Piano
+    Uso: identificar cifras e recursos para teclado.
+
+30. Microfone / Vocal
+    Inglês: Mic 2
+    Uso: letra, vocal, programação musical e observações de canto.
+
+31. Aumentar fonte
+    Inglês: Zoom In / Type Plus
+    Uso: aumentar a letra em músicas, cifras e Modo Ensaio.
+
+32. Diminuir fonte
+    Inglês: Zoom Out / Type Minus
+    Uso: diminuir a letra em músicas, cifras e Modo Ensaio.
+
+33. Adicionar / Aumentar
+    Inglês: Plus
+    Uso: subir o tom, aumentar valores e criar músicas, cifras, ensaios, integrantes,
+    administradores e outros registros.
+
+34. Diminuir tom
+    Inglês: Minus
+    Uso: baixar o tom da cifra e outras ações de redução.
+
+35. Restaurar tom original
+    Inglês: Rotate CCW / Undo 2
+    Uso: voltar a cifra para o tom original e restaurar valores.
+
+36. Visualizar / Modo foco
+    Inglês: Eye
+    Uso: modo foco, prévia, visualização de música, cifra e PDF.
+
+37. Ocultar / Sair do modo foco
+    Inglês: Eye Off
+    Uso: encerrar modo foco e ocultar elementos.
+
+38. Tela cheia
+    Inglês: Maximize
+    Uso: entrar em tela cheia nas músicas, cifras, ferramentas e Modo Ensaio.
+
+39. Sair da tela cheia
+    Inglês: Minimize
+    Uso: retornar da tela cheia.
+
+40. Manter tela ligada
+    Inglês: Smartphone / Monitor Up
+    Uso: impedir que a tela apague durante o ensaio.
+
+41. Autorrolagem
+    Inglês: Chevrons Down / Scroll Text
+    Uso: abrir e identificar os controles automáticos de rolagem.
+
+42. Iniciar / Play
+    Inglês: Play
+    Uso: iniciar autorrolagem, metrônomo, áudio, vídeo e prévias.
+
+43. Pausar
+    Inglês: Pause
+    Uso: pausar autorrolagem, metrônomo, áudio e vídeo.
+
+44. Velocidade / Ajustes
+    Inglês: Gauge / Sliders Horizontal
+    Uso: velocidade da autorrolagem, controles rápidos e configurações do conteúdo.
+
+45. Metrônomo
+    Inglês: Timer / Audio Lines
+    Uso: ferramenta de metrônomo, cifra e Modo Ensaio.
+
+46. Pulso / Batida
+    Inglês: Circle / Radio
+    Uso: indicador visual do tempo e das batidas do metrônomo.
+
+47. Afinador
+    Inglês: Audio Waveform / Tuning Fork
+    Uso: ferramenta de afinação e detecção de notas.
+
+48. Favoritar
+    Inglês: Star
+    Uso: adicionar música ou cifra aos favoritos.
+
+49. Remover dos favoritos
+    Inglês: Star Off
+    Uso: retirar música ou cifra dos favoritos.
+
+50. Adicionar à playlist
+    Inglês: List Plus
+    Uso: adicionar música ou cifra a uma playlist.
+
+51. PDF / Exportar PDF
+    Inglês: File PDF / File Down
+    Uso: gerar, baixar ou visualizar PDF de letra e cifra.
+
+======================================================================
+CONTEÚDO PÚBLICO
+======================================================================
+
+52. Agenda / Calendário
+    Inglês: Calendar Days
+    Uso: agenda, data da programação e data do ensaio.
+
+53. Horário
+    Inglês: Clock
+    Uso: horários de programação, evento e ensaio.
+
+54. Localização
+    Inglês: Map Pin
+    Uso: local de evento, culto, programação ou ensaio.
+
+55. Álbum
+    Inglês: Images / Album
+    Uso: página de álbuns, coleções de fotos e capas.
+
+56. Foto / Imagem
+    Inglês: Image
+    Uso: fotos, capas, banners, perfil e prévias.
+
+57. Download
+    Inglês: Download
+    Uso: baixar arquivos, materiais, PDFs e apresentações.
+
+58. Upload
+    Inglês: Upload
+    Uso: enviar arquivos, imagens, PDFs e materiais administrativos.
+
+59. YouTube
+    Inglês: Youtube / Play Square
+    Uso: vídeos das músicas e prévias de vídeo.
+
+60. Instagram
+    Inglês: Instagram
+    Uso: rodapé, contato e redes sociais.
+
+61. E-mail
+    Inglês: Mail
+    Uso: contato, cadastro, login e informações da conta.
+
+62. Telefone
+    Inglês: Phone
+    Uso: informações de contato.
+
+63. Notificação
+    Inglês: Bell
+    Uso: comunicados, novidades e alertas do site.
+
+64. Informação
+    Inglês: Info
+    Uso: orientações, observações e mensagens informativas.
+
+65. Alerta
+    Inglês: Triangle Alert
+    Uso: erros, avisos importantes e confirmações de risco.
+
+66. Sucesso
+    Inglês: Circle Check
+    Uso: cadastro salvo, importação concluída e confirmação de ações.
+
+67. Erro
+    Inglês: Circle X
+    Uso: falha de carregamento, erro de formulário e operação recusada.
+
+======================================================================
+ADMINISTRAÇÃO E EDIÇÃO
+======================================================================
+
+68. Editar
+    Inglês: Pencil
+    Uso: editar registros, letras, cifras, ensaios e configurações.
+
+69. Excluir
+    Inglês: Trash 2
+    Uso: remover registros, integrantes, ensaios, músicas e cifras.
+
+70. Salvar
+    Inglês: Save
+    Uso: formulários, editores e configurações.
+
+71. Confirmar
+    Inglês: Check
+    Uso: confirmar seleção, cadastro, importação e ajustes.
+
+72. Configurações
+    Inglês: Settings
+    Uso: configurações gerais, opções de página e painel administrativo.
+
+73. Mover para cima
+    Inglês: Arrow Up
+    Uso: reorganizar músicas e itens das listas.
+
+74. Mover para baixo
+    Inglês: Arrow Down
+    Uso: reorganizar músicas e itens das listas.
+
+75. Arrastar / Reordenar
+    Inglês: Grip Vertical
+    Uso: alterar a ordem do repertório e de outras listas.
+
+76. Backup
+    Inglês: Database Backup
+    Uso: backup do Firebase e proteção dos dados.
+
+77. Restaurar backup
+    Inglês: Database Restore / Rotate CCW
+    Uso: restaurar os dados do site.
+
+78. Histórico / Log
+    Inglês: History / Activity
+    Uso: log de atividades e histórico de mudanças.
+
+79. Contatos / Mensagens
+    Inglês: Messages / Mail
+    Uso: mensagens recebidas pelo formulário de contato.
+    Observação: o mesmo SVG de e-mail pode ser reutilizado.
+
+80. Painel administrativo
+    Inglês: Layout Dashboard
+    Uso: página principal e navegação do painel ADM.
+
+81. Banco de dados
+    Inglês: Database
+    Uso: Firebase, auditorias, integridade e gerenciamento de dados.
+
+82. Pasta / Arquivos
+    Inglês: Folder
+    Uso: downloads, uploads, biblioteca de PDFs e organização de arquivos.
+
+83. Código / Integração
+    Inglês: Code 2
+    Uso: integrações, API e recursos técnicos administrativos.
+
+======================================================================
+LOGOTIPOS E MARCAS — NÃO SÃO ÍCONES DE CONTROLE
+======================================================================
+
+84. Logo V7
+    Inglês: V7 Brand Logo
+    Uso: cabeçalho, Modo Ensaio, painel ADM, favicon e retorno ao site principal.
+    Variações necessárias: branca para fundo escuro e preta para fundo claro.
+
+85. Logo Ministério Seven
+    Inglês: Ministério Seven Brand Logo
+    Uso: rodapé, banner, telas institucionais e materiais de identidade visual.
+    Variações necessárias: clara e escura.
+
+86. Favicon V7
+    Inglês: V7 Favicon / App Icon
+    Uso: aba do navegador, atalhos e instalação do site.
+    Variações necessárias: clara, escura e tamanhos para aplicativo.
+
+======================================================================
+RESUMO
+======================================================================
+
+- Total de ícones e marcas catalogados, sem duplicações: 86.
+- Ícones repetidos devem compartilhar o mesmo arquivo SVG.
+- O mesmo Plus pode servir para adicionar e aumentar valores.
+- O mesmo Minus pode servir para diminuir tom, fonte ou velocidade.
+- O mesmo X deve fechar menus, pop-ups e janelas.
+- O mesmo Eye deve servir para modo foco e visualização.
+- O mesmo Download pode ser usado em downloads gerais e arquivos.
+- O mesmo Mail pode ser usado para e-mail e contatos.
+- O mesmo Rotate CCW pode ser usado para restaurar tom e restaurar valores.
+- Os estados ativo, inativo, selecionado e desabilitado devem ser controlados por CSS,
+  sem criar uma cópia diferente do SVG para cada estado.
+
